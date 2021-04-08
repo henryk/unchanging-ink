@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "unchanging-ink"
+version = "0.1.0"
+description = ""
+authors = ["Henryk Plötz <henryk@ploetzli.ch>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+sanic = "^21.3.2"
+environs = "^9.3.2"
+databases = {extras = ["postgresql"], version = "^0.4.3"}
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0a5"]
+build-backend = "poetry.core.masonry.api"
