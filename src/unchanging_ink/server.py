@@ -1,11 +1,12 @@
 from databases import Database
-from environs import Env
 from sanic import Sanic
 
 from .routes import setup_routes
 
 app = Sanic(__name__)
-db = Database("postgresql://test:test@db/test")
+db = Database(
+    f"postgresql://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
+)
 
 
 def setup_database():
@@ -21,16 +22,20 @@ def setup_database():
 
 
 def init():
-    env = Env()
-    env.read_env()
-
     setup_database()
     setup_routes(app)
 
+    workers = app.config.get("WORKERS", "auto")
+    if str(workers).lower() == "auto":
+        import multiprocessing
+
+        workers = multiprocessing.cpu_count()
+    else:
+        workers = int(workers)
+
     app.run(
-        host="127.0.0.1",
-        port=8000,
-        debug=True,
-        auto_reload=True,
-        workers=1,
+        host=app.config.get("BIND_HOST", "127.0.0.1"),
+        port=app.config.get("BIND_PORT", 8000),
+        debug=app.config.get("DEBUG", False),
+        workers=workers,
     )

@@ -1,7 +1,8 @@
 import sqlalchemy
 
-from .server import db
 from .models import metadata
+from .server import db
+
 
 def main():
     engine = sqlalchemy.create_engine(str(db.url))

@@ -1,19 +1,70 @@
 version: '3'
-services:
 
+services:
   db:
     image: "postgres:13"
+    restart: always
     ports:
       - "127.0.0.1:2999:5432"
+    read_only: true
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp
+      - /run
     environment:
-      POSTGRES_USER: "test"
-      POSTGRES_PASSWORD: "test"
-      POSTGRES_DB: "test"
+      POSTGRES_USER: "sanic"
+      POSTGRES_PASSWORD: "toomanysecrets"
+      POSTGRES_DB: "sanic"
+    networks:
+      - db
 
   backend:
     image: unchanging-ink:latest
     build: .
     ports:
       - "127.0.0.1:8000:8000"
+    read_only: true
+    restart: always
+    environment:
+      SANIC_DEBUG: $DEBUG
+      SANIC_DB_HOST: db
+      SANIC_DB_USER: sanic
+      SANIC_DB_PASSWORD: toomanysecrets
+      SANIC_DB_NAME: sanic
+      SANIC_ACCESS_LOG: "false"
+      SANIC_WORKERS: auto
+      SANIC_BIND_HOST: 0.0.0.0
+      SANIC_BIND_PORT: 8000
     depends_on:
       - db
+    networks:
+      - db
+      - default
+
+  helper:
+    image: unchanging-ink-helper:latest
+    build:
+      context: .
+      target: helper
+    read_only: true
+    environment:
+      SANIC_DEBUG: $DEBUG
+      SANIC_DB_HOST: db
+      SANIC_DB_USER: sanic
+      SANIC_DB_PASSWORD: toomanysecrets
+      SANIC_DB_NAME: sanic
+    depends_on:
+      - db
+    networks:
+      - db
+      - default
+
+networks:
+  db:
+    driver: bridge
+    internal: true
+  default:
+
+volumes:
+  db-data:

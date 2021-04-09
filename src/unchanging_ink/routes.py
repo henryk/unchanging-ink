@@ -9,7 +9,12 @@ def setup_routes(app):
     async def book_list(request: Request) -> HTTPResponse:
         query = signed_timestamp.select()
         rows = await request.app.ctx.db.fetch_all(query)
-        return json([{"signature": row["signature"], "timestamp": row["timestamp"]} for row in rows])
+        return json(
+            [
+                {"signature": row["signature"], "timestamp": row["timestamp"]}
+                for row in rows
+            ]
+        )
 
     @app.route("/hello")
     async def hello(request: Request) -> HTTPResponse:
