@@ -12,6 +12,7 @@ pynacl = "^1.4.0"
 databases = {extras = ["postgresql"], version = "^0.4.3"}
 SQLAlchemy-Utils = "^0.36.8"
 psycopg2 = "^2.8.6"
+ujson = "^4.0.2"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

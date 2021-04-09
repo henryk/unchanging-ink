@@ -1,6 +1,7 @@
 from databases import Database
 from sanic import Sanic
 
+from .crypto import setup_crypto
 from .routes import setup_routes
 
 app = Sanic(__name__)
@@ -24,6 +25,7 @@ def setup_database():
 def init():
     setup_database()
     setup_routes(app)
+    setup_crypto(app)
 
     workers = app.config.get("WORKERS", "auto")
     if str(workers).lower() == "auto":

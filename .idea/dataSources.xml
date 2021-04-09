@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="test@localhost" uuid="063031d9-a1e3-4534-8357-35bf4d56697e">
+    <data-source source="LOCAL" name="postgres@docker" uuid="c1dfa993-51ff-4591-b12a-cc39faa2e82d">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:2999/test</jdbc-url>
+      <jdbc-url>jdbc:postgresql://127.0.0.1:2999/sanic</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
