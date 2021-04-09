@@ -7,7 +7,7 @@ from sanic import Sanic
 from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.response import json as json_response
-from ujson import dumps as json_dumps
+from orjson import dumps as json_dumps
 
 from .models import signed_timestamp
 
@@ -46,13 +46,13 @@ def setup_routes(app: Sanic):
             kid = app.ctx.crypto.kid
 
             signed_statement = (
-                '{"data":%s,"kid":%s,"timestamp":"%s","typ":"st","version":"1"}'
+                b'{"data":%s,"kid":%s,"timestamp":"%s","typ":"st","version":"1"}'
                 % (
                     json_dumps(data),
                     json_dumps(kid),
-                    timestamp,
+                    timestamp.encode("us-ascii"),
                 )
-            ).encode("utf-8")
+            )
 
             signature = app.ctx.crypto.sign(signed_statement)
             st_id = uuid.uuid4()
