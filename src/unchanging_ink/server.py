@@ -5,7 +5,7 @@ from sanic import Sanic
 from .routes import setup_routes
 
 app = Sanic(__name__)
-db = Database("postgresql://test:test@localhost:2999/test")
+db = Database("postgresql://test:test@db/test")
 
 
 def setup_database():

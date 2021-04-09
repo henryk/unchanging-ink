@@ -17,6 +17,10 @@ psycopg2 = "^2.8.6"
 black = "^20.8b1"
 isort = "^5.8.0"
 
+[tool.poetry.scripts]
+unchanging-ink = "unchanging_ink.server:init"
+unchanging-ink_create_tables = "unchanging_ink.create_tables:main"
+
 [build-system]
 requires = ["poetry-core>=1.0.0a5"]
 build-backend = "poetry.core.masonry.api"

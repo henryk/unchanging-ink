@@ -1,7 +1,7 @@
 version: '3'
 services:
 
-  postgres:
+  db:
     image: "postgres:13"
     ports:
       - "127.0.0.1:2999:5432"
@@ -9,3 +9,11 @@ services:
       POSTGRES_USER: "test"
       POSTGRES_PASSWORD: "test"
       POSTGRES_DB: "test"
+
+  backend:
+    image: unchanging-ink:latest
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - db
