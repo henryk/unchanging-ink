@@ -42,11 +42,11 @@ services:
       - db
       - default
 
-  helper:
-    image: unchanging-ink-helper:latest
+  worker:
+    image: unchanging-ink-worker:latest
     build:
       context: .
-      target: helper
+      target: worker
     read_only: true
     environment:
       SANIC_DEBUG: $DEBUG

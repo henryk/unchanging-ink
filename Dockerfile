@@ -1,6 +1,6 @@
 FROM python:3.8-slim AS base
 
-FROM base AS builder
+FROM base AS builder-base
 
 ENV PYTHONFAULTHANDLER=1 \
   PYTHONUNBUFFERED=1 \
@@ -14,7 +14,7 @@ ENV PYTHONFAULTHANDLER=1 \
   POETRY_VERSION=1.1.5
 
 # System deps:
-RUN apt-get update && apt-get install -y build-essential unzip wget python-dev libpq-dev
+RUN apt-get update && apt-get install -y build-essential unzip wget python-dev
 RUN pip install "poetry==$POETRY_VERSION" && \
     poetry config virtualenvs.in-project true && \
     poetry config virtualenvs.path .venv
@@ -25,18 +25,27 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock /app/
 RUN poetry install --no-dev --no-root
 
-COPY . /app
+FROM builder-base as backend-builder
+
+COPY src /app/src
 RUN poetry install --no-dev
 
-FROM base as helper
-RUN apt-get update && apt-get install -y libpq5
-COPY --from=builder /app/ app/
+FROM builder-base as worker-builder
+RUN apt-get install -y libpq-dev
+RUN poetry install --no-dev --no-root -E worker
+
+COPY src /app/src
+RUN poetry install --no-dev -E worker
+
+FROM base as worker
+RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV PYTHONPATH=/app/.venv/lib/python3.8/site-packages/ PATH="$PATH:/app/.venv/bin"
 CMD "/bin/true"
+COPY --from=worker-builder /app/ /app/
 
-FROM base AS runtime
-COPY --from=builder /app/ app/
+FROM base AS backend
 WORKDIR /app
 ENV PYTHONPATH=/app/.venv/lib/python3.8/site-packages/ PATH="$PATH:/app/.venv/bin"
 CMD "/app/.venv/bin/unchanging-ink"
+COPY --from=backend-builder /app/ /app/
