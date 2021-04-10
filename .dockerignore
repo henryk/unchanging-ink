@@ -329,3 +329,5 @@ dist
 
 .git
 .idea
+**/.nuxt
+**/node_modules

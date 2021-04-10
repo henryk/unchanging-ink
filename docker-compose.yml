@@ -60,6 +60,20 @@ services:
       - db
       - default
 
+  frontend:
+    image: unchanging-ink-frontend:latest
+    ports:
+      - "127.0.0.1:8001:3000"
+    build:
+      context: .
+      target: frontend
+    environment:
+      HOST: "0"
+      PORT: "3000"
+    read_only: true
+    networks:
+      - default
+
 networks:
   db:
     driver: bridge

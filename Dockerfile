@@ -37,6 +37,30 @@ RUN poetry install --no-dev --no-root -E worker
 COPY src /app/src
 RUN poetry install --no-dev -E worker
 
+FROM node:lts-alpine as frontend-base
+
+FROM frontend-base as frontend-prep-stage
+WORKDIR /app
+COPY web/unchanging-ink/package.json ./
+RUN sed -i -e 's/  "version": ".*",/  "version": "0.0.0",/' package.json
+
+FROM frontend-base as frontend-build-stage
+WORKDIR /app
+
+COPY web/unchanging-ink/package-lock.json ./
+COPY --from=frontend-prep-stage /app/package.json ./
+RUN npm ci
+COPY web/unchanging-ink .
+
+RUN npm run build
+
+FROM frontend-base as frontend
+WORKDIR /app
+COPY --from=frontend-build-stage /app/node_modules/ /app/node_modules/
+COPY --from=frontend-build-stage /app/package*json /app/
+COPY --from=frontend-build-stage /app/.nuxt/ /app/.nuxt/
+CMD ["npm", "run", "start"]
+
 FROM base as worker
 RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
