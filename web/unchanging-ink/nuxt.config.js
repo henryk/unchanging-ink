@@ -45,7 +45,7 @@ export default {
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
-    defaultAssets: false,
+    // defaultAssets: false, FIXME For production
     treeShake: true,
     theme: {
       dark: true,
