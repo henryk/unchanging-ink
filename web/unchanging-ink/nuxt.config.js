@@ -3,10 +3,10 @@ import colors from 'vuetify/es5/util/colors'
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - unchanging-ink',
-    title: 'unchanging-ink',
+    titleTemplate: '%s - unchanging.ink',
+    title: 'unchanging.ink',
     htmlAttrs: {
-      lang: 'en',
+      lang: 'de',
     },
     meta: [
       { charset: 'utf-8' },
@@ -45,6 +45,8 @@ export default {
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
+    defaultAssets: false,
+    treeShake: true,
     theme: {
       dark: true,
       themes: {
