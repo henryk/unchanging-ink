@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  frontend:
+    image: unchanging-ink-frontend:dev
+    build:
+      context: .
+      target: frontend-base
+      dockerfile: Dockerfile.dev
+    read_only: false
+    volumes:
+      - ./web/unchanging-ink:/app
+    command: "sh -c 'cd /app && npm install && npm run dev'"
+
