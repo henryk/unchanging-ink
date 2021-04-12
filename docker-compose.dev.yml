@@ -23,6 +23,28 @@ services:
     command:
       "sh -c 'poetry install && poetry run python -m unchanging_ink'"
 
+  worker:
+    image: unchanging-ink-worker:dev
+    build:
+      context: .
+      target: builder-base
+      dockerfile: Dockerfile
+    read_only: false
+    environment:
+      SANIC_DEBUG: "true"
+      SANIC_DB_HOST: db
+      SANIC_DB_USER: sanic
+      SANIC_DB_PASSWORD: toomanysecrets
+      SANIC_DB_NAME: sanic
+      SANIC_ACCESS_LOG: "true"
+      SANIC_WORKERS: 1
+      SANIC_BIND_HOST: 0.0.0.0
+      SANIC_BIND_PORT: 8000
+    volumes:
+      - .:/app
+    command:
+      "sh -c 'poetry install && sleep 10000'"
+
   frontend:
     image: unchanging-ink-frontend:dev
     build:
