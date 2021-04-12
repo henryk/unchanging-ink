@@ -43,7 +43,7 @@ services:
     volumes:
       - .:/app
     command:
-      "sh -c 'poetry install && sleep 10000'"
+      "sh -c 'poetry install -E worker && sleep 10000'"
 
   frontend:
     image: unchanging-ink-frontend:dev
