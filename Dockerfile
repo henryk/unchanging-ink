@@ -21,8 +21,8 @@ RUN pip install "poetry==$POETRY_VERSION" && \
 
 WORKDIR /app
 
-# Generate requirements and install *all* dependencies.
-COPY pyproject.toml poetry.lock /app/
+# Install dependencies
+COPY pyproject.toml poetry.lock alembic.ini /app/
 RUN poetry install --no-dev --no-root
 
 FROM builder-base as backend-builder
@@ -34,6 +34,7 @@ FROM builder-base as worker-builder
 RUN apt-get install -y libpq-dev
 RUN poetry install --no-dev --no-root -E worker
 
+COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --no-dev -E worker
 

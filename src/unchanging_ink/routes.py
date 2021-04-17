@@ -77,6 +77,23 @@ def setup_routes(app: Sanic):
 
             return json_response(data)
 
+    @app.route("/st/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
+    async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
+        query = signed_timestamp.select(signed_timestamp.c.id == id_)
+        row = await request.app.ctx.db.fetch_one(query)
+        return json_response(
+            {
+                "id": str(row["id"]),
+                "signature": Base64Encoder.encode(row["signature"]).decode("us-ascii"),
+                "timestamp": row["timestamp"],
+                "kid": str(row["kid"]),
+                "version": "1",
+                "typ": "st",
+                "interval": row["interval"],
+                "proof": row["proof"],
+            }
+        )
+
     @app.route("/hello")
     async def hello(request: Request) -> HTTPResponse:
         return json_response({"Hello": "World"})
