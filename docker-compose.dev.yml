@@ -1,6 +1,11 @@
 version: '3'
 
 services:
+  db:
+    networks:
+      - db
+      - default
+
   backend:
     image: unchanging-ink:dev
     build:
