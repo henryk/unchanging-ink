@@ -68,7 +68,7 @@ FROM base as worker
 RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV PYTHONPATH=/app/.venv/lib/python3.8/site-packages/ PATH="$PATH:/app/.venv/bin"
-CMD "/bin/true"
+CMD "/app/.venv/bin/unchanging-ink_worker"
 COPY --from=worker-builder /app/ /app/
 
 FROM base AS backend

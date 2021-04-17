@@ -26,6 +26,7 @@ worker = [ "psycopg2", "alembic" ]
 
 [tool.poetry.scripts]
 unchanging-ink = "unchanging_ink.server:init"
+unchanging-ink_worker = "unchanging_ink.worker:main"
 unchanging-ink_create_tables = "unchanging_ink.create_tables:main"
 
 [build-system]
