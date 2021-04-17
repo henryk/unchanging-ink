@@ -5,10 +5,13 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    from .create_tables import main as create_tables_main
-
-    logger.info("Creating tables")
-    create_tables_main()
+    logger.info("Upgrading database")
+    import alembic.config
+    alembicArgs = [
+        '--raiseerr',
+        'upgrade', 'head',
+    ]
+    alembic.config.main(argv=alembicArgs)
 
     logger.info("Worker ready")
     while True:

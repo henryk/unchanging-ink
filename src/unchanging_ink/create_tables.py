@@ -6,7 +6,6 @@ from .server import db
 
 def main():
     engine = sqlalchemy.create_engine(str(db.url))
-    metadata.drop_all(engine)
     metadata.create_all(engine)
 
 

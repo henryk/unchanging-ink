@@ -14,13 +14,15 @@ config = context.config
 fileConfig(config.config_file_name)
 
 from unchanging_ink.server import db as sanic_db
-config.set_main_option('sqlalchemy.url', str(sanic_db.url))
+
+config.set_main_option("sqlalchemy.url", str(sanic_db.url))
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from unchanging_ink.models import metadata
+
 target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -67,9 +69,7 @@ def run_migrations_online():
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
