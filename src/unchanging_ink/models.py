@@ -15,6 +15,7 @@ signed_timestamp = sqlalchemy.Table(
         sqlalchemy.BigInteger,
         sqlalchemy.ForeignKey("interval.id", deferrable=True),
         nullable=True,
+        index=True,
     ),
     sqlalchemy.Column("proof", sqlalchemy.JSON(), nullable=True),
 )
