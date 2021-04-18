@@ -2,13 +2,13 @@ import datetime
 import logging
 import uuid
 
-from sqlalchemy.sql.expression import select
 from nacl.encoding import Base64Encoder
+from orjson import dumps as json_dumps
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.response import json as json_response
-from orjson import dumps as json_dumps
+from sqlalchemy.sql.expression import select
 
 from .models import signed_timestamp, timestamp_proof
 
@@ -83,9 +83,11 @@ def setup_routes(app: Sanic):
 
     @app.route("/st/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
-        query = select([signed_timestamp, timestamp_proof]).select_from(
-            signed_timestamp.join(timestamp_proof)
-        ).where(signed_timestamp.c.id == id_)
+        query = (
+            select([signed_timestamp, timestamp_proof])
+            .select_from(signed_timestamp.join(timestamp_proof))
+            .where(signed_timestamp.c.id == id_)
+        )
         row = await request.app.ctx.db.fetch_one(query)
         return json_response(
             {

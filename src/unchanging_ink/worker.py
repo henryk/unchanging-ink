@@ -1,14 +1,14 @@
-from nacl.encoding import Base64Encoder
 import datetime
-import time
 import logging
+import time
 
 import sqlalchemy
-from sqlalchemy.sql.expression import bindparam, select
+from nacl.encoding import Base64Encoder
 from sqlalchemy import create_engine
+from sqlalchemy.sql.expression import bindparam, select
 
 from .crypto import MerkleNode
-from .models import signed_timestamp, interval, timestamp_proof
+from .models import interval, signed_timestamp, timestamp_proof
 from .server import db
 
 logger = logging.getLogger(__name__)
@@ -16,15 +16,22 @@ logger = logging.getLogger(__name__)
 
 def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
     # FIXME Draw the rest of the owl
-    return {"id": row["id"], "interval": interval_id, "proof": {"ith": interval_hash_b64}}
+    return {
+        "id": row["id"],
+        "interval": interval_id,
+        "proof": {"ith": interval_hash_b64},
+    }
 
 
 def calculate_interval(conn: sqlalchemy.engine.Connection):
     print(datetime.datetime.now().isoformat())
     with conn.begin() as transaction:
-        s = select([signed_timestamp]).select_from(
-            signed_timestamp.outerjoin(timestamp_proof)
-        ).where(timestamp_proof.c.id.is_(None)).order_by("timestamp", "signature")
+        s = (
+            select([signed_timestamp])
+            .select_from(signed_timestamp.outerjoin(timestamp_proof))
+            .where(timestamp_proof.c.id.is_(None))
+            .order_by("timestamp", "signature")
+        )
         result = conn.execute(s)
 
         rows = list(result)
@@ -61,7 +68,8 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
                 id=bindparam("id"),
                 interval=bindparam("interval"),
                 proof=bindparam("proof"),
-            ), proofs
+            ),
+            proofs,
         )
 
 

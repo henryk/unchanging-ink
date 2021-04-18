@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from hashlib import sha512
-from typing import Iterable, List, Dict, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 from nacl.encoding import Base64Encoder
 from nacl.signing import SigningKey
