@@ -62,7 +62,7 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
 
         conn.execute(
             signed_timestamp.update()
-            .where(id=bindparam("id"))
+            .where(signed_timestamp.c.id == bindparam("id"))
             .values(
                 interval=bindparam("interval"),
                 proof=bindparam("proof"),
