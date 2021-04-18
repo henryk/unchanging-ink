@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
     # FIXME Draw the rest of the owl
     return {
-        "id": row["id"],
+        "id_": row["id"],
         "interval": interval_id,
         "proof": {"ith": interval_hash_b64},
     }
@@ -62,7 +62,7 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
 
         conn.execute(
             signed_timestamp.update()
-            .where(signed_timestamp.c.id == bindparam("id"))
+            .where(signed_timestamp.c.id == bindparam("id_"))
             .values(
                 interval=bindparam("interval"),
                 proof=bindparam("proof"),
