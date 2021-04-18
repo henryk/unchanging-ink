@@ -4,26 +4,27 @@ import time
 import logging
 
 import sqlalchemy
+from sqlalchemy.sql.expression import bindparam, select
 from sqlalchemy import create_engine
 
 from .crypto import MerkleNode
-from .models import signed_timestamp, interval
+from .models import signed_timestamp, interval, timestamp_proof
 from .server import db
 
 logger = logging.getLogger(__name__)
 
 
-def formulate_proof(full_index, i, row):
+def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
     # FIXME Draw the rest of the owl
-    return {"id": row["id"]}
+    return {"id": row["id"], "interval": interval_id, "proof": {"ith": interval_hash_b64}}
 
 
 def calculate_interval(conn: sqlalchemy.engine.Connection):
     print(datetime.datetime.now().isoformat())
     with conn.begin() as transaction:
-        s = signed_timestamp.select(
-            signed_timestamp.c.interval.is_(None), for_update=True
-        ).order_by("timestamp", "signature")
+        s = select([signed_timestamp]).select_from(
+            signed_timestamp.outerjoin(timestamp_proof)
+        ).where(timestamp_proof.c.id.is_(None)).order_by("timestamp", "signature")
         result = conn.execute(s)
 
         rows = list(result)
@@ -36,11 +37,6 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
         print("New head", merkle_node)
 
         ith_obj = {"ith": merkle_node.value}
-        ith_b64 = Base64Encoder.encode(merkle_node.value).decode("us-ascii")
-        proofs = []
-        for i, row in enumerate(rows):
-            proofs.append(formulate_proof(full_index, i, row))
-
         max_id = conn.execute(
             sqlalchemy.select(
                 [
@@ -51,16 +47,22 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
             )
         ).scalar()
         ith_obj["id"] = 0 if max_id is None else max_id + 1
-        conn.execute(interval.insert().values(**ith_obj))
+        ith_b64 = Base64Encoder.encode(merkle_node.value).decode("us-ascii")
 
-        for proof in proofs:
-            id_ = proof.pop("id")
-            proof["ith"] = ith_b64
-            conn.execute(
-                signed_timestamp.update()
-                .where(signed_timestamp.c.id == id_)
-                .values(interval=ith_obj["id"], proof=proof)
-            )
+        proofs = []
+        for i, row in enumerate(rows):
+            proofs.append(formulate_proof(full_index, i, row, ith_obj["id"], ith_b64))
+
+        conn.execute(interval.insert().values(**ith_obj))
+        conn.execute("SET CONSTRAINTS ALL DEFERRED")
+
+        conn.execute(
+            timestamp_proof.insert().values(
+                id=bindparam("id"),
+                interval=bindparam("interval"),
+                proof=bindparam("proof"),
+            ), proofs
+        )
 
 
 def main():
