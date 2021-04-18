@@ -10,25 +10,13 @@ signed_timestamp = sqlalchemy.Table(
     sqlalchemy.Column("kid", sqlalchemy.String(length=128), nullable=False),
     sqlalchemy.Column("timestamp", sqlalchemy.String(length=32), nullable=False),
     sqlalchemy.Column("signature", sqlalchemy.LargeBinary(length=64), nullable=False),
-)
-
-timestamp_proof = sqlalchemy.Table(
-    "timestamp_proof",
-    metadata,
-    sqlalchemy.Column(
-        "id",
-        uuid.UUIDType,
-        sqlalchemy.ForeignKey("signed_timestamp.id", deferrable=True),
-        primary_key=True,
-        nullable=False,
-    ),
     sqlalchemy.Column(
         "interval",
         sqlalchemy.BigInteger,
         sqlalchemy.ForeignKey("interval.id", deferrable=True),
-        nullable=False,
+        nullable=True,
     ),
-    sqlalchemy.Column("proof", sqlalchemy.JSON(), nullable=False),
+    sqlalchemy.Column("proof", sqlalchemy.JSON(), nullable=True),
 )
 
 interval = sqlalchemy.Table(

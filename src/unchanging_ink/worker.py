@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql.expression import bindparam, select
 
 from .crypto import MerkleNode
-from .models import interval, signed_timestamp, timestamp_proof
+from .models import interval, signed_timestamp
 from .server import db
 
 logger = logging.getLogger(__name__)
@@ -26,12 +26,9 @@ def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
 def calculate_interval(conn: sqlalchemy.engine.Connection):
     print(datetime.datetime.now().isoformat())
     with conn.begin() as transaction:
-        s = (
-            select([signed_timestamp])
-            .select_from(signed_timestamp.outerjoin(timestamp_proof))
-            .where(timestamp_proof.c.id.is_(None))
-            .order_by("timestamp", "signature")
-        )
+        s = signed_timestamp.select(
+            signed_timestamp.c.interval.is_(None), for_update=True
+        ).order_by("timestamp", "signature")
         result = conn.execute(s)
 
         rows = list(result)
@@ -64,8 +61,9 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
         conn.execute("SET CONSTRAINTS ALL DEFERRED")
 
         conn.execute(
-            timestamp_proof.insert().values(
-                id=bindparam("id"),
+            signed_timestamp.update()
+            .where(id=bindparam("id"))
+            .values(
                 interval=bindparam("interval"),
                 proof=bindparam("proof"),
             ),

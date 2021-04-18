@@ -10,7 +10,7 @@ from sanic.response import HTTPResponse
 from sanic.response import json as json_response
 from sqlalchemy.sql.expression import select
 
-from .models import signed_timestamp, timestamp_proof
+from .models import signed_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,7 @@ def setup_routes(app: Sanic):
     @app.route("/st/", version=1, methods=["GET", "POST"])  # FIXME Throttling
     async def request_timestamp(request: Request) -> HTTPResponse:
         if request.method == "GET":  # FIXME Remove
-            query = select([signed_timestamp, timestamp_proof]).select_from(
-                signed_timestamp.join(timestamp_proof)
-            )
+            query = signed_timestamp.select()
 
             rows = await request.app.ctx.db.fetch_all(query)
             return json_response(
@@ -83,11 +81,7 @@ def setup_routes(app: Sanic):
 
     @app.route("/st/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
-        query = (
-            select([signed_timestamp, timestamp_proof])
-            .select_from(signed_timestamp.join(timestamp_proof))
-            .where(signed_timestamp.c.id == id_)
-        )
+        query = signed_timestamp.query(signed_timestamp.c.id == id_)
         row = await request.app.ctx.db.fetch_one(query)
         return json_response(
             {
