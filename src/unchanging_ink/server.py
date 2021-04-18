@@ -31,7 +31,7 @@ def init():
     if str(workers).lower() == "auto":
         import multiprocessing
 
-        workers = multiprocessing.cpu_count()
+        workers = max(multiprocessing.cpu_count()-1, 1)
     else:
         workers = int(workers)
 
