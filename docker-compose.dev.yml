@@ -7,7 +7,7 @@ services:
       - default
 
   backend:
-    image: unchanging-ink:dev
+    image: ${IMAGE_BASE}/backend-dev:dev
     build:
       context: .
       target: backend-builder
@@ -33,7 +33,7 @@ services:
       "sh -c 'poetry install && poetry run python -m unchanging_ink'"
 
   worker:
-    image: unchanging-ink-worker:dev
+    image: ${IMAGE_BASE}/worker-dev:dev
     build:
       context: .
       target: worker-builder
@@ -59,7 +59,7 @@ services:
       "sh -c 'poetry install -E worker && poetry run python -m unchanging_ink.worker'"
 
   frontend:
-    image: unchanging-ink-frontend:dev
+    image: ${IMAGE_BASE}/frontend-dev:dev
     build:
       context: .
       target: frontend-base
