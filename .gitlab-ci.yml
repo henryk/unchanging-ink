@@ -13,8 +13,12 @@ docker-build-main:
   services:
     - docker:dind
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend" .
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend" --target backend .
     - docker push "$CI_REGISTRY_IMAGE/backend"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/worker" --target worker .
+    - docker push "$CI_REGISTRY_IMAGE/worker"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend" --target frontend .
+    - docker push "$CI_REGISTRY_IMAGE/frontend"
   only:
     - main
 
@@ -25,7 +29,11 @@ docker-build:
   services:
     - docker:dind
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG" .
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG" --target backend .
     - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG" --target worker .
+    - docker push "$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG" --target frontend .
+    - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG"
   except:
     - main
