@@ -4,8 +4,6 @@ services:
   db:
     image: "postgres:13"
     restart: always
-    ports:
-      - "127.0.0.1:2999:5432"
     read_only: true
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -20,7 +18,7 @@ services:
       - db
 
   backend:
-    image: ${IMAGE_BASE}/backend:latest
+    image: ${IMAGE_BASE}/backend:${DEPLOY_VERSION}
     build: .
     ports:
       - "127.0.0.1:8000:8000"
@@ -43,7 +41,7 @@ services:
       - default
 
   worker:
-    image: ${IMAGE_BASE}/worker:latest
+    image: ${IMAGE_BASE}/worker:${DEPLOY_VERSION}
     build:
       context: .
       target: worker
@@ -61,7 +59,7 @@ services:
       - default
 
   frontend:
-    image: ${IMAGE_BASE}/frontend:latest
+    image: ${IMAGE_BASE}/frontend:${DEPLOY_VERSION}
     ports:
       - "127.0.0.1:8001:3000"
     build:
