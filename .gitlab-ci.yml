@@ -40,23 +40,11 @@ build main frontend:
   only:
     - main
 
-push main backend:
+push main all:
   stage: push
   script:
     - docker push "$CI_REGISTRY_IMAGE/backend"
-  only:
-    - main
-
-push main worker:
-  stage: push
-  script:
     - docker push "$CI_REGISTRY_IMAGE/worker"
-  only:
-    - main
-
-push main frontend:
-  stage: push
-  script:
     - docker push "$CI_REGISTRY_IMAGE/frontend"
   only:
     - main
