@@ -20,7 +20,7 @@ services:
       - db
 
   backend:
-    image: unchanging-ink:latest
+    image: ${IMAGE_BASE}/backend:latest
     build: .
     ports:
       - "127.0.0.1:8000:8000"
@@ -43,7 +43,7 @@ services:
       - default
 
   worker:
-    image: unchanging-ink-worker:latest
+    image: ${IMAGE_BASE}/worker:latest
     build:
       context: .
       target: worker
@@ -61,7 +61,7 @@ services:
       - default
 
   frontend:
-    image: unchanging-ink-frontend:latest
+    image: ${IMAGE_BASE}/frontend:latest
     ports:
       - "127.0.0.1:8001:3000"
     build:
