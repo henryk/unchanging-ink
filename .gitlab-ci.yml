@@ -1,12 +1,17 @@
 default:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
 
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_BUILDKIT: 1
 
-docker-build-main:
+build main:
   # Official docker image.
   image: docker:latest
   stage: build
@@ -22,7 +27,16 @@ docker-build-main:
   only:
     - main
 
-docker-build:
+deploy main:
+  environment: production
+  script:
+    - ssh-add -L
+  needs:
+    - build main
+  only:
+    - main
+
+build other:
   # Official docker image.
   image: docker:latest
   stage: build
