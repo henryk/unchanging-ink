@@ -6,23 +6,57 @@ default:
     - \[ -z "$SSH_PRIVATE_KEY" ] || (echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -)
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
+  image: docker:latest
+  services:
+    - docker:dind
 
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_BUILDKIT: 1
 
-build main:
-  # Official docker image.
-  image: docker:latest
+stages:
+  - build
+  - push
+  - deploy
+
+build main backend:
   stage: build
-  services:
-    - docker:dind
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/backend" --target backend .
-    - docker push "$CI_REGISTRY_IMAGE/backend"
+  only:
+    - main
+
+build main worker:
+  stage: build
+  script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/worker" --target worker .
-    - docker push "$CI_REGISTRY_IMAGE/worker"
+  only:
+    - main
+
+build main frontend:
+  stage: build
+  script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend" --target frontend .
+  only:
+    - main
+
+push main backend:
+  stage: push
+  script:
+    - docker push "$CI_REGISTRY_IMAGE/backend"
+  only:
+    - main
+
+push main worker:
+  stage: push
+  script:
+    - docker push "$CI_REGISTRY_IMAGE/worker"
+  only:
+    - main
+
+push main frontend:
+  stage: push
+  script:
     - docker push "$CI_REGISTRY_IMAGE/frontend"
   only:
     - main
@@ -32,17 +66,12 @@ deploy main:
   stage: deploy
   script:
     - ssh-add -L
-  needs:
-    - build main
   only:
     - main
 
-build other:
+build other all:
   # Official docker image.
-  image: docker:latest
   stage: build
-  services:
-    - docker:dind
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG" --target backend .
     - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG"
