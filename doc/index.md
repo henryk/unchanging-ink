@@ -16,6 +16,8 @@ The service provides signed timestamps for arbitrary submitted data, and allows 
 ### Non-goals
 
 * Cannot be used as a storage service: Input data is never returned
+* Cannot provide proof of completeness (enumerate all data signed),
+  cannot provide proof of non-inclusion (that some data was never signed)
 * Inclusion proofs can have variable size, offloads some storage burden to claimant
 * Inclusion proofs are *not* permanently stored server side
 * Inclusion proof can have variable issuance time, are not instant

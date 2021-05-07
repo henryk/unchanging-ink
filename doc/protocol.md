@@ -78,6 +78,7 @@ Content-Type: application/json
     "typ": "st",
     "signature": "...base64-encoded...",
     "proof": {
+        "mth": "...url...",
     	"ith": "...base64-encoded...",
     	"a": 123,
     	"path": ["...base64-encoded...", "...base64-encoded...", "...base64-encoded...", "...base64-encoded..."]
@@ -86,6 +87,20 @@ Content-Type: application/json
 ````
 
 `proof` is encoded as follows: `ith` is the interval tree hash, `a` and `path` are as defined based on RFC 6962 section 2.1.1. Specifically, `path`is `PATH(m, {interval tree})` and `a` is `m >> (ceil(log2(n)) - len(path))`. That is, `a` is defined as the `len(path)` highest order bits of `m`, if `m` is represented as an integer of the minimal length that fits `n`. This is another way to say that `a` is the node address of `m` in the interval tree, where, starting from the highest order bits, `0`is the left (lower indexes) subtree and `1`is the right (higher indexes) subtree.
+
+````
+                                                  [root]
+                                               (a=''_2=0x0)
+                             / 0                                            1 \
+                       (a=0_2=0x0)                                       (a=1_2=0x1)
+              / 0                       1 \                          / 0            1 \
+         (a=00_2=0x0)               (a=10_2=0x2)                (a=10_2=0x3)            \
+        / 0       1 \              / 0        1 \              / 0        1 \             \
+(0x000_2=0x0) (0x001_2=0x1) (0x010_2=0x2) (0x011_2=0x3) (0x100_2=0x4) (0x101_2=0x5)  (0x11_2=0x3)
+    [node 0]     [node 1]      [node 2]      [node 3]      [node 4]      [node 5]      [node 6]
+````
+
+Note that `a` as an integer is not unique for all nodes, but the pair `(a, len(path))` is unique.
 
 ### Verify proof
 
@@ -105,4 +120,62 @@ def verify(signature: bytes, ith: bytes, a: int, path: List[bytes]) -> bool:
     return current == ith  # `current` should now be the interval tree hash
 ````
 
-hashfunc is SHA-512 for version 1.
+`hashfunc` is SHA-512 for version 1.
+
+### Main Merkle tree
+
+The `mth` member of `proof` provides a reference to the main Merkle tree in shortened URL format: `authority/i#version:mth` with the following parts:
+
+* `authority` is a DNS name of the authority managing the tree, such as `unchanging.ink`
+* `i` is the interval index as an integer encoded base 10, starting at `0`
+* `version` is the version identifier, currently `v1`
+* `mth` is the main tree hash at tree height `i`, base64 encoded
+
+By convention interpreting this string as an HTTP URL should lead to a human readable web site with further information.
+
+## Monitor log
+
+### Request live log
+
+````http request
+GET /api/v1/mth/live HTTP/1.1
+Connection: Upgrade
+Upgrade: websocket
+
+````
+
+This opens a live web socket to the server which will receive messages in near real time when a new main tree hash is committed. The requester can use this information to keep a local fully replicated copy of the server main Merkle tree.
+
+#### Response messages
+
+````json
+{
+    "version": "1",
+	"mth": "...url...",
+    "ith": "...base64-encoded...",
+    "kid": "xxx",
+    "signature": "...base64-encoded...",
+    "timestamp": "2021-04-13T15:22:23.535937Z"
+}
+````
+
+### Signed main tree hash
+
+````json
+{
+    "data": "...url...",
+    "kid": "xxx",
+    "timestamp": "2021-04-13T15:22:23.535937Z",
+    "typ": "mth",
+    "version": "1"
+}
+````
+
+### Request current Merkle head
+
+````http request
+GET /api/v1/mth/current HTTP/1.1
+
+````
+
+#### Response
