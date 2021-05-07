@@ -53,7 +53,7 @@ deploy main:
   environment: production
   stage: deploy
   script:
-    - ssh-add -L
+    - ssh $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT 'touch foo'
   only:
     - main
 
