@@ -81,7 +81,7 @@ export default {
         en: {
           welcome: 'Welcome',
         },
-        fr: {
+        de: {
           welcome: 'Willkommen',
         },
       },
