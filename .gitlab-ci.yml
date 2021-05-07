@@ -54,7 +54,7 @@ deploy dev:
   environment: dev
   stage: deploy
   script:
-    - ssh $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "mkdir -p ~/.ssh; grep git.wolff.holdings .ssh/known_hosts 2> /dev/null > /dev/null || echo '$SSH_KNOWN_HOSTS' >> ~/.ssh/known_hosts; chmod -R go= ~/.ssh; [ -z '$CI_PROJECT_NAME' ] || git clone --recurse-submodules -b '$CI_COMMIT_REF_NAME' 'ssh://git@git.wolff.holdings:2222/${CI_PROJECT_PATH}.git' && cd '$CI_PROJECT_NAME' && git checkout $CI_COMMIT_SHA"
+    - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "mkdir -p ~/.ssh; grep git.wolff.holdings .ssh/known_hosts 2> /dev/null > /dev/null || echo '$SSH_KNOWN_HOSTS' >> ~/.ssh/known_hosts; chmod -R go= ~/.ssh; [ -z '$CI_PROJECT_NAME' ] || git clone --recurse-submodules -b '$CI_COMMIT_REF_NAME' 'ssh://git@git.wolff.holdings:2222/${CI_PROJECT_PATH}.git' && cd '$CI_PROJECT_NAME' && git checkout $CI_COMMIT_SHA"
   only:
     - dev
 
