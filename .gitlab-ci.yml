@@ -57,7 +57,7 @@ deploy dev:
     - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "mkdir -p ~/.ssh; grep git.wolff.holdings .ssh/known_hosts 2> /dev/null > /dev/null || echo '$SSH_KNOWN_HOSTS' >> ~/.ssh/known_hosts; chmod -R go= ~/.ssh"
     - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "python3 -m pip -- install pip setuptools; export PATH=~/.local/bin:$$PATH; pip3 install -U docker-compose"
     - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "( [ -d '$CI_PROJECT_NAME' ] || git clone --recurse-submodules -b '$CI_COMMIT_REF_NAME' 'ssh://git@git.wolff.holdings:2222/${CI_PROJECT_PATH}.git' ) && cd '$CI_PROJECT_NAME' && git fetch origin $CI_COMMIT_SHA && git checkout $CI_COMMIT_SHA"
-    - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "export PATH=~/.local/bin:$$PATH && cd '${CI_PROJECT_NAME}' && bash -l -c 'docker-compose up -d'"
+    - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "export PATH=~/.local/bin:\\$$PATH && export && cd '${CI_PROJECT_NAME}' && bash -l -c 'docker-compose up -d'"
   only:
     - dev
 
