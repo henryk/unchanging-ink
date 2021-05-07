@@ -40,6 +40,7 @@ services:
 
   worker:
     image: ${IMAGE_BASE}/worker:${DEPLOY_VERSION}
+    restart: always
     build:
       context: .
       target: worker
@@ -57,6 +58,7 @@ services:
 
   frontend:
     image: ${IMAGE_BASE}/frontend:${DEPLOY_VERSION}
+    restart: always
     build:
       context: .
       target: frontend
@@ -66,6 +68,22 @@ services:
     read_only: true
     networks:
       - web
+
+  proxy:
+    image: fholzer/nginx-brotli
+    ports:
+      - "127.0.0.1:$PROXYPORT:80"
+    restart: always
+    networks:
+      - web
+      - default
+    volumes:
+    - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+      - /var/cache/nginx
 
 networks:
   db:
