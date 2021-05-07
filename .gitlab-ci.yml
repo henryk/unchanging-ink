@@ -62,7 +62,6 @@ deploy dev:
     - dev
 
 build other all:
-  # Official docker image.
   stage: build
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG" --target backend .
