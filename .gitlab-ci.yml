@@ -49,13 +49,13 @@ push main all:
   only:
     - main
 
-deploy main:
-  environment: production
+deploy dev:
+  environment: dev
   stage: deploy
   script:
     - ssh $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT 'touch foo'
   only:
-    - main
+    - dev
 
 build other all:
   # Official docker image.
