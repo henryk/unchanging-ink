@@ -5,7 +5,8 @@ default:
     - eval $(ssh-agent -s)
     - \[ -z "$SSH_PRIVATE_KEY" ] || (echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -)
     - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod -R go= ~/.ssh
   image: docker:latest
   services:
     - docker:dind
