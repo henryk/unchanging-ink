@@ -20,8 +20,6 @@ services:
   backend:
     image: ${IMAGE_BASE}/backend:${DEPLOY_VERSION}
     build: .
-    ports:
-      - "127.0.0.1:8000:8000"
     read_only: true
     restart: always
     environment:
@@ -38,7 +36,7 @@ services:
       - db
     networks:
       - db
-      - default
+      - web
 
   worker:
     image: ${IMAGE_BASE}/worker:${DEPLOY_VERSION}
@@ -56,12 +54,9 @@ services:
       - db
     networks:
       - db
-      - default
 
   frontend:
     image: ${IMAGE_BASE}/frontend:${DEPLOY_VERSION}
-    ports:
-      - "127.0.0.1:8001:3000"
     build:
       context: .
       target: frontend
@@ -70,10 +65,13 @@ services:
       PORT: "3000"
     read_only: true
     networks:
-      - default
+      - web
 
 networks:
   db:
+    driver: bridge
+    internal: true
+  web:
     driver: bridge
     internal: true
   default:
