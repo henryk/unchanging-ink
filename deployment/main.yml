@@ -9,6 +9,17 @@
         - docker-compose.yml
         - Dockerfile
         - default.conf
+    - name: Update pip and setuptools
+      ansible.builtin.pip:
+        state: latest
+        name:
+          - pip
+          - setuptools
+    - name: Install docker-compose
+      ansible.builtin.pip:
+        state: latest
+        name:
+          - docker-compose
     - name: Set environment
       ansible.builtin.copy:
         dest: "unchanging-ink/.env"
