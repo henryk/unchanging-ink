@@ -1,0 +1,4 @@
+- name: Deploy selected version
+  hosts: all
+  roles:
+    - user-docker-prepare

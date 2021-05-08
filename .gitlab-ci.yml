@@ -70,7 +70,7 @@ deploy dev:
     - !reference [.ssh-agent, before_script]
     - ansible-galaxy collection install community.docker
   script:
-    - cd deployment && ansible-playbook -i "${DEPLOY_HOST}," -e "ansible_port=${DEPLOY_PORT}" -e "ansible_python_interpreter=/usr/bin/python3" -e "ansible_user=${DEPLOY_USER}" -e "CI_COMMIT_REF_SLUG=${CI_COMMIT_REF_SLUG}" -e "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}"  -e "CI_REGISTRY_USER=${CI_REGISTRY_USER}" -e "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}" -e "CI_REGISTRY=${CI_REGISTRY}" main.yml
+    - cd deployment && ansible-playbook -i "${DEPLOY_HOST}," -e "ansible_port=${DEPLOY_PORT}" -e "ansible_python_interpreter=/usr/bin/python3" -e "ansible_user=${DEPLOY_USER}" -e "CI_COMMIT_REF_SLUG=${CI_COMMIT_REF_SLUG}" -e "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}"  -e "CI_REGISTRY_USER=${CI_REGISTRY_USER}" -e "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}" -e "CI_REGISTRY=${CI_REGISTRY}" deploy.yml
   only:
     - dev
 
