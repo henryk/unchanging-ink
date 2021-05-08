@@ -8,6 +8,7 @@
       with_items:
         - docker-compose.yml
         - Dockerfile
+        - default.conf
     - name: Set environment
       ansible.builtin.copy:
         dest: "unchanging-ink/.env"
