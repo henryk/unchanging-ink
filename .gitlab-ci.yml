@@ -1,13 +1,23 @@
-default:
+.docker-login:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+
+.ssh-agent:
+  before_script:
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
     - \[ -z "$SSH_PRIVATE_KEY" ] || (echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -)
     - mkdir -p ~/.ssh
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod -R go= ~/.ssh
+
+default:
+  before_script:
+    - !reference [.docker-login, before_script]
+    - !reference [.ssh-agent, before_script]
   image: docker:latest
+  tags:
+    - shell
   services:
     - docker:dind
 
@@ -53,11 +63,14 @@ push main all:
 deploy dev:
   environment: dev
   stage: deploy
+  image: cytopia/ansible:latest-tools
+  tags:
+    - docker
+  before_script:
+    - !reference [.ssh-agent, before_script]
+    - ansible-galaxy collection install community.docker
   script:
-    - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "mkdir -p ~/.ssh; grep git.wolff.holdings .ssh/known_hosts 2> /dev/null > /dev/null || echo '$SSH_KNOWN_HOSTS' >> ~/.ssh/known_hosts; chmod -R go= ~/.ssh"
-    - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "python3 -m pip -- install pip setuptools; export PATH=~/.local/bin:$$PATH; pip3 install -U docker-compose"
-    - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "( [ -d '$CI_PROJECT_NAME' ] || git clone -n --recurse-submodules -b '$CI_COMMIT_REF_NAME' 'ssh://git@git.wolff.holdings:2222/${CI_PROJECT_PATH}.git' ) && cd '$CI_PROJECT_NAME' && git fetch origin $CI_COMMIT_SHA && git checkout --theirs $CI_COMMIT_SHA -- docker-compose.yml .env default.conf"
-    - ssh -A $DEPLOY_USER@$DEPLOY_HOST -p $DEPLOY_PORT "export PATH=~/.local/bin:\\$PATH && docker login -u '$CI_REGISTRY_USER' -p '$CI_REGISTRY_PASSWORD' $CI_REGISTRY && cd '${CI_PROJECT_NAME}' && echo 'DEPLOY_VERSION=$CI_COMMIT_REF_SLUG' > .env.local && echo 'IMAGE_BASE=$CI_REGISTRY_IMAGE' >> .env.local && echo 'PROXYPORT=23230' >> .env.local && bash -l -c 'docker-compose --env-file=.env.local pull && docker-compose --env-file=.env.local up --no-build -d'"
+    - cd deployment && ansible-playbook -i "${DEPLOY_HOST}," -e "ansible_port=${DEPLOY_PORT}" -e "ansible_user=${DEPLOY_USER}" -e "CI_COMMIT_REF_SLUG=${CI_COMMIT_REF_SLUG}" -e "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}"  -e "CI_REGISTRY_USER=${CI_REGISTRY_USER}" -e "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}" -e "CI_REGISTRY=${CI_REGISTRY}" main.yml
   only:
     - dev
 
