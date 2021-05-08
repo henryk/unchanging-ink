@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 
 services:
   db:
@@ -20,8 +20,6 @@ services:
   backend:
     image: ${IMAGE_BASE}/backend:${DEPLOY_VERSION}
     build: .
-    ports:
-      - "127.0.0.1:8000:8000"
     read_only: true
     restart: always
     environment:
@@ -38,10 +36,11 @@ services:
       - db
     networks:
       - db
-      - default
+      - web
 
   worker:
     image: ${IMAGE_BASE}/worker:${DEPLOY_VERSION}
+    restart: always
     build:
       context: .
       target: worker
@@ -56,12 +55,10 @@ services:
       - db
     networks:
       - db
-      - default
 
   frontend:
     image: ${IMAGE_BASE}/frontend:${DEPLOY_VERSION}
-    ports:
-      - "127.0.0.1:8001:3000"
+    restart: always
     build:
       context: .
       target: frontend
@@ -70,10 +67,29 @@ services:
       PORT: "3000"
     read_only: true
     networks:
+      - web
+
+  proxy:
+    image: fholzer/nginx-brotli
+    ports:
+      - "127.0.0.1:$PROXYPORT:80"
+    restart: always
+    networks:
+      - web
       - default
+    volumes:
+    - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+      - /var/cache/nginx
 
 networks:
   db:
+    driver: bridge
+    internal: true
+  web:
     driver: bridge
     internal: true
   default:
