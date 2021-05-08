@@ -2,18 +2,14 @@
   ansible.builtin.copy:
     dest: "unchanging-ink/"
     src: "{{ playbook_dir }}/../{{ item }}"
-    with_items:
-      - docker-compose.yml
-      - Dockerfile
-      - default.conf
+  with_items:
+    - docker-compose.yml
+    - Dockerfile
+    - default.conf
 - name: Set environment
-  ansible.builtin.copy:
+  ansible.builtin.template:
     dest: "unchanging-ink/.env"
-    content: |
-      DEPLOY_VERSION={{ CI_COMMIT_REF_SLUG }}
-      IMAGE_BASE={{ CI_REGISTRY_IMAGE }} 
-      PROXYPORT=23230
-      COMPOSE_PROJECT_NAME=unchanging-ink
+    src: env.j2
 - name: Log in to private registry
   community.docker.docker_login:
     username: "{{ CI_REGISTRY_USER }}"
