@@ -62,7 +62,6 @@ COPY --from=frontend-prep-stage /app/package.json ./
 RUN npm ci --production
 
 COPY --from=frontend-build-stage /app/package.json /app/
-COPY --from=frontend-build-stage /app/report.html /
 COPY --from=frontend-build-stage /app/.nuxt/ /app/.nuxt/
 CMD ["npm", "run", "start"]
 
