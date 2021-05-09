@@ -25,17 +25,11 @@
         dest: "{{ deploy_base_dir }}/.env"
         src: "{{ playbook_dir }}/env.j2"
     - name: Log in to private registry
-      community.docker.docker_login:
-        username: "{{ CI_REGISTRY_USER }}"
-        password:  "{{ CI_REGISTRY_PASSWORD }}"
-        registry_url: "{{ CI_REGISTRY }}"
+      ansible.builtin.shell:
+        cmd: "docker login -u '{{ CI_REGISTRY_USER }}' -p '{{ CI_REGISTRY_PASSWORD }}' {{ CI_REGISTRY }}"
     - name: Bring up
-      community.docker.docker_compose:
-        project_src: "{{ deploy_base_dir }}"
-        project_name: "{{ CI_PROJECT_NAME }}"
-        state: present
-        pull: yes
-        restarted: yes
-        build: no
+      ansible.builtin.shell:
+        cmd: "docker-compose fetch && docker-compose restart --no-build -d"
+        chdir: "{{ deploy_base_dir }}"
       environment:
         PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"

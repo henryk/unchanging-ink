@@ -68,7 +68,6 @@ deploy dev:
     - docker
   before_script:
     - !reference [.ssh-agent, before_script]
-    - ansible-galaxy collection install community.docker
   script:
     - cd deployment && ansible-playbook -i "${DEPLOY_HOST}," deploy.yml
   only:
