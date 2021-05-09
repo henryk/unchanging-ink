@@ -3,13 +3,13 @@
   vars:
     ansible_port: "{{ lookup('env', 'DEPLOY_PORT') }}"
     ansible_python_interpreter: /usr/bin/python3
-    ansible_user: "{{ lookup('env', 'DEPLOY_USER'}}"
-    CI_COMMIT_REF_SLUG: "{{ lookup('env', 'CI_COMMIT_REF_SLUG'}}"
-    CI_REGISTRY_IMAGE: "{{ lookup('env', 'CI_REGISTRY_IMAGE'}}"
-    CI_REGISTRY_USER: "{{ lookup('env', 'CI_REGISTRY_USER'}}"
-    CI_REGISTRY_PASSWORD: "{{ lookup('env', 'CI_REGISTRY_PASSWORD'}}"
-    CI_REGISTRY: "{{ lookup('env', 'CI_REGISTRY'}}"
-    CI_PROJECT_NAME: "{{ lookup('env', 'CI_PROJECT_NAME'}}"
+    ansible_user: "{{ lookup('env', 'DEPLOY_USER') }}"
+    CI_COMMIT_REF_SLUG: "{{ lookup('env', 'CI_COMMIT_REF_SLUG') }}"
+    CI_REGISTRY_IMAGE: "{{ lookup('env', 'CI_REGISTRY_IMAGE') }}"
+    CI_REGISTRY_USER: "{{ lookup('env', 'CI_REGISTRY_USER') }}"
+    CI_REGISTRY_PASSWORD: "{{ lookup('env', 'CI_REGISTRY_PASSWORD') }}"
+    CI_REGISTRY: "{{ lookup('env', 'CI_REGISTRY') }}"
+    CI_PROJECT_NAME: "{{ lookup('env', 'CI_PROJECT_NAME') }}"
     deploy_base_dir: "{{ CI_PROJECT_NAME }}"
   tasks:
     - name: Copy files
