@@ -5,12 +5,24 @@
         <v-card-title class="headline">
           {{ $t('welcome') }}
         </v-card-title>
-        <v-card-text>
-          <transition-group name="slide-x-transition" tag="ul">
-            <li v-for="item in items" :key="item">
-              {{ item }}
-            </li>
-          </transition-group>
+        <v-card-text style="height: 25em; overflow-y: hidden">
+          <v-timeline clipped>
+            <transition-group name="slide-y-transition">
+              <v-timeline-item
+                v-for="item in items"
+                :key="item"
+                fill-dot
+                color="primary"
+                right
+              >
+                <v-card>
+                  <v-card-text>Hash-Wert hier</v-card-text>
+                </v-card>
+                <template #icon><span class="white--text">#</span></template>
+                <template #opposite>{{ item }}</template>
+              </v-timeline-item>
+            </transition-group>
+          </v-timeline>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -40,9 +52,9 @@ export default {
   },
   methods: {
     tick() {
-      this.items.push(new Date().toISOString())
+      this.items.unshift(new Date().toISOString())
       if (this.items.length > 5) {
-        this.items.shift()
+        this.items.pop()
       }
       return true
     },
