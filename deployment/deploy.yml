@@ -1,4 +1,30 @@
 - name: Deploy selected version
   hosts: all
-  roles:
-    - deploy-docker
+  tasks:
+    - name: Copy files
+      ansible.builtin.copy:
+        dest: "unchanging-ink/"
+        src: "{{ playbook_dir }}/../{{ item }}"
+      with_items:
+        - docker-compose.yml
+        - Dockerfile
+        - default.conf
+    - name: Set environment
+      ansible.builtin.template:
+        dest: "unchanging-ink/.env"
+        src: "{{ playbook_dir }}/env.j2"
+    - name: Log in to private registry
+      community.docker.docker_login:
+        username: "{{ CI_REGISTRY_USER }}"
+        password:  "{{ CI_REGISTRY_PASSWORD }}"
+        registry_url: "{{ CI_REGISTRY }}"
+    - name: Bring up
+      community.docker.docker_compose:
+        project_src: unchanging-ink
+        project_name: unchanging-ink
+        state: present
+        pull: yes
+        restarted: yes
+        build: no
+      environment:
+        PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"

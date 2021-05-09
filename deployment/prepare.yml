@@ -1,4 +1,14 @@
 - name: Deploy selected version
   hosts: all
-  roles:
-    - user-docker-prepare
+  tasks:
+    - name: Update pip and setuptools
+      ansible.builtin.pip:
+        state: latest
+        name:
+          - pip
+          - setuptools
+    - name: Install docker-compose
+      ansible.builtin.pip:
+        state: latest
+        name:
+          - docker-compose
