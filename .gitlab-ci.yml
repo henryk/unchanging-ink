@@ -77,10 +77,10 @@ build other all:
   stage: build
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG" --target backend .
-    - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG"
     - docker build --pull -t "$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG" --target worker .
-    - docker push "$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG"
     - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG" --target frontend .
+    - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG"
+    - docker push "$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG"
     - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG"
   except:
     - main
