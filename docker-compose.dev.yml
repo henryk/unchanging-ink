@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 
 services:
   db:
@@ -29,6 +29,10 @@ services:
       - .:/app
       - backend_venv:/app/.venv
       - poetry_cache:/cache
+    networks:
+      - db
+      - web
+      - default
     command:
       "sh -c 'poetry install && poetry run python -m unchanging_ink'"
 
@@ -55,6 +59,9 @@ services:
       - .:/app
       - worker_venv:/app/.venv
       - poetry_cache:/cache
+    networks:
+      - db
+      - default
     command:
       "sh -c 'poetry install -E worker && poetry run python -m unchanging_ink.worker'"
 
@@ -67,6 +74,9 @@ services:
     read_only: false
     volumes:
       - ./web/unchanging-ink:/app
+    networks:
+      - web
+      - default
     command: "sh -c 'cd /app && npm install && npm run dev'"
 
 volumes:
