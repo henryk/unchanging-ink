@@ -6,8 +6,8 @@
           {{ $t('welcome') }}
         </v-card-title>
         <v-card-text>
-          <transition-group name="fade" tag="ul">
-            <li v-for="(item, index) in items" :key="index">
+          <transition-group name="slide-x-transition" tag="ul">
+            <li v-for="item in items" :key="item">
               {{ item }}
             </li>
           </transition-group>
@@ -49,3 +49,14 @@ export default {
   },
 }
 </script>
+<style scoped>
+.myfade-enter-active,
+.myfade-leave-active {
+  transition: height 0.25s;
+}
+
+.myfade-enter,
+.fade-leave-to {
+  height: 100%;
+}
+</style>
