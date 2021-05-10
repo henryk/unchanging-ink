@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import uuid
@@ -99,3 +100,15 @@ def setup_routes(app: Sanic):
     @app.route("/hello")
     async def hello(request: Request) -> HTTPResponse:
         return json_response({"Hello": "World"})
+
+    @app.websocket("/mth/live", version=1)
+    async def mth_live(request, ws):
+        while True:
+            now = datetime.datetime.now(datetime.timezone.utc)
+            timestamp = now.isoformat(timespec="microseconds").replace("+00:00", "Z")
+            item = {
+                "timestamp": timestamp,
+                "hash": "dummy",
+            }
+            await ws.send(json_dumps(item))
+            await asyncio.sleep(3)
