@@ -5,15 +5,15 @@
         <v-card-title class="headline" color="primary"
           >Zeitstempel erzeugen</v-card-title
         >
-        <v-card-text>
+        <v-card-text @dragover="doverHandler" @drop="dropHandler">
           <v-textarea
             v-model="createInput.text"
             :disabled="!!createInput.files.length"
-            placeholder="Hier Text eintragen oder Datei ziehen"
+            :placeholder="textPlaceholder"
           ></v-textarea>
           <v-file-input
             v-model="createInput.files"
-            placeholder="Alternativ: Datei wählen"
+            :placeholder="filesPlaceholder"
             chips
             multiple
             counter
@@ -99,6 +99,20 @@ export default {
     items() {
       return this.paused ? this.pausedItems : this.rawItems
     },
+    textPlaceholder() {
+      if (!this.createInput.files.length) {
+        return 'Hier Text eintragen oder Datei ziehen'
+      } else {
+        return 'Optional: Mehr Dateien hinzufügen'
+      }
+    },
+    filesPlaceholder() {
+      if (!this.createInput.text.length) {
+        return 'Alternativ: Datei wählen'
+      } else {
+        return ''
+      }
+    },
   },
   mounted() {
     this.cbHandle = window.setInterval(() => {
@@ -143,6 +157,28 @@ export default {
         this.rawItems.pop()
       }
       return true
+    },
+    doverHandler(event) {
+      event.preventDefault()
+    },
+    dropHandler(event) {
+      event.preventDefault()
+
+      if (event.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (let i = 0; i < event.dataTransfer.items.length; i++) {
+          // If dropped items aren't files, reject them
+          if (event.dataTransfer.items[i].kind === 'file') {
+            const file = event.dataTransfer.items[i].getAsFile()
+            this.createInput.files.push(file)
+          }
+        }
+      } else {
+        // Use DataTransfer interface to access the file(s)
+        for (let i = 0; i < event.dataTransfer.files.length; i++) {
+          this.createInput.files.push(event.dataTransfer.files[i])
+        }
+      }
     },
   },
 }
