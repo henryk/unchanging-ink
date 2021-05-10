@@ -1,0 +1,35 @@
+- name: Deploy selected version
+  hosts: all
+  vars:
+    ansible_port: "{{ lookup('env', 'DEPLOY_PORT') }}"
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_user: "{{ lookup('env', 'DEPLOY_USER') }}"
+    CI_COMMIT_REF_SLUG: "{{ lookup('env', 'CI_COMMIT_REF_SLUG') }}"
+    CI_REGISTRY_IMAGE: "{{ lookup('env', 'CI_REGISTRY_IMAGE') }}"
+    CI_REGISTRY_USER: "{{ lookup('env', 'CI_REGISTRY_USER') }}"
+    CI_REGISTRY_PASSWORD: "{{ lookup('env', 'CI_REGISTRY_PASSWORD') }}"
+    CI_REGISTRY: "{{ lookup('env', 'CI_REGISTRY') }}"
+    CI_PROJECT_NAME: "{{ lookup('env', 'CI_PROJECT_NAME') }}"
+    deploy_base_dir: "{{ CI_PROJECT_NAME }}"
+  tasks:
+    - name: Copy files
+      ansible.builtin.copy:
+        dest: "{{ deploy_base_dir }}/"
+        src: "{{ playbook_dir }}/../{{ item }}"
+      with_items:
+        - docker-compose.yml
+        - Dockerfile
+        - default.conf
+    - name: Set environment
+      ansible.builtin.template:
+        dest: "{{ deploy_base_dir }}/.env"
+        src: "{{ playbook_dir }}/env.j2"
+    - name: Log in to private registry
+      ansible.builtin.shell:
+        cmd: "docker login -u '{{ CI_REGISTRY_USER }}' -p '{{ CI_REGISTRY_PASSWORD }}' {{ CI_REGISTRY }}"
+    - name: Bring up
+      ansible.builtin.shell:
+        cmd: "docker-compose pull && docker-compose up --no-start --no-build && docker-compose restart"
+        chdir: "{{ deploy_base_dir }}"
+      environment:
+        PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"

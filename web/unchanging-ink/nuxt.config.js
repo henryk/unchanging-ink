@@ -49,13 +49,13 @@ export default {
     // defaultAssets: false, FIXME For production
     treeShake: true,
     theme: {
-      dark: true,
+      dark: false,
       themes: {
         dark: {
-          primary: colors.blue.darken2,
-          accent: colors.grey.darken3,
-          secondary: colors.amber.darken3,
-          info: colors.teal.lighten1,
+          primary: colors.cyan.darken2,
+          accent: colors.deepPurple.darken1,
+          secondary: colors.blue.darken1,
+          info: colors.indigo.lighten1,
           warning: colors.amber.base,
           error: colors.deepOrange.accent4,
           success: colors.green.accent3,
