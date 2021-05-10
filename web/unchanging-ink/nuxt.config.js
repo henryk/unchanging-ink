@@ -79,10 +79,10 @@ export default {
       fallbackLocale: 'en',
       messages: {
         en: {
-          welcome: 'Welcome',
+          liveView: 'Live View',
         },
         de: {
-          welcome: 'Willkommen',
+          liveView: 'Live-Ansicht',
         },
       },
     },
