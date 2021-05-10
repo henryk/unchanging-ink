@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col cols="12" sm="8" md="6">
+    <v-col cols="12" md="6">
       <v-card>
         <v-card-title class="headline" color="primary"
           >Zeitstempel erzeugen</v-card-title
@@ -8,7 +8,7 @@
         <v-card-text>
           <v-textarea
             v-model="createInput.text"
-            :disabled="createInput.files.length"
+            :disabled="!!createInput.files.length"
             placeholder="Hier Text eintragen oder Datei ziehen"
           ></v-textarea>
           <v-file-input
@@ -17,7 +17,7 @@
             chips
             multiple
             counter
-            :disabled="createInput.text.length"
+            :disabled="!!createInput.text.length"
           ></v-file-input>
         </v-card-text>
         <v-card-actions
@@ -32,7 +32,7 @@
         >
       </v-card>
     </v-col>
-    <v-col cols="12" sm="8" md="6">
+    <v-col cols="12" md="6">
       <v-card @mouseenter="pause" @mouseleave="unpause">
         <v-card-title class="headline">
           {{ $t('liveView') }}
