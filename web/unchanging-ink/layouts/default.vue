@@ -38,7 +38,7 @@
       </v-container>
     </v-main>
     <v-footer :absolute="!fixed" app>
-      <span>&copy; {{ new Date().getFullYear() }}</span>
+      <span>&copy; 2021</span>
     </v-footer>
   </v-app>
 </template>
@@ -53,14 +53,14 @@ export default {
       items: [
         {
           icon: 'mdi-apps',
-          title: 'Welcome',
+          title: this.$t('liveView'),
           to: '/',
         },
       ],
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: 'unchanging.ink',
+      title: 'unchanging.ink -- ' + this.$t('timestampService'),
     }
   },
 }

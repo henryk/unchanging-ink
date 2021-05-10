@@ -80,9 +80,11 @@ export default {
       messages: {
         en: {
           liveView: 'Live View',
+          timestampService: 'Timestamp Service',
         },
         de: {
           liveView: 'Live-Ansicht',
+          timestampService: 'Zeitstempeldienst',
         },
       },
     },

@@ -1,5 +1,37 @@
 <template>
-  <v-row justify="center" align="center">
+  <v-row>
+    <v-col cols="12" sm="8" md="6">
+      <v-card>
+        <v-card-title class="headline" color="primary"
+          >Zeitstempel erzeugen</v-card-title
+        >
+        <v-card-text>
+          <v-textarea
+            v-model="createInput.text"
+            :disabled="createInput.files.length"
+            placeholder="Hier Text eintragen oder Datei ziehen"
+          ></v-textarea>
+          <v-file-input
+            v-model="createInput.files"
+            placeholder="Alternativ: Datei wählen"
+            chips
+            multiple
+            counter
+            :disabled="createInput.text.length"
+          ></v-file-input>
+        </v-card-text>
+        <v-card-actions
+          ><v-spacer></v-spacer
+          ><v-btn
+            large
+            dark
+            color="primary"
+            :disabled="!createInput.text.length && !createInput.files.length"
+            ><v-icon dark>mdi-stamper</v-icon> Zeitstempel erzeugen</v-btn
+          ></v-card-actions
+        >
+      </v-card>
+    </v-col>
     <v-col cols="12" sm="8" md="6">
       <v-card @mouseenter="pause" @mouseleave="unpause">
         <v-card-title class="headline">
@@ -41,9 +73,6 @@
             </transition-group>
           </v-timeline>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-        </v-card-actions>
       </v-card>
     </v-col>
   </v-row>
@@ -56,6 +85,10 @@ export default {
       pausedItems: [],
       paused: false,
       cbHandle: null,
+      createInput: {
+        text: '',
+        files: [],
+      },
     }
   },
   // eslint-disable-next-line require-await
@@ -114,14 +147,3 @@ export default {
   },
 }
 </script>
-<style scoped>
-.myfade-enter-active,
-.myfade-leave-active {
-  transition: height 0.25s;
-}
-
-.myfade-enter,
-.fade-leave-to {
-  height: 100%;
-}
-</style>
