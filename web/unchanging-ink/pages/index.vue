@@ -18,7 +18,10 @@
                 <v-card>
                   <v-card-text>Hash-Wert hier</v-card-text>
                 </v-card>
-                <template #icon><span class="white--text">#</span></template>
+                <template #icon>
+                  <v-avatar
+                    ><img src="@/assets/gibberish.svg" alt="#" /> </v-avatar
+                ></template>
                 <template #opposite>{{ item }}</template>
               </v-timeline-item>
             </transition-group>
