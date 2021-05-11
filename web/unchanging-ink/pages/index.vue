@@ -2,9 +2,9 @@
   <v-row>
     <v-col cols="12" md="6">
       <v-card>
-        <v-card-title class="headline" color="primary"
-          >Zeitstempel erzeugen</v-card-title
-        >
+        <v-card-title class="headline" color="primary">{{
+          $t('createTimestamp')
+        }}</v-card-title>
         <v-card-text @dragover="doverHandler" @drop="dropHandler">
           <v-textarea
             v-model="createInput.text"
@@ -27,7 +27,8 @@
             dark
             color="primary"
             :disabled="!createInput.text.length && !createInput.files.length"
-            ><v-icon dark>mdi-stamper</v-icon> Zeitstempel erzeugen</v-btn
+            ><v-icon dark>mdi-stamper</v-icon>
+            {{ $t('createTimestamp') }}</v-btn
           ></v-card-actions
         >
       </v-card>
@@ -113,14 +114,14 @@ export default {
     },
     textPlaceholder() {
       if (!this.createInput.files.length) {
-        return 'Hier Text eintragen oder Datei ziehen'
+        return this.$t('dropTextOrDragFile')
       } else {
-        return 'Optional: Mehr Dateien hinzufügen'
+        return this.$t('optionAddMoreFiles')
       }
     },
     filesPlaceholder() {
       if (!this.createInput.text.length) {
-        return 'Alternativ: Datei wählen'
+        return this.$t('alternateSelectFile')
       } else {
         return ''
       }
@@ -193,3 +194,17 @@ export default {
   },
 }
 </script>
+<i18n lang="yaml">
+de:
+  createTimestamp: Zeitstempel erzeugen
+  liveView: Live-Ansicht
+  dropTextOrDragFile: Hier Text eintragen oder Datei ziehen
+  optionAddMoreFiles: 'Optional: Mehr Dateien hinzufügen'
+  alternateSelectFile: 'Alternativ: Datei wählen'
+en:
+  createTimestamp: Create timestamp
+  liveView: Live View
+  dropTextOrDragFile: Enter text or drag and drop file here
+  optionAddMoreFiles: 'Optional: Add more files'
+  alternateSelectFile: 'Alternatively: Select file'
+</i18n>

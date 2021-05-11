@@ -70,23 +70,17 @@ export default {
   modern: 'client',
 
   i18n: {
-    locales: ['en', 'de'],
+    locales: [
+      { code: 'en', name: 'English' },
+      { code: 'de', name: 'Deutsch' },
+    ],
     defaultLocale: 'en',
     detectBrowserLanguage: {
       useCookie: false,
     },
+    vueI18nLoader: true,
     vueI18n: {
       fallbackLocale: 'en',
-      messages: {
-        en: {
-          liveView: 'Live View',
-          timestampService: 'Timestamp Service',
-        },
-        de: {
-          liveView: 'Live-Ansicht',
-          timestampService: 'Zeitstempeldienst',
-        },
-      },
     },
   },
 }

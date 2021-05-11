@@ -39,6 +39,14 @@
     </v-main>
     <v-footer :absolute="!fixed" app>
       <span>&copy; 2021</span>
+      <v-spacer></v-spacer>
+      <v-icon class="px-2">mdi-translate</v-icon>
+      <nuxt-link
+        v-for="locale in availableLocales"
+        :key="locale.code"
+        :to="switchLocalePath(locale.code)"
+        >{{ locale.name }}</nuxt-link
+      >
     </v-footer>
   </v-app>
 </template>
@@ -63,8 +71,16 @@ export default {
       title: 'unchanging.ink -- ' + this.$t('timestampService'),
     }
   },
+  computed: {
+    availableLocales() {
+      return this.$i18n.locales.filter((i) => i.code !== this.$i18n.locale)
+    },
+  },
 }
 </script>
-<style lang="sass">
-@import '../node_modules/typeface-roboto/index.css'
-</style>
+<i18n lang="yaml">
+de:
+  timestampService: Zeitstempeldienst
+en:
+  timestampService: Timestamp Service
+</i18n>
