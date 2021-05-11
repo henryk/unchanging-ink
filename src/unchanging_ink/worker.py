@@ -1,8 +1,11 @@
 import datetime
 import logging
+import random
 import time
 
+import orjson
 import sqlalchemy
+import redis
 from nacl.encoding import Base64Encoder
 from sqlalchemy import create_engine
 from sqlalchemy.sql.expression import bindparam, select
@@ -23,8 +26,11 @@ def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
     }
 
 
-def calculate_interval(conn: sqlalchemy.engine.Connection):
-    print(datetime.datetime.now().isoformat())
+def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
+    retval = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64))
+    }
     with conn.begin() as transaction:
         s = signed_timestamp.select(
             signed_timestamp.c.interval.is_(None), for_update=True
@@ -33,7 +39,7 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
 
         rows = list(result)
         if len(rows) == 0:
-            return
+            return retval
 
         merkle_node, full_index = MerkleNode.from_sequence(
             row["signature"] for row in rows
@@ -69,6 +75,7 @@ def calculate_interval(conn: sqlalchemy.engine.Connection):
             ),
             proofs,
         )
+    return retval
 
 
 def main():
@@ -83,12 +90,14 @@ def main():
     alembic.config.main(argv=alembicArgs)
 
     engine = create_engine(str(db.url))
+    r_conn = redis.Redis(host='redis', port=6379, db=0)
 
     logger.info("Worker ready")
     while True:
         time.sleep(1)
         with engine.connect() as conn:
-            calculate_interval(conn)
+            mth = calculate_interval(conn)
+            r_conn.publish('mth-live', orjson.dumps(mth))
 
 
 if __name__ == "__main__":

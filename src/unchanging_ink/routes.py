@@ -4,6 +4,7 @@ import logging
 import random
 import uuid
 
+import aioredis
 from nacl.encoding import Base64Encoder
 from orjson import dumps as json_dumps
 from sanic import Sanic
@@ -104,12 +105,11 @@ def setup_routes(app: Sanic):
 
     @app.websocket("/mth/live", version=1)
     async def mth_live(request, ws):
+        r_conn = aioredis.from_url("redis://redis/0")
+        p_conn = r_conn.pubsub()
+        await p_conn.subscribe("mth-live")
         while True:
-            now = datetime.datetime.now(datetime.timezone.utc)
-            timestamp = now.isoformat(timespec="microseconds").replace("+00:00", "Z")
-            item = {
-                "timestamp": timestamp,
-                "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64))
-            }
-            await ws.send(json_dumps(item).decode('utf-8'))
-            await asyncio.sleep(3)
+            message = await p_conn.get_message(ignore_subscribe_messages=True)
+            if message is not None:
+                await ws.send(message["data"].decode())
+            await asyncio.sleep(0.1)
