@@ -17,7 +17,7 @@ export default {
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
-  css: [],
+  css: ['typeface-roboto'],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [{ src: '~/plugins/websocket.js', mode: 'client' }],
@@ -46,7 +46,10 @@ export default {
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
-    // defaultAssets: false, FIXME For production
+    defaultAssets: {
+      font: false,
+      icons: 'mdi',
+    },
     treeShake: true,
     theme: {
       dark: false,
