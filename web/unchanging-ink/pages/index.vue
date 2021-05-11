@@ -51,7 +51,10 @@
                 right
               >
                 <v-card>
-                  <v-card-subtitle>{{ item.time }} <v-icon color="success">mdi-check</v-icon></v-card-subtitle>
+                  <v-card-subtitle
+                    >{{ item.time }}
+                    <v-icon color="success">mdi-check</v-icon></v-card-subtitle
+                  >
                   <v-card-text style="font-family: Roboto Mono, monospace">{{
                     item.hash
                   }}</v-card-text>
@@ -95,11 +98,14 @@ export default {
   },
   // eslint-disable-next-line require-await
   async fetch() {
-    this.tick({ timestamp: new Date().toLocaleString(), hash: [...Array(64)]
+    this.tick({
+      timestamp: new Date().toLocaleString(),
+      hash: [...Array(64)]
         .map((_) =>
           HEX_CHARS.charAt(Math.floor(Math.random() * HEX_CHARS.length))
         )
-        .join('') })
+        .join(''),
+    })
   },
   computed: {
     items() {
