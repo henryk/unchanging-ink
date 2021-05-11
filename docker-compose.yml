@@ -86,6 +86,9 @@ services:
     ports:
       - "127.0.0.1:$PROXYPORT:80"
     restart: always
+    depends_on:
+      - backend
+      - frontend
     networks:
       - web
       - default
