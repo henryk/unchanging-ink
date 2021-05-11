@@ -17,7 +17,7 @@ export default {
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
-  css: ['typeface-roboto'],
+  css: ['typeface-roboto', '@mdi/font/css/materialdesignicons.css'],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [{ src: '~/plugins/websocket.js', mode: 'client' }],
@@ -46,10 +46,7 @@ export default {
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
-    defaultAssets: {
-      font: false,
-      icons: 'mdi',
-    },
+    defaultAssets: false,
     treeShake: true,
     theme: {
       dark: false,

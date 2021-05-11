@@ -15,8 +15,7 @@
     "core-js": "^3.9.1",
     "nuxt": "^2.15.3",
     "nuxt-i18n": "^6.27.0",
-    "typeface-roboto": "^1.1.13",
-    "vue-native-websocket": "^2.0.14"
+    "typeface-roboto": "^1.1.13"
   },
   "devDependencies": {
     "@mdi/font": "^5.9.55",
@@ -31,6 +30,7 @@
     "eslint-plugin-nuxt": "^2.0.0",
     "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-vue": "^7.7.0",
-    "prettier": "^2.2.1"
+    "prettier": "^2.2.1",
+    "vue-native-websocket": "^2.0.14"
   }
 }
