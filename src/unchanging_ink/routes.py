@@ -108,8 +108,7 @@ def setup_routes(app: Sanic):
         r_conn = aioredis.from_url("redis://redis/0")
         p_conn = r_conn.pubsub()
         await p_conn.subscribe("mth-live")
-        while True:
-            message = await p_conn.get_message(ignore_subscribe_messages=True)
-            if message is not None:
-                await ws.send(message["data"].decode())
-            await asyncio.sleep(0.1)
+        async for message in p_conn.listen():
+            if message["type"] != "message":
+                continue
+            await ws.send(message["data"].decode())
