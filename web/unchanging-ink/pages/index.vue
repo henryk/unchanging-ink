@@ -41,7 +41,7 @@
           ><v-icon v-else>mdi-play</v-icon>
         </v-card-title>
         <v-card-text style="max-height: 35em; overflow-y: hidden">
-          <v-timeline v-show="items.length" clipped>
+          <v-timeline v-show="items.length" clipped dense>
             <transition-group name="slide-y-transition">
               <v-timeline-item
                 v-for="item in items"
@@ -51,6 +51,7 @@
                 right
               >
                 <v-card>
+                  <v-card-subtitle>{{ item.time }} <v-icon color="success">mdi-check</v-icon></v-card-subtitle>
                   <v-card-text style="font-family: Roboto Mono, monospace">{{
                     item.hash
                   }}</v-card-text>
@@ -68,7 +69,6 @@
                     ></v-avatar
                   ></template
                 >
-                <template #opposite>{{ item.time }}</template>
               </v-timeline-item>
             </transition-group>
           </v-timeline>
@@ -78,6 +78,8 @@
   </v-row>
 </template>
 <script>
+const HEX_CHARS = '0123456789ABCDEF'
+
 export default {
   data() {
     return {
@@ -93,7 +95,11 @@ export default {
   },
   // eslint-disable-next-line require-await
   async fetch() {
-    this.tick()
+    this.tick({ timestamp: new Date().toLocaleString(), hash: [...Array(64)]
+        .map((_) =>
+          HEX_CHARS.charAt(Math.floor(Math.random() * HEX_CHARS.length))
+        )
+        .join('') })
   },
   computed: {
     items() {
@@ -115,15 +121,14 @@ export default {
     },
   },
   mounted() {
-    this.cbHandle = window.setInterval(() => {
-      return this.tick()
-    }, 3000)
+    this.$options.sockets.onmessage = this.receiveMessage
   },
   beforeDestroy() {
     if (this.cbHandle) {
       window.clearInterval(this.cbHandle)
       this.cbHandle = null
     }
+    delete this.$options.sockets.onmessage
   },
   methods: {
     pause() {
@@ -133,15 +138,14 @@ export default {
     unpause() {
       this.paused = false
     },
-    tick() {
-      const HEX_CHARS = '0123456789ABCDEF'
+    receiveMessage(event) {
+      const data = JSON.parse(event?.data ?? '')
+      this.tick(data)
+    },
+    tick(data) {
       const item = {
-        time: new Date().toLocaleString(),
-        hash: [...Array(64)]
-          .map((_) =>
-            HEX_CHARS.charAt(Math.floor(Math.random() * HEX_CHARS.length))
-          )
-          .join(''),
+        time: data?.timestamp ?? 'not set',
+        hash: data?.hash ?? 'NOT SET',
         icon: [...Array(3)]
           .map((_) =>
             [...Array(5)]

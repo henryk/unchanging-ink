@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+import random
 import uuid
 
 from nacl.encoding import Base64Encoder
@@ -108,7 +109,7 @@ def setup_routes(app: Sanic):
             timestamp = now.isoformat(timespec="microseconds").replace("+00:00", "Z")
             item = {
                 "timestamp": timestamp,
-                "hash": "dummy",
+                "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64))
             }
-            await ws.send(json_dumps(item))
+            await ws.send(json_dumps(item).decode('utf-8'))
             await asyncio.sleep(3)
