@@ -34,6 +34,7 @@ services:
       SANIC_BIND_PORT: 8000
     depends_on:
       - db
+      - redis
     networks:
       - db
       - web
@@ -53,6 +54,7 @@ services:
       SANIC_DB_NAME: sanic
     depends_on:
       - db
+      - redis
     networks:
       - db
 
@@ -68,6 +70,16 @@ services:
     read_only: true
     networks:
       - web
+
+  redis:
+    image: redis:6-alpine
+    restart: always
+    networks:
+      - db
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
 
   proxy:
     image: fholzer/nginx-brotli
