@@ -81,6 +81,14 @@ export default {
     vueI18nLoader: true,
     vueI18n: {
       fallbackLocale: 'en',
+      messages: {
+        de: {
+          liveView: 'Live-Ansicht',
+        },
+        en: {
+          liveView: 'Live View',
+        },
+      },
     },
   },
 }

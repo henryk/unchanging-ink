@@ -71,8 +71,6 @@ export default {
 <i18n lang="yaml">
 de:
   timestampService: Zeitstempeldienst
-  liveView: Live-Ansicht
 en:
   timestampService: Timestamp Service
-  liveView: Live View
 </i18n>
