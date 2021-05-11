@@ -197,13 +197,11 @@ export default {
 <i18n lang="yaml">
 de:
   createTimestamp: Zeitstempel erzeugen
-  liveView: Live-Ansicht
   dropTextOrDragFile: Hier Text eintragen oder Datei ziehen
   optionAddMoreFiles: 'Optional: Mehr Dateien hinzufügen'
   alternateSelectFile: 'Alternativ: Datei wählen'
 en:
   createTimestamp: Create timestamp
-  liveView: Live View
   dropTextOrDragFile: Enter text or drag and drop file here
   optionAddMoreFiles: 'Optional: Add more files'
   alternateSelectFile: 'Alternatively: Select file'
