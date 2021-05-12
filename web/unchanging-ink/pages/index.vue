@@ -73,7 +73,7 @@
       </v-card>
     </v-col>
     <v-col cols="12" md="6">
-      <v-card @mouseenter="pause" @mouseleave="unpause">
+      <v-card @mouseenter="pauseMover = true" @mouseleave="pauseMover = false">
         <v-card-title class="headline">
           {{ $t('liveView') }}
           <v-spacer></v-spacer>
@@ -129,7 +129,8 @@ export default {
       selectedTab: 'create',
       rawItems: [],
       pausedItems: [],
-      paused: false,
+      pauseMover: false,
+      pauseBackground: false,
       cbHandle: null,
       createInput: {
         text: '',
@@ -157,6 +158,9 @@ export default {
     items() {
       return this.paused ? this.pausedItems : this.rawItems
     },
+    paused() {
+      return this.pauseMover || this.pauseBackground
+    },
     textPlaceholder() {
       if (!this.createInput.files.length) {
         return this.$t('dropTextOrDragFile')
@@ -172,8 +176,20 @@ export default {
       }
     },
   },
+  watch: {
+    paused(newVal) {
+      if (newVal) {
+        this.pausedItems = [...this.rawItems]
+      }
+    },
+  },
   mounted() {
     this.$options.sockets.onmessage = this.receiveMessage
+    document.addEventListener(
+      'visibilitychange',
+      this.handleVisibilityChange,
+      false
+    )
   },
   beforeDestroy() {
     if (this.cbHandle) {
@@ -183,16 +199,12 @@ export default {
     delete this.$options.sockets.onmessage
   },
   methods: {
-    pause() {
-      this.pausedItems = [...this.rawItems]
-      this.paused = true
-    },
-    unpause() {
-      this.paused = false
-    },
     receiveMessage(event) {
       const data = JSON.parse(event?.data ?? '')
       this.tick(data)
+    },
+    handleVisibilityChange() {
+      this.pauseBackground = document.hidden
     },
     tick(data) {
       const item = {
