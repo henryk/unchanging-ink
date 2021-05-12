@@ -32,9 +32,8 @@ async def redis_fanout(app):
             await p_conn.subscribe("mth-live")
             async for message in p_conn.listen():
                 print("Message", os.getpid())
-                if message["type"] != "message":
-                    continue
-                await app.ctx.fanout.trigger(message["data"].decode())
+                if message["type"] == "message":
+                    await app.ctx.fanout.trigger(message["data"].decode())
         except:
             import traceback
             bt = traceback.format_exc()
