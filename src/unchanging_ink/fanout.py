@@ -23,10 +23,13 @@ class Fanout:
 
 
 async def redis_fanout(app):
-    r_conn = aioredis.from_url("redis://redis/0")
-    p_conn = r_conn.pubsub()
-    await p_conn.subscribe("mth-live")
-    async for message in p_conn.listen():
-        if message["type"] != "message":
-            continue
-        await app.ctx.fanout.trigger(message["data"].decode())
+    try:
+        r_conn = aioredis.from_url("redis://redis/0")
+        p_conn = r_conn.pubsub()
+        await p_conn.subscribe("mth-live")
+        async for message in p_conn.listen():
+            if message["type"] != "message":
+                continue
+            await app.ctx.fanout.trigger(message["data"].decode())
+    except:
+        import traceback; traceback.print_exc()
