@@ -35,4 +35,7 @@ async def redis_fanout(app):
                 continue
             await app.ctx.fanout.trigger(message["data"].decode())
     except:
-        import traceback; traceback.print_exc()
+        import traceback
+        bt = traceback.format_exc()
+        prf = str(os.getpid()) + ": "
+        print(prf + prf.join(bt.splitlines()))
