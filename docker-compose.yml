@@ -75,6 +75,8 @@ services:
   redis:
     image: redis:6-alpine
     restart: always
+    ulimits:
+      nofile: 10032
     networks:
       - db
     read_only: true
@@ -87,6 +89,8 @@ services:
     ports:
       - "127.0.0.1:$PROXYPORT:80"
     restart: always
+    ulimits:
+      nofile: 10032
     depends_on:
       - backend
       - frontend
