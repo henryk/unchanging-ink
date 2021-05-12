@@ -32,6 +32,7 @@ services:
       SANIC_WORKERS: auto
       SANIC_BIND_HOST: 0.0.0.0
       SANIC_BIND_PORT: 8000
+      PYTHONUNBUFFERED: 1
     depends_on:
       - db
       - redis

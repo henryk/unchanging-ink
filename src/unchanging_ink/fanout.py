@@ -1,4 +1,6 @@
 import asyncio
+import os
+
 import aioredis
 from asyncio import wait_for
 from typing import Any, Optional
@@ -28,6 +30,7 @@ async def redis_fanout(app):
         p_conn = r_conn.pubsub()
         await p_conn.subscribe("mth-live")
         async for message in p_conn.listen():
+            print("Message", os.getpid())
             if message["type"] != "message":
                 continue
             await app.ctx.fanout.trigger(message["data"].decode())
