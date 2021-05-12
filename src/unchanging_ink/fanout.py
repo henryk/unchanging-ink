@@ -26,6 +26,7 @@ class Fanout:
 
 async def redis_fanout(app):
     while True:
+        r_conn = None
         try:
             print(os.getpid(), "before connect")
             r_conn = await aioredis.create_connection('redis://redis/0')
@@ -43,3 +44,7 @@ async def redis_fanout(app):
             bt = traceback.format_exc()
             prf = str(os.getpid()) + ": "
             print(prf + ("\n"+prf).join(bt.splitlines()))
+            await asyncio.sleep(1)
+        finally:
+            if r_conn:
+                r_conn.close()
