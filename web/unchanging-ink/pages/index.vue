@@ -5,7 +5,7 @@
         <v-card-title class="headline">{{ $t('createOrVerify') }}</v-card-title>
         <v-tabs v-model="selectedTab" color="primary" grow>
           <v-tab key="create">{{ $t('createTimestamp') }}</v-tab>
-          <v-tab key="verify">{{ $t('verifyTimestamp') }}</v-tab>
+          <v-tab key="verify" disabled>{{ $t('verifyTimestamp') }}</v-tab>
         </v-tabs>
         <v-tabs-items v-model="selectedTab" color="primary">
           <v-tab-item key="create">
