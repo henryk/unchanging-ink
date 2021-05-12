@@ -37,6 +37,8 @@ async def redis_fanout(app):
                 print("Message", os.getpid(), message)
                 if message["type"] == "message":
                     await app.ctx.fanout.trigger(message["data"].decode())
+        except GeneratorExit:
+            raise
         except:
             import traceback
             bt = traceback.format_exc()
