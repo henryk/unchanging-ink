@@ -94,7 +94,7 @@ def main():
 
     logger.info("Worker ready")
     while True:
-        time.sleep(1)
+        time.sleep(3)
         with engine.connect() as conn:
             mth = calculate_interval(conn)
             r_conn.publish('mth-live', orjson.dumps(mth))
