@@ -26,16 +26,14 @@ class Fanout:
 
 async def redis_fanout(app):
     while True:
-        r_conn = None
+        redis = None
         try:
-            print(os.getpid(), "before connect")
-            r_conn = await aioredis.create_connection('redis://redis/0')
-            print(os.getpid(), "before pubsub")
-            p_recv = aioredis.pubsub.Receiver()
+            redis = await aioredis.create_redis('redis://redis/0')
             print(os.getpid(), "before subscribe")
-            await r_conn.subscribe(p_recv.channel("mth-live"))
-            print(os.getpid(), "before listen")
-            async for channel, message in p_recv.iter():
+            channel, = await redis.subscribe("mth-live")
+            print(os.getpid(), "before iter", channel)
+            while await channel.wait_message():
+                message = await channel.get()
                 print("Message", os.getpid(), message)
                 if message["type"] == "message":
                     await app.ctx.fanout.trigger(message["data"].decode())
@@ -46,5 +44,5 @@ async def redis_fanout(app):
             print(prf + ("\n"+prf).join(bt.splitlines()))
             await asyncio.sleep(1)
         finally:
-            if r_conn:
-                r_conn.close()
+            if redis:
+                redis.close()
