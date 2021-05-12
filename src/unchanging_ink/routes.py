@@ -105,10 +105,6 @@ def setup_routes(app: Sanic):
 
     @app.websocket("/mth/live", version=1)
     async def mth_live(request, ws):
-        r_conn = aioredis.from_url("redis://redis/0")
-        p_conn = r_conn.pubsub()
-        await p_conn.subscribe("mth-live")
-        async for message in p_conn.listen():
-            if message["type"] != "message":
-                continue
-            await ws.send(message["data"].decode())
+        while True:
+            data = await request.app.ctx.fanout.wait()
+            await ws.send(data)
