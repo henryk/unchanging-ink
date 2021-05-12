@@ -2,35 +2,74 @@
   <v-row>
     <v-col cols="12" md="6">
       <v-card>
-        <v-card-title class="headline" color="primary">{{
-          $t('createTimestamp')
-        }}</v-card-title>
-        <v-card-text @dragover="doverHandler" @drop="dropHandler">
-          <v-textarea
-            v-model="createInput.text"
-            :disabled="!!createInput.files.length"
-            :placeholder="textPlaceholder"
-          ></v-textarea>
-          <v-file-input
-            v-model="createInput.files"
-            :placeholder="filesPlaceholder"
-            chips
-            multiple
-            counter
-            :disabled="!!createInput.text.length"
-          ></v-file-input>
-        </v-card-text>
-        <v-card-actions
-          ><v-spacer></v-spacer
-          ><v-btn
-            large
-            dark
-            color="primary"
-            :disabled="!createInput.text.length && !createInput.files.length"
-            ><v-icon dark>mdi-stamper</v-icon>
-            {{ $t('createTimestamp') }}</v-btn
-          ></v-card-actions
-        >
+        <v-card-title class="headline">{{ $t('createOrVerify') }}</v-card-title>
+        <v-tabs v-model="selectedTab" color="primary" grow>
+          <v-tab key="create">{{ $t('createTimestamp') }}</v-tab>
+          <v-tab key="verify">{{ $t('verifyTimestamp') }}</v-tab>
+        </v-tabs>
+        <v-tabs-items v-model="selectedTab" color="primary">
+          <v-tab-item key="create">
+            <v-card-text @dragover="doverHandler" @drop="dropHandler">
+              <v-textarea
+                v-model="createInput.text"
+                :disabled="!!createInput.files.length"
+                :placeholder="textPlaceholder"
+              ></v-textarea>
+              <v-file-input
+                v-model="createInput.files"
+                :placeholder="filesPlaceholder"
+                chips
+                multiple
+                counter
+                :disabled="!!createInput.text.length"
+              ></v-file-input>
+            </v-card-text>
+            <v-card-actions
+              ><v-spacer></v-spacer
+              ><v-btn
+                large
+                dark
+                color="primary"
+                :disabled="
+                  !createInput.text.length && !createInput.files.length
+                "
+                ><v-icon dark>mdi-stamper</v-icon>
+                {{ $t('createTimestamp') }}</v-btn
+              ></v-card-actions
+            >
+          </v-tab-item>
+          <v-tab-item key="verify">
+            <v-card-text @dragover="doverHandler" @drop="dropHandler">
+              <v-textarea
+                v-model="createInput.text"
+                :disabled="!!createInput.files.length"
+                :placeholder="textPlaceholder"
+              ></v-textarea>
+              <v-file-input
+                v-model="createInput.files"
+                :placeholder="filesPlaceholder"
+                chips
+                multiple
+                counter
+                :disabled="!!createInput.text.length"
+              ></v-file-input>
+            </v-card-text>
+            <v-card-actions
+              ><v-text-field placeholder="proof"></v-text-field
+              ><v-spacer></v-spacer
+              ><v-btn
+                large
+                dark
+                color="primary"
+                :disabled="
+                  !createInput.text.length && !createInput.files.length
+                "
+                ><v-icon dark>mdi-stamper</v-icon>
+                {{ $t('verifyTimestamp') }}</v-btn
+              ></v-card-actions
+            >
+          </v-tab-item>
+        </v-tabs-items>
       </v-card>
     </v-col>
     <v-col cols="12" md="6">
@@ -87,6 +126,7 @@ const HEX_CHARS = '0123456789ABCDEF'
 export default {
   data() {
     return {
+      selectedTab: 'create',
       rawItems: [],
       pausedItems: [],
       paused: false,
@@ -94,6 +134,11 @@ export default {
       createInput: {
         text: '',
         files: [],
+      },
+      verifyInput: {
+        text: '',
+        files: [],
+        proof: '',
       },
     }
   },
@@ -197,11 +242,15 @@ export default {
 <i18n lang="yaml">
 de:
   createTimestamp: Zeitstempel erzeugen
+  verifyTimestamp: Zeitstempel überprüfen
+  createOrVerify: Erzeugen oder Überprüfen
   dropTextOrDragFile: Hier Text eintragen oder Datei ziehen
   optionAddMoreFiles: 'Optional: Mehr Dateien hinzufügen'
   alternateSelectFile: 'Alternativ: Datei wählen'
 en:
   createTimestamp: Create timestamp
+  verifyTimestamp: Verify timestamp
+  createOrVerify: Create or Verify
   dropTextOrDragFile: Enter text or drag and drop file here
   optionAddMoreFiles: 'Optional: Add more files'
   alternateSelectFile: 'Alternatively: Select file'
