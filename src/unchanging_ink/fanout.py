@@ -25,18 +25,15 @@ class Fanout:
 
 
 async def redis_fanout(app):
+    await asyncio.sleep(1)  # I don't know why I need this
     while True:
         redis = None
         try:
             redis = await aioredis.create_redis('redis://redis/0')
-            print(os.getpid(), "before subscribe")
             channel, = await redis.subscribe("mth-live")
-            print(os.getpid(), "before iter", channel)
             while await channel.wait_message():
                 message = await channel.get()
-                print("Message", os.getpid(), message)
-                if message["type"] == "message":
-                    await app.ctx.fanout.trigger(message["data"].decode())
+                await app.ctx.fanout.trigger(message.decode())
         except GeneratorExit:
             raise
         except:
