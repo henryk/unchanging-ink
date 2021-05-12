@@ -256,6 +256,7 @@ de:
   createTimestamp: Zeitstempel erzeugen
   verifyTimestamp: Zeitstempel überprüfen
   createOrVerify: Erzeugen oder Überprüfen
+  liveView: Live-Ansicht
   dropTextOrDragFile: Hier Text eintragen oder Datei ziehen
   optionAddMoreFiles: 'Optional: Mehr Dateien hinzufügen'
   alternateSelectFile: 'Alternativ: Datei wählen'
@@ -263,6 +264,7 @@ en:
   createTimestamp: Create timestamp
   verifyTimestamp: Verify timestamp
   createOrVerify: Create or Verify
+  liveView: Live View
   dropTextOrDragFile: Enter text or drag and drop file here
   optionAddMoreFiles: 'Optional: Add more files'
   alternateSelectFile: 'Alternatively: Select file'
