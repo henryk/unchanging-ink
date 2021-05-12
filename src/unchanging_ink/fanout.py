@@ -35,7 +35,7 @@ async def redis_fanout(app):
             print(os.getpid(), "before subscribe")
             await r_conn.subscribe(p_recv.channel("mth-live"))
             print(os.getpid(), "before listen")
-            async for channel, message in p_recv.listen():
+            async for channel, message in p_recv.iter():
                 print("Message", os.getpid(), message)
                 if message["type"] == "message":
                     await app.ctx.fanout.trigger(message["data"].decode())
