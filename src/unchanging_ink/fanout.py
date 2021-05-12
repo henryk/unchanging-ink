@@ -28,14 +28,14 @@ async def redis_fanout(app):
     while True:
         try:
             print(os.getpid(), "before connect")
-            r_conn = aioredis.from_url("redis://redis/0")
+            r_conn = await aioredis.create_connection('redis://redis/0')
             print(os.getpid(), "before pubsub")
-            p_conn = r_conn.pubsub()
+            p_recv = aioredis.pubsub.Receiver()
             print(os.getpid(), "before subscribe")
-            await p_conn.subscribe("mth-live")
+            await r_conn.subscribe(p_recv.channel("mth-live"))
             print(os.getpid(), "before listen")
-            async for message in p_conn.listen():
-                print("Message", os.getpid())
+            async for channel, message in p_recv.listen():
+                print("Message", os.getpid(), message)
                 if message["type"] == "message":
                     await app.ctx.fanout.trigger(message["data"].decode())
         except:
