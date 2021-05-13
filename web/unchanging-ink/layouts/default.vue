@@ -51,9 +51,14 @@ export default {
       fixed: false,
       items: [
         {
-          icon: 'mdi-apps',
-          title: this.$t('liveView'),
+          icon: 'mdi-home',
+          title: this.$t('homepage'),
           to: '/',
+        },
+        {
+          icon: 'mdi-book-open-variant',
+          title: 'Documentation',
+          to: '/doc/',
         },
       ],
       right: true,
@@ -71,6 +76,8 @@ export default {
 <i18n lang="yaml">
 de:
   timestampService: Zeitstempeldienst
+  homepage: Startseite
 en:
   timestampService: Timestamp Service
+  homepage: Home Page
 </i18n>

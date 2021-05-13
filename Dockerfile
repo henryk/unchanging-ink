@@ -52,6 +52,7 @@ COPY web/unchanging-ink/package-lock.json ./
 COPY --from=frontend-prep-stage /app/package.json ./
 RUN npm ci
 COPY web/unchanging-ink .
+COPY doc ./content/doc
 
 RUN npm run build
 
@@ -61,8 +62,9 @@ COPY web/unchanging-ink/package-lock.json ./
 COPY --from=frontend-prep-stage /app/package.json ./
 RUN npm ci --production
 
-COPY --from=frontend-build-stage /app/package.json /app/
+COPY --from=frontend-build-stage /app/package.json /app/nuxt.config.js /app/
 COPY --from=frontend-build-stage /app/.nuxt/ /app/.nuxt/
+COPY --from=frontend-build-stage /app/content/ /app/content/
 CMD ["npm", "run", "start"]
 
 FROM base as worker

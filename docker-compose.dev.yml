@@ -74,6 +74,7 @@ services:
     read_only: false
     volumes:
       - ./web/unchanging-ink:/app
+      - ./doc:/app/content/doc
     networks:
       - web
       - default

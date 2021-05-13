@@ -1,5 +1,9 @@
 # unchanging.ink -- Merkle tree timestamping service
 
+ * [Protocol](protocol)
+ * [Components](components)
+ * [Deployment](deployment)
+
 ## Design rationale
 
 The service provides signed timestamps for arbitrary submitted data, and allows public verification of the unchanged history of generated signatures. Cross timestamping with other timestamp services is possible, but not a core functionality. The design should allow for a very high rate of requests per second (at least a few thousand) to be usable on a large scale (f.e. operated by a government agency for an entire country).
