@@ -18,10 +18,8 @@ class Fanout:
 
     async def trigger(self, data: Optional[Any] = None):
         async with self._cond:
-            c = self._cond
-            self._cond = asyncio.Condition()
             self._data = data
-            c.notify_all()
+            self._cond.notify_all()
 
 
 async def redis_fanout(app):
