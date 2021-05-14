@@ -2,6 +2,7 @@ import datetime
 import logging
 import random
 import time
+from collections import deque
 
 import orjson
 import sqlalchemy
@@ -93,11 +94,16 @@ def main():
     r_conn = redis.Redis(host='redis', port=6379, db=0)
 
     logger.info("Worker ready")
+    queue = []
     while True:
         time.sleep(3)
         with engine.connect() as conn:
             mth = calculate_interval(conn)
             r_conn.publish('mth-live', orjson.dumps(mth))
+            queue.append(mth)
+            if len(queue) > 5:
+                queue.pop(0)
+            r_conn.set('recent-mth', orjson.dumps(queue))
 
 
 if __name__ == "__main__":

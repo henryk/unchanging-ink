@@ -39,6 +39,7 @@ services:
     networks:
       - db
       - web
+      - redis
 
   worker:
     image: ${IMAGE_BASE}/worker:${DEPLOY_VERSION}
@@ -58,6 +59,7 @@ services:
       - redis
     networks:
       - db
+      - redis
 
   frontend:
     image: ${IMAGE_BASE}/frontend:${DEPLOY_VERSION}
@@ -69,14 +71,17 @@ services:
       HOST: "0"
       PORT: "3000"
     read_only: true
+    depends_on:
+      - redis
     networks:
       - web
+      - redis
 
   redis:
     image: redis:6-alpine
     restart: always
     networks:
-      - db
+      - redis
     read_only: true
     tmpfs:
       - /tmp
@@ -106,6 +111,9 @@ networks:
     driver: bridge
     internal: true
   web:
+    driver: bridge
+    internal: true
+  redis:
     driver: bridge
     internal: true
   default:

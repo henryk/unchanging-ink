@@ -121,6 +121,8 @@
   </v-row>
 </template>
 <script>
+import { promisify } from 'util'
+import redis from 'redis'
 const HEX_CHARS = '0123456789ABCDEF'
 
 export default {
@@ -145,14 +147,11 @@ export default {
   },
   // eslint-disable-next-line require-await
   async fetch() {
-    this.tick({
-      timestamp: new Date().toLocaleString(),
-      hash: [...Array(64)]
-        .map((_) =>
-          HEX_CHARS.charAt(Math.floor(Math.random() * HEX_CHARS.length))
-        )
-        .join(''),
-    })
+    const client = redis.createClient('redis://redis/0')
+    const getAsync = promisify(client.get).bind(client)
+    const val = await getAsync('recent-mth')
+    const recent = JSON.parse(val)
+    ;(recent ?? []).forEach((item) => this.tick(item))
   },
   computed: {
     items() {

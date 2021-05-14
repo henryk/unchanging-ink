@@ -14,8 +14,11 @@
     "@nuxt/content": "^1.14.0",
     "@nuxtjs/axios": "^5.13.1",
     "core-js": "^3.9.1",
+    "net": "^1.0.2",
     "nuxt": "^2.15.3",
     "nuxt-i18n": "^6.27.0",
+    "redis": "^3.1.2",
+    "tls": "0.0.1",
     "typeface-roboto": "^1.1.13",
     "vuetify": "^2.5.0"
   },
