@@ -1,4 +1,5 @@
 import colors from 'vuetify/es5/util/colors'
+import { Integrations } from '@sentry/tracing'
 
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
@@ -36,6 +37,7 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/axios
+    '@nuxtjs/sentry',
     '@nuxtjs/axios',
     'nuxt-i18n',
     '@nuxt/content',
@@ -90,6 +92,18 @@ export default {
           liveView: 'Live View',
         },
       },
+    },
+  },
+
+  sentry: {
+    dsn: 'https://26453d4c0df842bdbe54069d5d23452c@sentry.digitalwolff.de/11',
+    config: {
+      integrations: [new Integrations.BrowserTracing()],
+
+      // Set tracesSampleRate to 1.0 to capture 100%
+      // of transactions for performance monitoring.
+      // We recommend adjusting this value in production
+      tracesSampleRate: 1.0,
     },
   },
 }

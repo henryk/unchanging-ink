@@ -17,6 +17,16 @@ from .server import db
 
 logger = logging.getLogger(__name__)
 
+import sentry_sdk
+sentry_sdk.init(
+    "https://67428a387e6f4703afd14b4b7fe92936@sentry.digitalwolff.de/10",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
+
 
 def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
     # FIXME Draw the rest of the owl
