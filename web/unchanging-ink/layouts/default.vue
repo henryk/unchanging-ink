@@ -43,6 +43,8 @@
 </template>
 
 <script>
+import { mdiHome, mdiBookOpenVariant } from '@mdi/js'
+
 export default {
   data() {
     return {
@@ -51,12 +53,12 @@ export default {
       fixed: false,
       items: [
         {
-          icon: 'mdi-home',
+          icon: mdiHome,
           title: this.$t('homepage'),
           to: '/',
         },
         {
-          icon: 'mdi-book-open-variant',
+          icon: mdiBookOpenVariant,
           title: 'Documentation',
           to: '/doc/',
         },

@@ -33,7 +33,7 @@
                 :disabled="
                   !createInput.text.length && !createInput.files.length
                 "
-                ><v-icon dark>mdi-stamper</v-icon>
+                ><v-icon dark>{{ mdiStamper }}</v-icon>
                 {{ $t('createTimestamp') }}</v-btn
               ></v-card-actions
             >
@@ -64,7 +64,7 @@
                 :disabled="
                   !createInput.text.length && !createInput.files.length
                 "
-                ><v-icon dark>mdi-stamper</v-icon>
+                ><v-icon dark>{{ mdiStamper }}</v-icon>
                 {{ $t('verifyTimestamp') }}</v-btn
               ></v-card-actions
             >
@@ -77,8 +77,8 @@
         <v-card-title class="headline">
           {{ $t('liveView') }}
           <v-spacer></v-spacer>
-          <v-icon v-if="paused">mdi-pause</v-icon
-          ><v-icon v-else>mdi-play</v-icon>
+          <v-icon v-if="paused">{{ mdiPause }}</v-icon
+          ><v-icon v-else>{{ mdiPlay }}</v-icon>
         </v-card-title>
         <v-card-text style="max-height: 35em; overflow-y: hidden">
           <v-timeline v-show="items.length" clipped dense>
@@ -93,7 +93,7 @@
                 <v-card>
                   <v-card-subtitle
                     >{{ item.time }}
-                    <v-icon color="success">mdi-check</v-icon></v-card-subtitle
+                    <v-icon color="success">{{ mdiCheck }}</v-icon></v-card-subtitle
                   >
                   <v-card-text style="font-family: Roboto Mono, monospace">{{
                     item.hash
@@ -122,12 +122,17 @@
 </template>
 <script>
 import { promisify } from 'util'
+import { mdiStamper, mdiPause, mdiPlay, mdiCheck } from '@mdi/js'
 import redis from 'redis'
 const HEX_CHARS = '0123456789ABCDEF'
 
 export default {
   data() {
     return {
+      mdiStamper,
+      mdiPause,
+      mdiPlay,
+      mdiCheck,
       selectedTab: 'create',
       rawItems: [],
       pausedItems: [],
