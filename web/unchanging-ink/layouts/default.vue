@@ -31,7 +31,7 @@
     <v-footer :absolute="!fixed" app>
       <span>&copy; 2021</span>
       <v-spacer></v-spacer>
-      <v-icon class="px-2">mdi-translate</v-icon>
+      <v-icon class="px-2">{{ mdiTranslate }}</v-icon>
       <nuxt-link
         v-for="locale in availableLocales"
         :key="locale.code"
@@ -43,11 +43,12 @@
 </template>
 
 <script>
-import { mdiHome, mdiBookOpenVariant } from '@mdi/js'
+import { mdiHome, mdiBookOpenVariant, mdiTranslate } from '@mdi/js'
 
 export default {
   data() {
     return {
+      mdiTranslate,
       clipped: false,
       drawer: false,
       fixed: false,
