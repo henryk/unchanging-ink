@@ -2,11 +2,11 @@ import datetime
 import logging
 import random
 import time
-from collections import deque
 
 import orjson
-import sqlalchemy
 import redis
+import sentry_sdk
+import sqlalchemy
 from nacl.encoding import Base64Encoder
 from sqlalchemy import create_engine
 from sqlalchemy.sql.expression import bindparam, select
@@ -17,14 +17,13 @@ from .server import db
 
 logger = logging.getLogger(__name__)
 
-import sentry_sdk
+
 sentry_sdk.init(
     "https://67428a387e6f4703afd14b4b7fe92936@sentry.digitalwolff.de/10",
-
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
     # We recommend adjusting this value in production.
-    traces_sample_rate=1.0
+    traces_sample_rate=1.0,
 )
 
 
@@ -40,7 +39,7 @@ def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
 def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
     retval = {
         "timestamp": datetime.datetime.now().isoformat(),
-        "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64))
+        "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64)),
     }
     with conn.begin() as transaction:
         s = signed_timestamp.select(
@@ -101,7 +100,7 @@ def main():
     alembic.config.main(argv=alembicArgs)
 
     engine = create_engine(str(db.url))
-    r_conn = redis.Redis(host='redis', port=6379, db=0)
+    r_conn = redis.Redis(host="redis", port=6379, db=0)
 
     logger.info("Worker ready")
     queue = []
@@ -109,11 +108,11 @@ def main():
         time.sleep(3)
         with engine.connect() as conn:
             mth = calculate_interval(conn)
-            r_conn.publish('mth-live', orjson.dumps(mth))
+            r_conn.publish("mth-live", orjson.dumps(mth))
             queue.append(mth)
             if len(queue) > 5:
                 queue.pop(0)
-            r_conn.set('recent-mth', orjson.dumps(queue))
+            r_conn.set("recent-mth", orjson.dumps(queue))
 
 
 if __name__ == "__main__":

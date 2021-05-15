@@ -24,7 +24,6 @@ def setup_database():
 
 
 def setup_fanout(app):
-
     @app.listener("before_server_start")
     async def create_fanout(*args, **kwargs):
         app.ctx.fanout = Fanout()
