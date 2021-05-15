@@ -158,6 +158,11 @@ export default {
     const recent = JSON.parse(val)
     ;(recent ?? []).forEach((item) => this.tick(item))
   },
+  head() {
+    return {
+      title: this.$t('homepage'),
+    }
+  },
   computed: {
     items() {
       return this.paused ? this.pausedItems : this.rawItems
@@ -260,6 +265,7 @@ de:
   createTimestamp: Zeitstempel erzeugen
   verifyTimestamp: Zeitstempel überprüfen
   createOrVerify: Erzeugen oder Überprüfen
+  homepage: Startseite
   liveView: Live-Ansicht
   dropTextOrDragFile: Hier Text eintragen oder Datei ziehen
   optionAddMoreFiles: 'Optional: Mehr Dateien hinzufügen'
@@ -269,6 +275,7 @@ en:
   verifyTimestamp: Verify timestamp
   createOrVerify: Create or Verify
   liveView: Live View
+  homepage: Home Page
   dropTextOrDragFile: Enter text or drag and drop file here
   optionAddMoreFiles: 'Optional: Add more files'
   alternateSelectFile: 'Alternatively: Select file'
