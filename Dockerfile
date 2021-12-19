@@ -1,4 +1,4 @@
-FROM python:3.8-slim AS base
+FROM python:3.9-slim AS base
 
 FROM base AS builder-base
 
@@ -10,8 +10,8 @@ ENV PYTHONFAULTHANDLER=1 \
   PIP_DEFAULT_TIMEOUT=100 \
   POETRY_NO_INTERACTION=1 \
   PATH="$PATH:/app/.venv/bin" \
-  PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python3.8/site-packages/" \
-  POETRY_VERSION=1.1.5
+  PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python3.9/site-packages/" \
+  POETRY_VERSION=1.1.12
 
 # System deps:
 RUN apt-get update && apt-get install -y build-essential unzip wget python-dev
@@ -38,7 +38,7 @@ COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --no-dev -E worker
 
-FROM node:lts-alpine as frontend-base
+FROM node:14-alpine as frontend-base
 
 FROM frontend-base as frontend-prep-stage
 WORKDIR /app
