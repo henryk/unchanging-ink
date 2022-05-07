@@ -153,8 +153,8 @@ export default {
   // eslint-disable-next-line require-await
   async fetch() {
     const client = redis.createClient('redis://redis/0')
-    const getAsync = promisify(client.get).bind(client)
-    const val = await getAsync('recent-mth')
+    await client.connect()
+    const val = await client.get('recent-mth')
     const recent = JSON.parse(val)
     ;(recent ?? []).forEach((item) => this.tick(item))
   },
