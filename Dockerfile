@@ -1,5 +1,5 @@
 ARG PYTHON_VERSION=3.9
-ARG NODE_VERSION=16
+ARG NODE_VERSION=14
 
 FROM python:${PYTHON_VERSION}-slim AS base
 
@@ -14,7 +14,7 @@ ENV PYTHONFAULTHANDLER=1 \
   POETRY_NO_INTERACTION=1 \
   PATH="$PATH:/app/.venv/bin" \
   PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python${PYTHON_VERSION}/site-packages/" \
-  POETRY_VERSION=1.1.12
+  POETRY_VERSION=1.1.13
 
 # System deps:
 RUN apt-get update && apt-get install -y build-essential unzip wget python-dev
