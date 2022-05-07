@@ -39,7 +39,7 @@ export default {
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/sentry',
     '@nuxtjs/axios',
-    'nuxt-i18n',
+    '@nuxtjs/i18n',
     '@nuxt/content',
   ],
 
