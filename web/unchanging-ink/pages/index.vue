@@ -121,7 +121,6 @@
   </v-row>
 </template>
 <script>
-import { promisify } from 'util'
 import { mdiStamper, mdiPause, mdiPlay, mdiCheck } from '@mdi/js'
 import redis from 'redis'
 const HEX_CHARS = '0123456789ABCDEF'
@@ -152,7 +151,7 @@ export default {
   },
   // eslint-disable-next-line require-await
   async fetch() {
-    const client = redis.createClient('redis://redis/0')
+    const client = redis.createClient({url: 'redis://redis/0'})
     await client.connect()
     const val = await client.get('recent-mth')
     const recent = JSON.parse(val)
