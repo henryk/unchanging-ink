@@ -1,4 +1,7 @@
-FROM python:3.9-slim AS base
+ARG PYTHON_VERSION=3.9
+ARG NODE_VERSION=16
+
+FROM python:${PYTHON_VERSION}-slim AS base
 
 FROM base AS builder-base
 
@@ -10,7 +13,7 @@ ENV PYTHONFAULTHANDLER=1 \
   PIP_DEFAULT_TIMEOUT=100 \
   POETRY_NO_INTERACTION=1 \
   PATH="$PATH:/app/.venv/bin" \
-  PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python3.9/site-packages/" \
+  PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python${PYTHON_VERSION}/site-packages/" \
   POETRY_VERSION=1.1.12
 
 # System deps:
@@ -38,7 +41,7 @@ COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --no-dev -E worker
 
-FROM node:14-alpine as frontend-base
+FROM node:${NODE_VERSION}-alpine as frontend-base
 
 FROM frontend-base as frontend-prep-stage
 WORKDIR /app
@@ -70,12 +73,12 @@ CMD ["npm", "run", "start"]
 FROM base as worker
 RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-ENV PYTHONPATH=/app/.venv/lib/python3.8/site-packages/ PATH="$PATH:/app/.venv/bin"
+ENV PYTHONPATH=/app/.venv/lib/python${PYTHON_VERSION}/site-packages/ PATH="$PATH:/app/.venv/bin"
 CMD "/app/.venv/bin/unchanging-ink_worker"
 COPY --from=worker-builder /app/ /app/
 
 FROM base AS backend
 WORKDIR /app
-ENV PYTHONPATH=/app/.venv/lib/python3.8/site-packages/ PATH="$PATH:/app/.venv/bin"
+ENV PYTHONPATH=/app/.venv/lib/python${PYTHON_VERSION}/site-packages/ PATH="$PATH:/app/.venv/bin"
 CMD "/app/.venv/bin/unchanging-ink"
 COPY --from=backend-builder /app/ /app/
