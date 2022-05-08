@@ -1,17 +1,13 @@
-import asyncio
 import datetime
 import logging
-import random
 import uuid
 
-import aioredis
 from nacl.encoding import Base64Encoder
 from orjson import dumps as json_dumps
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.response import json as json_response
-from sqlalchemy.sql.expression import select
 
 from .models import signed_timestamp
 

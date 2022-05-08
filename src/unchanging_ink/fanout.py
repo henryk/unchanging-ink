@@ -27,11 +27,13 @@ async def redis_fanout(app):
     while True:
         redis = None
         try:
-            redis = await aioredis.create_redis("redis://redis/0")
-            (channel,) = await redis.subscribe("mth-live")
-            while await channel.wait_message():
-                message = await channel.get()
-                await app.ctx.fanout.trigger(message.decode())
+            redis = await aioredis.from_url("redis://redis/0")
+            pubsub = redis.pubsub()
+            await pubsub.subscribe("mth-live")
+            while True:
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=None)
+                if message:
+                    await app.ctx.fanout.trigger(message["data"].decode())
         except GeneratorExit:
             raise
         except:
@@ -43,4 +45,4 @@ async def redis_fanout(app):
             await asyncio.sleep(1)
         finally:
             if redis:
-                redis.close()
+                await redis.close()

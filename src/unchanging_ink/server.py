@@ -5,7 +5,7 @@ from .crypto import setup_crypto
 from .fanout import Fanout, redis_fanout
 from .routes import setup_routes
 
-app = Sanic(__name__)
+app = Sanic(__name__.replace(".", "-"))
 db = Database(
     f"postgresql://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
 )
