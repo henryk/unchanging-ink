@@ -23,10 +23,11 @@ services:
       SANIC_WORKERS: 1
       SANIC_BIND_HOST: 0.0.0.0
       SANIC_BIND_PORT: 8000
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+      POETRY_VIRTUALENVS_IN_PROJECT: "false"
+      POETRY_VIRTUALENVS_PATH: /venv
     volumes:
       - .:/app
-      - backend_venv:/app/.venv
+      - backend_venv:/venv
       - poetry_backend_cache:/root/.cache
     networks:
       - db
@@ -53,10 +54,11 @@ services:
       SANIC_WORKERS: 1
       SANIC_BIND_HOST: 0.0.0.0
       SANIC_BIND_PORT: 8000
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+      POETRY_VIRTUALENVS_IN_PROJECT: "false"
+      POETRY_VIRTUALENVS_PATH: /venv
     volumes:
       - .:/app
-      - worker_venv:/app/.venv
+      - worker_venv:/venv
       - poetry_worker_cache:/root/.cache
     networks:
       - db
