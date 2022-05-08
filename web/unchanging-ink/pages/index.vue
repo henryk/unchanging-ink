@@ -23,19 +23,36 @@
                 counter
                 :disabled="!!createInput.text.length"
               ></v-file-input>
+              <v-expansion-panels v-model="extendedOptionsOpen">
+                <v-expansion-panel>
+                  <v-expansion-panel-header>{{
+                    $t('extendedOptions')
+                  }}</v-expansion-panel-header>
+                  <v-expansion-panel-content>
+                    <v-select
+                      v-model="createInput.hash"
+                      :items="hashItems"
+                      :hint="$t('hashfunction')"
+                    ></v-select>
+                  </v-expansion-panel-content>
+                </v-expansion-panel>
+              </v-expansion-panels>
             </v-card-text>
-            <v-card-actions
-              ><v-spacer></v-spacer
-              ><v-btn
-                large
-                dark
-                color="primary"
-                :disabled="
-                  !createInput.text.length && !createInput.files.length
-                "
-                ><v-icon dark>{{ mdiStamper }}</v-icon>
-                {{ $t('createTimestamp') }}</v-btn
-              ></v-card-actions
+            <v-expand-transition
+              ><v-card-actions
+                v-show="createInput.text.length || createInput.files.length"
+                ><v-spacer></v-spacer
+                ><v-btn
+                  large
+                  dark
+                  color="primary"
+                  :disabled="
+                    !createInput.text.length && !createInput.files.length
+                  "
+                  ><v-icon dark>{{ mdiStamper }}</v-icon>
+                  {{ $t('createTimestamp') }}</v-btn
+                ></v-card-actions
+              ></v-expand-transition
             >
           </v-tab-item>
           <v-tab-item key="verify">
@@ -54,19 +71,22 @@
                 :disabled="!!createInput.text.length"
               ></v-file-input>
             </v-card-text>
-            <v-card-actions
-              ><v-text-field placeholder="proof"></v-text-field
-              ><v-spacer></v-spacer
-              ><v-btn
-                large
-                dark
-                color="primary"
-                :disabled="
-                  !createInput.text.length && !createInput.files.length
-                "
-                ><v-icon dark>{{ mdiStamper }}</v-icon>
-                {{ $t('verifyTimestamp') }}</v-btn
-              ></v-card-actions
+            <v-expand-transition
+              ><v-card-actions
+                v-show="createInput.text.length || createInput.files.length"
+                ><v-text-field placeholder="proof"></v-text-field
+                ><v-spacer></v-spacer
+                ><v-btn
+                  large
+                  dark
+                  color="primary"
+                  :disabled="
+                    !createInput.text.length && !createInput.files.length
+                  "
+                  ><v-icon dark>{{ mdiStamper }}</v-icon>
+                  {{ $t('verifyTimestamp') }}</v-btn
+                ></v-card-actions
+              ></v-expand-transition
             >
           </v-tab-item>
         </v-tabs-items>
@@ -93,7 +113,9 @@
                 <v-card>
                   <v-card-subtitle
                     >{{ item.time }}
-                    <v-icon color="success">{{ mdiCheck }}</v-icon></v-card-subtitle
+                    <v-icon color="success">{{
+                      mdiCheck
+                    }}</v-icon></v-card-subtitle
                   >
                   <v-card-text style="font-family: Roboto Mono, monospace">{{
                     item.hash
@@ -139,9 +161,11 @@ export default {
       pauseMover: false,
       pauseBackground: false,
       cbHandle: null,
+      extendedOptionsOpen: false,
       createInput: {
         text: '',
         files: [],
+        hash: 'sha512',
       },
       verifyInput: {
         text: '',
@@ -169,6 +193,12 @@ export default {
     },
     paused() {
       return this.pauseMover || this.pauseBackground
+    },
+    hashItems() {
+      return [
+        { text: 'SHA-512', value: 'sha512' },
+        { text: this.$t('rawHash'), value: 'raw' },
+      ]
     },
     textPlaceholder() {
       if (!this.createInput.files.length) {
@@ -270,6 +300,9 @@ de:
   dropTextOrDragFile: Hier Text eintragen oder Datei ziehen
   optionAddMoreFiles: 'Optional: Mehr Dateien hinzufügen'
   alternateSelectFile: 'Alternativ: Datei wählen'
+  hashfunction: Hash-Funktion
+  extendedOptions: Erweiterte Einstellungen
+  rawHash: Rohdaten/ungehasht (max 256 Bytes)
 en:
   createTimestamp: Create timestamp
   verifyTimestamp: Verify timestamp
@@ -279,4 +312,7 @@ en:
   dropTextOrDragFile: Enter text or drag and drop file here
   optionAddMoreFiles: 'Optional: Add more files'
   alternateSelectFile: 'Alternatively: Select file'
+  hashfunction: Hash function
+  extendedOptions: Extended Options
+  rawHash: raw/no hash (max 256 bytes)
 </i18n>
