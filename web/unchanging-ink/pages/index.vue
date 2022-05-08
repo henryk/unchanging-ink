@@ -32,7 +32,7 @@
                     <v-select
                       v-model="createInput.hash"
                       :items="hashItems"
-                      :hint="$t('hashfunction')"
+                      :label="$t('hashfunction')"
                     ></v-select>
                   </v-expansion-panel-content>
                 </v-expansion-panel>
