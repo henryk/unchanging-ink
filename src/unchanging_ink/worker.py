@@ -43,8 +43,8 @@ def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
     }
     with conn.begin() as transaction:
         s = signed_timestamp.select(
-            signed_timestamp.c.interval.is_(None), for_update=True
-        ).order_by("timestamp", "signature")
+            signed_timestamp.c.interval.is_(None)
+        ).with_for_update().order_by("timestamp", "signature")
         result = conn.execute(s)
 
         rows = list(result)
