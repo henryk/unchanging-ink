@@ -25,6 +25,8 @@ services:
       SANIC_BIND_PORT: 8000
       POETRY_VIRTUALENVS_IN_PROJECT: "false"
       POETRY_VIRTUALENVS_PATH: /venv
+      PYTHONUNBUFFERED: 1
+      PYTHONASYNCIODEBUG: 1
     volumes:
       - .:/app
       - backend_venv:/venv
@@ -56,6 +58,8 @@ services:
       SANIC_BIND_PORT: 8000
       POETRY_VIRTUALENVS_IN_PROJECT: "false"
       POETRY_VIRTUALENVS_PATH: /venv
+      PYTHONUNBUFFERED: 1
+      PYTHONASYNCIODEBUG: 1
     volumes:
       - .:/app
       - worker_venv:/venv

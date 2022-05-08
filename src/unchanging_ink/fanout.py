@@ -31,7 +31,7 @@ async def redis_fanout(app):
             pubsub = redis.pubsub()
             await pubsub.subscribe("mth-live")
             while True:
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=None)
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=11)
                 if message:
                     await app.ctx.fanout.trigger(message["data"].decode())
         except GeneratorExit:
