@@ -109,4 +109,11 @@ export default {
       tracesSampleRate: 1.0,
     },
   },
+
+  // See https://github.com/nuxt/nuxt.js/issues/2481#issuecomment-356074552
+  watchers: {
+    webpack: {
+      poll: true,
+    },
+  },
 }
