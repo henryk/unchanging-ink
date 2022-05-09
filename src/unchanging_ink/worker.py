@@ -12,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql.expression import bindparam, select
 
 from .crypto import MerkleNode
-from .models import interval, signed_timestamp
+from .models import interval, timestamp
 from .server import db
 
 logger = logging.getLogger(__name__)
@@ -42,9 +42,9 @@ def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
         "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64)),
     }
     with conn.begin() as transaction:
-        s = signed_timestamp.select(
-            signed_timestamp.c.interval.is_(None)
-        ).with_for_update().order_by("timestamp", "signature")
+        s = timestamp.select(
+            timestamp.c.interval.is_(None)
+        ).with_for_update().order_by("timestamp", "hash")
         result = conn.execute(s)
 
         rows = list(result)
@@ -77,8 +77,8 @@ def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
         conn.execute("SET CONSTRAINTS ALL DEFERRED")
 
         conn.execute(
-            signed_timestamp.update()
-            .where(signed_timestamp.c.id == bindparam("id_"))
+            timestamp.update()
+            .where(timestamp.c.id == bindparam("id_"))
             .values(
                 interval=bindparam("interval"),
                 proof=bindparam("proof"),

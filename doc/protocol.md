@@ -1,54 +1,79 @@
 # Protocol specification for `unchanging.ink`
 
+The API can be used with messages in CBOR encoding or optionally JSON encoding, as selected by `Content-Type` and `Accept` headers. The response will be in the same format as the request, unless the `Accept` header specifies otherwise.
+
+The native format is CBOR, and the JSON encoding is only offered as a convenience feature to web developers. The type mapping is as follows:
+
+| CBOR                 | JSON   | Notes                                                            | field restrictions |
+|----------------------|--------|------------------------------------------------------------------|--------------------|
+| Integer (0, 1)       | Number |                                                                  |                    |
+| Bytestring (2)       | String | Encoded in Base64                                                | hash               |
+| String (3)           | String | Required to be valid UTF-8                                       |                    |
+| Array (4)            | Array  |                                                                  |                    |
+| Map (5)              | Object |                                                                  |                    |
+| Timestamp (6, Tag 0) | String | Full ISO datetime string, with fractional seconds, in Z timezone | timestamp          |
+
+
+Note: For improved readability the following documentation will show CBOR content in diagnostic notation.
+
 ## Request timestamp
 
 ### Request
 
 ````http request
-POST /api/v1/st/ HTTP/1.1
-Content-Type: application/json
+POST /api/v1/ts/ HTTP/1.1
+Content-Type: application/cbor
 
 {
     "data": "sha512:cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
-    "options": []
+    "options": ["wait"]
 }
 ````
 
 `data` MUST be valid UTF-8 and MUST NOT exceed 256 bytes in length. It is recommended that `data` be constructed as a hash function identifier followed by the canonical text representation for that hash.
 
-`options` is an array of options (optional, assumed to be empty when missing):
+`options` is an array of options (optional, assumed to be empty when missing, case-sensitive):
 
 * `wait`: Wait for issuance of inclusion proof, return inclusion proof with response
+* `tag:...`: Attach a retrieval tag to the provisional timestamp. The must not exceed 36 characters and the caller is responsible for uniqueness. Recommended: use a UUID in canonical lower-case format, example: `tag:f3109b67-3be9-405f-a7ca-a7b1f80b1e65`.
 
-### Signed statement
+### Timestamp structure
 
-````json
+````cbor
 {
     "data": "sha512:cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
-    "kid": "xxx",
-    "timestamp": "2021-04-05T23:39:42.944682Z",
-    "typ": "st",
+    "timestamp": 0("2021-04-05T23:39:42.944682Z"),
+    "typ": "ts",
     "version": "1"
 }
 ````
 
-Server computes signature of the canonical representation (keys sorted alphabetically, optional whitespace removed, UTF-8 normalized, JSON encoding normalized) of the signed statement.
+The only currently defined version is `"1"` (as a string). In this version, a SHA-512 hash is calculated over the CBOR representation of this timestamp structure. This hash is designated `hash` in the following.
+
+**NOTE:** Internal operations always use CBOR, even if input/output is JSON.
+
+The response contains all data necessary to construct this data and is delivered with a `Location` header that specifies the REST API location of the response.
 
 ### Response
 
 ````http response
 HTTP/1.1 200 OK
-Content-Type: application/json
+Content-Type: application/cbor
+Location: /api/v1/ts/154084e6-9573-41a1-9ab4-f2724dae23b3/
 
 {
-    "version": "1",
-    "kid": "xxx",
-    "timestamp": "2021-04-05T23:39:42.944682Z",
-    "id": "154084e6-9573-41a1-9ab4-f2724dae23b3",
-    "typ": "st",
-    "signature": "...base64-encoded..."
+    "hash": h'53C650E2F30364B9603D73016FA9....FIXME...86402B600C96765900D625F3C86425604023E8418CC1442EC902DADF6'
+    "timestamp": 0("2021-04-05T23:39:42.944682Z"),
+    "typ": "ts",
+    "version": "1"
 }
 ````
+
+-----------------------------
+
+**FIXME** The following has not been updated
+
+-----------------------------
 
 ## Compute Merkle inclusion proof
 Set *interval* to a small time value on the order of 1s - 5s.

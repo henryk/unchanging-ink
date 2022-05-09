@@ -9,27 +9,26 @@ from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.response import json as json_response
 
-from .models import signed_timestamp
+from .models import timestamp
 
 logger = logging.getLogger(__name__)
 
 
 def setup_routes(app: Sanic):
-    @app.route("/st/", version=1, methods=["GET", "POST"])  # FIXME Throttling
+    @app.route("/ts/", version=1, methods=["GET", "POST"])  # FIXME Throttling
     async def request_timestamp(request: Request) -> HTTPResponse:
         if request.method == "GET":  # FIXME Remove
-            query = signed_timestamp.select()
+            query = timestamp.select()
 
             rows = await request.app.ctx.db.fetch_all(query)
             return json_response(
                 [
                     {
                         "id": str(row["id"]),
-                        "signature": Base64Encoder.encode(row["signature"]).decode(
+                        "hash": Base64Encoder.encode(row["hash"]).decode(
                             "us-ascii"
                         ),
                         "timestamp": row["timestamp"],
-                        "kid": str(row["kid"]),
                         "version": "1",
                         "typ": "st",
                         "interval": row["interval"],
@@ -43,7 +42,7 @@ def setup_routes(app: Sanic):
             now = datetime.datetime.now(datetime.timezone.utc)
             data = request.json["data"]
             options = request.json.get("options", [])
-            timestamp = now.isoformat(timespec="microseconds").replace("+00:00", "Z")
+            timestamp_ = now.isoformat(timespec="microseconds").replace("+00:00", "Z")
             kid = app.ctx.crypto.kid
 
             signed_statement = (
@@ -55,39 +54,37 @@ def setup_routes(app: Sanic):
                 )
             )
 
-            signature = app.ctx.crypto.sign(signed_statement)
+            hash = app.ctx.crypto.sign(signed_statement)
             st_id = uuid.uuid4()
 
             data = {
                 "id": st_id,
-                "kid": kid,
                 "timestamp": timestamp,
-                "signature": signature,
+                "hash": hash,
             }
 
-            await app.ctx.db.execute(query=signed_timestamp.insert(), values=data)
+            await app.ctx.db.execute(query=timestamp.insert(), values=data)
 
             data.update(
                 {
                     "version": "1",
                     "typ": "st",
                     "id": str(st_id),
-                    "signature": Base64Encoder.encode(signature).decode("us-ascii"),
+                    "hash": Base64Encoder.encode(hash).decode("us-ascii"),
                 }
             )
 
             return json_response(data)
 
-    @app.route("/st/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
+    @app.route("/ts/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
-        query = signed_timestamp.query(signed_timestamp.c.id == id_)
+        query = timestamp.query(timestamp.c.id == id_)
         row = await request.app.ctx.db.fetch_one(query)
         return json_response(
             {
                 "id": str(row["id"]),
-                "signature": Base64Encoder.encode(row["signature"]).decode("us-ascii"),
+                "hash": Base64Encoder.encode(row["hash"]).decode("us-ascii"),
                 "timestamp": row["timestamp"],
-                "kid": str(row["kid"]),
                 "version": "1",
                 "typ": "st",
                 "interval": row["interval"],

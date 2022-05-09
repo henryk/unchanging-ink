@@ -3,13 +3,18 @@ from sqlalchemy_utils.types import uuid
 
 metadata = sqlalchemy.MetaData()
 
-signed_timestamp = sqlalchemy.Table(
-    "signed_timestamp",
+timestamp = sqlalchemy.Table(
+    "timestamp",
     metadata,
     sqlalchemy.Column("id", uuid.UUIDType, primary_key=True),
-    sqlalchemy.Column("kid", sqlalchemy.String(length=128), nullable=False),
     sqlalchemy.Column("timestamp", sqlalchemy.String(length=32), nullable=False),
-    sqlalchemy.Column("signature", sqlalchemy.LargeBinary(length=64), nullable=False),
+    sqlalchemy.Column("hash", sqlalchemy.LargeBinary(length=64), nullable=False),
+    sqlalchemy.Column(
+        "tag",
+        sqlalchemy.String(length=36),
+        nullable=True,
+        index=True,
+    ),
     sqlalchemy.Column(
         "interval",
         sqlalchemy.BigInteger,
