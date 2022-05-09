@@ -30,7 +30,7 @@
         cmd: "docker login -u '{{ CI_REGISTRY_USER }}' -p '{{ CI_REGISTRY_PASSWORD }}' {{ CI_REGISTRY }}"
     - name: Bring up
       ansible.builtin.shell:
-        cmd: "sed -e 's/\\bbuild:/x-build:/' < docker-compose.yml > docker-compose.pull.yml && docker-compose -f docker-compose.pull.yml pull && docker-compose up --no-start --no-build && (docker-compose down backend proxy || true) && docker-compose up -d"
+        cmd: "docker-compose pull && docker-compose up --no-start --no-build && (docker-compose down backend proxy || true) && docker-compose up -d"
         chdir: "{{ deploy_base_dir }}"
       environment:
         PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
