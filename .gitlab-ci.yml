@@ -90,7 +90,7 @@ test other all:
   stage: test
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG" --target tester .
-    - docker run -v $PWD:/output/ "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG" --cov-report xml:/output/coverage-$CI_JOB_ID.xml --cov-report term
+    - docker run --rm -v $PWD:/output/ "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG" --cov-report xml:/output/coverage-$CI_JOB_ID.xml --cov-report term
   except:
     - main
   artifacts:
