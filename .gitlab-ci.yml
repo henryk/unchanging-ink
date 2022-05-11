@@ -90,6 +90,6 @@ test other all:
   stage: test
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG" --target tester .
-    - docker run --rm -ti "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG"
+    - docker run --rm "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG"
   except:
     - main
