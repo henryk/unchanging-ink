@@ -48,7 +48,7 @@ RUN poetry install --no-dev --no-root -E worker -E test
 COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --no-dev -E worker -E test
-CMD "poetry run pytest -m unchanging_ink"
+CMD ["poetry", "run", "pytest", "--cov"]
 
 FROM node:${NODE_VERSION}-alpine as frontend-base
 

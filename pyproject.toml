@@ -23,6 +23,8 @@ pytest-sanic = {version = "^1.9.1", optional = true}
 black = {version = "^22.3.0", optional = true}
 isort = {version = "^5.10.1", optional = true}
 pytest = {version = "^7.1.2", optional = true}
+pytest-cov = {version = "^3.0.0", optional = true}
+coverage = {version = "^6.3.2", optional = true, extras = ["toml"]}
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
@@ -30,13 +32,17 @@ isort = "^5.8.0"
 
 [tool.poetry.extras]
 worker = [ "psycopg2", "alembic", "redis", "sentry-sdk" ]
-test = [ "pytest", "pytest-sanic" ]
+test = [ "pytest", "pytest-sanic", "coverage", "pytest-cov" ]
 dev = [ "black", "isort" ]
 
 [tool.poetry.scripts]
 unchanging-ink = "unchanging_ink.server:init"
 unchanging-ink_worker = "unchanging_ink.worker:main"
 unchanging-ink_create_tables = "unchanging_ink.create_tables:main"
+
+[tool.coverage.run]
+branch = true
+omit = ["*/tests/*"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0a5"]
