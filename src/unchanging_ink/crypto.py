@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from hashlib import sha512
-from typing import Dict, Iterable, List, Tuple, Optional
+from typing import Dict, Iterable, List, Tuple, Optional, Sequence
 
 from nacl.encoding import Base64Encoder
 from nacl.signing import SigningKey
@@ -70,6 +70,63 @@ class MerkleNode:
         return_node = stack[0] if stack else MerkleNode(0, 0, cls.hash_function().digest())
         return return_node, full_index
 
+    @classmethod
+    def path_proof(cls: MerkleNode, tree_index: Dict[Tuple[int, int], MerkleNode], x: int, n: int) -> Tuple[int, Sequence[MerkleNode]]:
+        current_read_bit: int = 1
+        current_write_bit: int = 1
+        current_width: int = 1
+        path: int = 0
+        neighbours: List[MerkleNode] = []
+
+        mytree: MerkleNode = tree_index[(x, x+1)]
+        while not (mytree.start == 0 and mytree.end == n):
+            if mytree.start & current_read_bit == 0:
+                # This is the left side
+                otherend = min(n, mytree.end + current_width)
+                if mytree.end != otherend:
+                    othertree = tree_index[(mytree.end, otherend)]
+                else:
+                    othertree = None
+                # Do not OR in current_write_bit
+            else:
+                # Right side
+                otherstart = max(0, mytree.start - current_width)
+                if mytree.start != otherstart:
+                    othertree = tree_index[(otherstart, mytree.start)]
+                    path |= current_write_bit
+                else:
+                    othertree = None
+
+            current_width *= 2
+            current_read_bit <<= 1
+
+            if othertree is None:
+                # There is no other side
+                continue
+
+            if othertree.start == 0 and othertree.end == n:
+                break
+
+            current_write_bit <<= 1
+            neighbours.append(othertree)
+
+            mytree = tree_index[(min(mytree.start, othertree.start), max(mytree.end, othertree.end))]
+
+        return path, neighbours
+
+    @classmethod
+    def verify_proof(cls, head_node: MerkleNode, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]):
+        current_node = leaf_node
+        for neighbour in neighbours:
+            if path & 1 == 0:
+                # Left side
+                current_node = MerkleNode.combine(current_node, neighbour)
+            else:
+                current_node = MerkleNode.combine(neighbour, current_node)
+            path >>= 1
+        return current_node.value == head_node.value
+
 
 def setup_crypto(app: Sanic):
     app.ctx.crypto = Signer()
+

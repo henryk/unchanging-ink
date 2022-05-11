@@ -1,3 +1,5 @@
+import pytest
+
 from unchanging_ink.crypto import MerkleNode
 
 
@@ -36,3 +38,46 @@ def test_tree_four_content():
     a, idx = MerkleNode.from_sequence_with_index([b"A", b"BB", b"CCC", b"DDDD"])
     assert a.value == bytes.fromhex("3b5d486f014f22858d9d87021b3c0f707009969895eeffe8e0642d81aea3906764d10ad2ff0b961fcf07d83eabd8d9eaa7242cd4a7aacde5ccb1e3c1b9a2ff94")
     assert idx[(0, 4)] == a
+
+
+@pytest.fixture(scope='session')
+def tree_index_width_7():
+    _, idx = MerkleNode.from_sequence_with_index([str(i).encode() for i in range(7)])
+    return idx
+
+
+def test_proof_simple_7_0(tree_index_width_7):
+    path, proof = MerkleNode.path_proof(tree_index_width_7, 0, 7)
+    assert path == 0
+    assert proof == [
+        tree_index_width_7[(1, 2)],
+        tree_index_width_7[(2, 4)],
+        tree_index_width_7[(4, 7)],
+    ]
+
+
+def test_proof_simple_7_1(tree_index_width_7):
+    path, proof = MerkleNode.path_proof(tree_index_width_7, 1, 7)
+    assert path == 1
+    assert proof == [
+        tree_index_width_7[(0, 1)],
+        tree_index_width_7[(2, 4)],
+        tree_index_width_7[(4, 7)],
+    ]
+
+
+def test_proof_simple_7_6(tree_index_width_7):
+    path, proof = MerkleNode.path_proof(tree_index_width_7, 6, 7)
+    assert path == 3
+    assert proof == [
+        tree_index_width_7[(4, 6)],
+        tree_index_width_7[(0, 4)],
+    ]
+
+
+@pytest.mark.parametrize("target,length", [(i, n) for n in range(1, 17) for i in range(n)])
+def test_proof_verify(target, length):
+    head_node, idx = MerkleNode.from_sequence_with_index([str(i).encode() for i in range(length)])
+    leaf_node = idx[(target, target+1)]
+    path, proof = MerkleNode.path_proof(idx, target, length)
+    assert MerkleNode.verify_proof(head_node, leaf_node, path, proof)

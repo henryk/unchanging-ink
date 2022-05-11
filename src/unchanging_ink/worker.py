@@ -2,6 +2,7 @@ import datetime
 import logging
 import random
 import time
+from typing import Dict, Tuple
 
 import orjson
 import redis
@@ -9,7 +10,7 @@ import sentry_sdk
 import sqlalchemy
 from nacl.encoding import Base64Encoder
 from sqlalchemy import create_engine
-from sqlalchemy.sql.expression import bindparam, select
+from sqlalchemy.sql.expression import bindparam
 
 from .crypto import MerkleNode
 from .models import interval, timestamp
@@ -27,7 +28,7 @@ sentry_sdk.init(
 )
 
 
-def formulate_proof(full_index, i, row, interval_id, interval_hash_b64):
+def formulate_proof(full_index: Dict[Tuple[int, int], MerkleNode], i: int, row, interval_id, interval_hash_b64):
     # FIXME Draw the rest of the owl
     return {
         "id_": row["id"],
