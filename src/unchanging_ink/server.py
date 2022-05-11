@@ -30,11 +30,15 @@ def setup_fanout(app):
         app.add_task(redis_fanout)
 
 
-def init():
+def setup():
     setup_database()
     setup_routes(app)
     setup_crypto(app)
     setup_fanout(app)
+
+
+def init():
+    setup()
 
     workers = app.config.get("WORKERS", "auto")
     if str(workers).lower() == "auto":

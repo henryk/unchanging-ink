@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from hashlib import sha512
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple, Optional
 
 from nacl.encoding import Base64Encoder
 from nacl.signing import SigningKey
@@ -24,21 +24,25 @@ class MerkleNode:
     start: int
     end: int
     value: bytes
-    height: int = field(init=False)
+    height: Optional[int] = field(init=False)
+    hash_function = sha512
 
     def __post_init__(self):
-        self.height = int(math.ceil(math.log2(self.end - self.start + 1)))
+        if self.end < self.start:
+            self.height = None
+        else:
+            self.height = int(math.ceil(math.log2(self.end - self.start + 1)))
 
     @classmethod
     def combine(cls: MerkleNode, n1: MerkleNode, n2: MerkleNode) -> MerkleNode:
         assert n1.end + 1 == n2.start
         return MerkleNode(
-            n1.start, n2.end, sha512(b"\x01" + n1.value + n2.value).digest()
+            n1.start, n2.end, cls.hash_function(b"\x01" + n1.value + n2.value).digest()
         )
 
     @classmethod
     def from_leaf(cls: MerkleNode, index: int, value: bytes) -> MerkleNode:
-        return MerkleNode(index, index, sha512(b"\x00" + value).digest())
+        return MerkleNode(index, index, cls.hash_function(b"\x00" + value).digest())
 
     @classmethod
     def from_sequence(
@@ -60,7 +64,8 @@ class MerkleNode:
             del stack[-1]
             full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
 
-        return stack[0], full_index
+        return_node = stack[0] if stack else MerkleNode(0, -1, cls.hash_function().digest())
+        return return_node, full_index
 
 
 def setup_crypto(app: Sanic):
