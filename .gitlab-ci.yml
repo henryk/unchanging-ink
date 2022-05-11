@@ -90,6 +90,11 @@ test other all:
   stage: test
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG" --target tester .
-    - docker run --rm "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG"
+    - docker run --rm -v .:/output "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG" --cov-report xml:/output/coverage-$CI_CONCURRENT_PROJECT_ID.xml
   except:
     - main
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage-$CI_CONCURRENT_PROJECT_ID.xml
