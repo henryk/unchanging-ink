@@ -28,26 +28,29 @@ class MerkleNode:
     hash_function = sha512
 
     def __post_init__(self):
-        if self.end < self.start:
-            self.height = None
+        if self.end == self.start:
+            self.height = 0
         else:
-            self.height = int(math.ceil(math.log2(self.end - self.start + 1)))
+            self.height = int(math.ceil(math.log2(self.end - self.start))) + 1
 
     @classmethod
     def combine(cls: MerkleNode, n1: MerkleNode, n2: MerkleNode) -> MerkleNode:
-        assert n1.end + 1 == n2.start
+        assert n1.end == n2.start
         return MerkleNode(
             n1.start, n2.end, cls.hash_function(b"\x01" + n1.value + n2.value).digest()
         )
 
     @classmethod
     def from_leaf(cls: MerkleNode, index: int, value: bytes) -> MerkleNode:
-        return MerkleNode(index, index, cls.hash_function(b"\x00" + value).digest())
+        return MerkleNode(index, index+1, cls.hash_function(b"\x00" + value).digest())
 
     @classmethod
-    def from_sequence(
+    def from_sequence_with_index(
         cls: MerkleNode, values: Iterable[bytes]
     ) -> Tuple[MerkleNode, Dict[Tuple[int, int], MerkleNode]]:
+        """Efficiently calculates the entire Merkle tree for a sequence of raw values.
+
+        Returns the root node and an index dictionary mapping (start, end) to nodes. (start inclusive, end exclusive)"""
         stack: List[MerkleNode] = []
         full_index: Dict[Tuple[int, int], MerkleNode] = {}
 
@@ -64,7 +67,7 @@ class MerkleNode:
             del stack[-1]
             full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
 
-        return_node = stack[0] if stack else MerkleNode(0, -1, cls.hash_function().digest())
+        return_node = stack[0] if stack else MerkleNode(0, 0, cls.hash_function().digest())
         return return_node, full_index
 
 

@@ -51,7 +51,7 @@ def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
         if len(rows) == 0:
             return retval
 
-        merkle_node, full_index = MerkleNode.from_sequence(
+        merkle_node, full_index = MerkleNode.from_sequence_with_index(
             row["signature"] for row in rows
         )
         print("New head", merkle_node)
