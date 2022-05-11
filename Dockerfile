@@ -41,6 +41,15 @@ COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --no-dev -E worker
 
+FROM builder-base as tester
+RUN apt-get install -y libpq-dev
+RUN poetry install --no-dev --no-root -E worker -E tester
+
+COPY migrations /app/migrations
+COPY src /app/src
+RUN poetry install --no-dev -E worker -E tester
+CMD "pytest -m unchanging_ink"
+
 FROM node:${NODE_VERSION}-alpine as frontend-base
 
 FROM frontend-base as frontend-prep-stage

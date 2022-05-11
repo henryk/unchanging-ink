@@ -84,3 +84,11 @@ build other all:
     - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG"
   except:
     - main
+
+test other all:
+  stage: test
+  script:
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG" --target tester .
+    - docker run --rm -ti "$CI_REGISTRY_IMAGE/tester:$CI_COMMIT_REF_SLUG"
+  except:
+    - main
