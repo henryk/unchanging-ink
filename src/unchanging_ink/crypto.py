@@ -115,7 +115,7 @@ class MerkleNode:
         return path, neighbours
 
     @classmethod
-    def verify_proof(cls, head_node: MerkleNode, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]):
+    def verify_proof(cls, head_node: MerkleNode, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
         current_node = leaf_node
         for neighbour in neighbours:
             if path & 1 == 0:
@@ -125,6 +125,33 @@ class MerkleNode:
                 current_node = MerkleNode.combine(neighbour, current_node)
             path >>= 1
         return current_node.value == head_node.value
+
+
+@dataclass
+class MerkleTree:
+    width: int
+    nodes: Dict[Tuple[int, int], MerkleNode]
+
+    @property
+    def root(self):
+        if self.width > 0:
+            return self.nodes[(0, self.width)]
+        raise ValueError
+
+    @classmethod
+    def from_root(cls: MerkleTree, root: MerkleNode) -> MerkleTree:
+        return cls(root.end - root.start, {(root.start, root.end): root})
+
+    @classmethod
+    def from_sequence(cls: MerkleTree, values: Iterable[bytes]) -> MerkleTree:
+        root, nodes = MerkleNode.from_sequence_with_index(values)
+        return cls(root.end - root.start, nodes)
+
+    def proof_for(self, x: int) -> Tuple[int, Sequence[MerkleNode]]:
+        return MerkleNode.path_proof(self.nodes, x, self.width)
+
+    def verify_proof(self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
+        return MerkleNode.verify_proof(self.root, leaf_node, path, neighbours)
 
 
 def setup_crypto(app: Sanic):

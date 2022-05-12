@@ -1,6 +1,6 @@
 import pytest
 
-from unchanging_ink.crypto import MerkleNode
+from unchanging_ink.crypto import MerkleNode, MerkleTree
 
 
 def test_tree_none():
@@ -81,3 +81,14 @@ def test_proof_verify(target, length):
     leaf_node = idx[(target, target+1)]
     path, proof = MerkleNode.path_proof(idx, target, length)
     assert MerkleNode.verify_proof(head_node, leaf_node, path, proof)
+
+
+def test_tree_verify():
+    generating_tree = MerkleTree.from_sequence([str(i).encode() for i in range(15)])
+
+    path, proof = generating_tree.proof_for(13)
+
+    checking_tree = MerkleTree.from_root(MerkleNode(0, 15, generating_tree.root.value))
+    leaf_node = MerkleNode.from_leaf(13, str(13).encode())
+
+    assert checking_tree.verify_proof(leaf_node, path, proof)
