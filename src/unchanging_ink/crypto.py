@@ -147,11 +147,29 @@ class MerkleTree:
         root, nodes = MerkleNode.from_sequence_with_index(values)
         return cls(root.end - root.start, nodes)
 
-    def proof_for(self, x: int) -> Tuple[int, Sequence[MerkleNode]]:
+    def compute_inclusion_proof(self, x: int) -> Tuple[int, Sequence[MerkleNode]]:
         return MerkleNode.path_proof(self.nodes, x, self.width)
 
-    def verify_proof(self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
+    def verify_inclusion_proof(self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
         return MerkleNode.verify_proof(self.root, leaf_node, path, neighbours)
+
+    def compute_consistency_proof(self, old_width) -> Sequence[MerkleNode]:
+        return self._subproof(old_width, self.width, True)
+
+    def _subproof(self, m: int, n, flag: bool, _o: int = 0) -> List[MerkleNode]:
+        assert 0 < m
+        if n == m:
+            if flag:
+                return []
+            else:
+                return [self.nodes[(_o+0, _o+n)]]
+        else:
+            assert m < n
+            k = 2 ** (math.ceil(math.log2(n)) - 1)
+            if m <= k:
+                return self._subproof(m, k, flag, _o) + [self.nodes[(_o+k, _o+n)]]
+            else:
+                return [self.nodes[(_o+0, _o+k)]] + self._subproof(m - k, n-k, False, _o+k)
 
 
 def setup_crypto(app: Sanic):

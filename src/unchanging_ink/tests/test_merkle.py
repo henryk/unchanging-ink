@@ -83,12 +83,38 @@ def test_proof_verify(target, length):
     assert MerkleNode.verify_proof(head_node, leaf_node, path, proof)
 
 
-def test_tree_verify():
-    generating_tree = MerkleTree.from_sequence([str(i).encode() for i in range(15)])
+@pytest.fixture(scope='session')
+def merkle_tree_7() -> MerkleTree:
+    return MerkleTree.from_sequence([str(i).encode() for i in range(7)])
 
-    path, proof = generating_tree.proof_for(13)
 
-    checking_tree = MerkleTree.from_root(MerkleNode(0, 15, generating_tree.root.value))
-    leaf_node = MerkleNode.from_leaf(13, str(13).encode())
+@pytest.fixture(scope='session')
+def merkle_tree_11() -> MerkleTree:
+    return MerkleTree.from_sequence([str(i).encode() for i in range(11)])
 
-    assert checking_tree.verify_proof(leaf_node, path, proof)
+
+def test_tree_verify(merkle_tree_11):
+    path, proof = merkle_tree_11.compute_inclusion_proof(9)
+
+    checking_tree = MerkleTree.from_root(MerkleNode(0, 11, merkle_tree_11.root.value))
+    leaf_node = MerkleNode.from_leaf(9, str(9).encode())
+
+    assert checking_tree.verify_inclusion_proof(leaf_node, path, proof)
+
+
+def test_consistency_proof_1(merkle_tree_7):
+    proof = merkle_tree_7.compute_consistency_proof(3)
+
+    assert [(n.start, n.end) for n in proof] == [(0, 2), (2, 3), (3, 4), (4, 7)]
+
+
+def test_consistency_proof_2(merkle_tree_7):
+    proof = merkle_tree_7.compute_consistency_proof(4)
+
+    assert [(n.start, n.end) for n in proof] == [(4, 7)]
+
+
+def test_consistency_proof_3(merkle_tree_7):
+    proof = merkle_tree_7.compute_consistency_proof(6)
+
+    assert [(n.start, n.end) for n in proof] == [(0, 4), (4, 6), (6, 7)]
