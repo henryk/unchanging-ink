@@ -114,7 +114,6 @@ def test_consistency_proof_2(merkle_tree_7):
     assert [(n.start, n.end) for n in proof] == [(4, 7)]
 
 
-def test_consistency_proof_3(merkle_tree_7):
-    proof = merkle_tree_7.compute_consistency_proof(6)
-
-    assert [(n.start, n.end) for n in proof] == [(0, 4), (4, 6), (6, 7)]
+def test_consistence_proof_nodes():
+    proof = MerkleTree.consistency_proof_nodes(6, 7)
+    assert list(proof) == [(0, 4), (4, 6), (6, 7)]

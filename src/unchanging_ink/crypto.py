@@ -153,23 +153,32 @@ class MerkleTree:
     def verify_inclusion_proof(self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
         return MerkleNode.verify_proof(self.root, leaf_node, path, neighbours)
 
-    def compute_consistency_proof(self, old_width) -> Sequence[MerkleNode]:
-        return self._subproof(old_width, self.width, True)
+    @classmethod
+    def consistency_proof_nodes(cls, old_width, new_width) -> Iterable[Tuple[int, int]]:
+        yield from cls._consistency_proof_subnodes(old_width, new_width, True)
 
-    def _subproof(self, m: int, n, flag: bool, _o: int = 0) -> List[MerkleNode]:
+    @classmethod
+    def _consistency_proof_subnodes(cls, m: int, n: int, flag: bool, _o: int = 0) -> Iterable[Tuple[int, int]]:
         assert 0 < m
         if n == m:
             if flag:
-                return []
+                return ()
             else:
-                return [self.nodes[(_o+0, _o+n)]]
+                yield _o+0, _o+n
         else:
             assert m < n
             k = 2 ** (math.ceil(math.log2(n)) - 1)
             if m <= k:
-                return self._subproof(m, k, flag, _o) + [self.nodes[(_o+k, _o+n)]]
+                yield from cls._consistency_proof_subnodes(m, k, flag, _o)
+                yield _o+k, _o+n
             else:
-                return [self.nodes[(_o+0, _o+k)]] + self._subproof(m - k, n-k, False, _o+k)
+                yield _o+0, _o+k
+                yield from cls._consistency_proof_subnodes(m - k, n-k, False, _o+k)
+
+    def compute_consistency_proof(self, old_width) -> Sequence[MerkleNode]:
+        return [
+            self.nodes[node_address] for node_address in self.consistency_proof_nodes(old_width, self.width)
+        ]
 
 
 def setup_crypto(app: Sanic):
