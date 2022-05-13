@@ -18,4 +18,3 @@ class Signer:
 
 def setup_crypto(app: Sanic):
     app.ctx.crypto = Signer()
-

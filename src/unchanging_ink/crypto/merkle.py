@@ -3,14 +3,16 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from hashlib import sha512
-from typing import Dict, Iterable, List, Tuple, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 
 def consistency_proof_nodes(old_width, new_width) -> Iterable[Tuple[int, int]]:
     yield from _consistency_proof_subnodes(old_width, new_width, True)
 
 
-def _consistency_proof_subnodes(m: int, n: int, flag: bool, _o: int = 0) -> Iterable[Tuple[int, int]]:
+def _consistency_proof_subnodes(
+    m: int, n: int, flag: bool, _o: int = 0
+) -> Iterable[Tuple[int, int]]:
     assert 0 < m
     if n == m:
         if flag:
@@ -51,7 +53,7 @@ class MerkleNode:
 
     @classmethod
     def from_leaf(cls: MerkleNode, index: int, value: bytes) -> MerkleNode:
-        return MerkleNode(index, index+1, cls.hash_function(b"\x00" + value).digest())
+        return MerkleNode(index, index + 1, cls.hash_function(b"\x00" + value).digest())
 
     @classmethod
     def from_sequence_with_index(
@@ -76,18 +78,22 @@ class MerkleNode:
             del stack[-1]
             full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
 
-        return_node = stack[0] if stack else MerkleNode(0, 0, cls.hash_function().digest())
+        return_node = (
+            stack[0] if stack else MerkleNode(0, 0, cls.hash_function().digest())
+        )
         return return_node, full_index
 
     @classmethod
-    def path_proof(cls: MerkleNode, tree_index: Dict[Tuple[int, int], MerkleNode], x: int, n: int) -> Tuple[int, Sequence[MerkleNode]]:
+    def path_proof(
+        cls: MerkleNode, tree_index: Dict[Tuple[int, int], MerkleNode], x: int, n: int
+    ) -> Tuple[int, Sequence[MerkleNode]]:
         current_read_bit: int = 1
         current_write_bit: int = 1
         current_width: int = 1
         path: int = 0
         neighbours: List[MerkleNode] = []
 
-        mytree: MerkleNode = tree_index[(x, x+1)]
+        mytree: MerkleNode = tree_index[(x, x + 1)]
         while not (mytree.start == 0 and mytree.end == n):
             if mytree.start & current_read_bit == 0:
                 # This is the left side
@@ -119,12 +125,20 @@ class MerkleNode:
             current_write_bit <<= 1
             neighbours.append(othertree)
 
-            mytree = tree_index[(min(mytree.start, othertree.start), max(mytree.end, othertree.end))]
+            mytree = tree_index[
+                (min(mytree.start, othertree.start), max(mytree.end, othertree.end))
+            ]
 
         return path, neighbours
 
     @classmethod
-    def verify_proof(cls, head_node: MerkleNode, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
+    def verify_proof(
+        cls,
+        head_node: MerkleNode,
+        leaf_node: MerkleNode,
+        path: int,
+        neighbours: Sequence[MerkleNode],
+    ) -> bool:
         current_node = leaf_node
         for neighbour in neighbours:
             if path & 1 == 0:
@@ -159,10 +173,13 @@ class MerkleTree:
     def compute_inclusion_proof(self, x: int) -> Tuple[int, Sequence[MerkleNode]]:
         return MerkleNode.path_proof(self.nodes, x, self.width)
 
-    def verify_inclusion_proof(self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
+    def verify_inclusion_proof(
+        self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]
+    ) -> bool:
         return MerkleNode.verify_proof(self.root, leaf_node, path, neighbours)
 
     def compute_consistency_proof(self, old_width) -> Sequence[MerkleNode]:
         return [
-            self.nodes[node_address] for node_address in consistency_proof_nodes(old_width, self.width)
+            self.nodes[node_address]
+            for node_address in consistency_proof_nodes(old_width, self.width)
         ]

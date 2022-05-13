@@ -28,7 +28,13 @@ sentry_sdk.init(
 )
 
 
-def formulate_proof(full_index: Dict[Tuple[int, int], MerkleNode], i: int, row, interval_id, interval_hash_b64):
+def formulate_proof(
+    full_index: Dict[Tuple[int, int], MerkleNode],
+    i: int,
+    row,
+    interval_id,
+    interval_hash_b64,
+):
     # FIXME Draw the rest of the owl
     return {
         "id_": row["id"],
@@ -43,9 +49,11 @@ def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
         "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64)),
     }
     with conn.begin() as transaction:
-        s = timestamp.select(
-            timestamp.c.interval.is_(None)
-        ).with_for_update().order_by("timestamp", "hash")
+        s = (
+            timestamp.select(timestamp.c.interval.is_(None))
+            .with_for_update()
+            .order_by("timestamp", "hash")
+        )
         result = conn.execute(s)
 
         rows = list(result)

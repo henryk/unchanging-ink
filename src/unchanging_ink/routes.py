@@ -25,9 +25,7 @@ def setup_routes(app: Sanic):
                 [
                     {
                         "id": str(row["id"]),
-                        "hash": Base64Encoder.encode(row["hash"]).decode(
-                            "us-ascii"
-                        ),
+                        "hash": Base64Encoder.encode(row["hash"]).decode("us-ascii"),
                         "timestamp": row["timestamp"],
                         "version": "1",
                         "typ": "st",
