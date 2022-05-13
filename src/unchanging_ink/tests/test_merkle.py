@@ -1,6 +1,7 @@
 import pytest
 
 from unchanging_ink.crypto import MerkleNode, MerkleTree
+from unchanging_ink.crypto.merkle import consistency_proof_nodes
 
 
 def test_tree_none():
@@ -115,5 +116,5 @@ def test_consistency_proof_2(merkle_tree_7):
 
 
 def test_consistence_proof_nodes():
-    proof = MerkleTree.consistency_proof_nodes(6, 7)
+    proof = consistency_proof_nodes(6, 7)
     assert list(proof) == [(0, 4), (4, 6), (6, 7)]

@@ -5,18 +5,27 @@ from dataclasses import dataclass, field
 from hashlib import sha512
 from typing import Dict, Iterable, List, Tuple, Optional, Sequence
 
-from nacl.encoding import Base64Encoder
-from nacl.signing import SigningKey
-from sanic import Sanic
+
+def consistency_proof_nodes(old_width, new_width) -> Iterable[Tuple[int, int]]:
+    yield from _consistency_proof_subnodes(old_width, new_width, True)
 
 
-class Signer:
-    def __init__(self):
-        self.key: SigningKey = SigningKey.generate()
-        self.kid = "Exp:" + self.key.verify_key.encode(Base64Encoder).decode("us-ascii")
-
-    def sign(self, data: bytes) -> bytes:
-        return self.key.sign(data).signature
+def _consistency_proof_subnodes(m: int, n: int, flag: bool, _o: int = 0) -> Iterable[Tuple[int, int]]:
+    assert 0 < m
+    if n == m:
+        if flag:
+            return ()
+        else:
+            yield _o + 0, _o + n
+    else:
+        assert m < n
+        k = 2 ** (math.ceil(math.log2(n)) - 1)
+        if m <= k:
+            yield from _consistency_proof_subnodes(m, k, flag, _o)
+            yield _o + k, _o + n
+        else:
+            yield _o + 0, _o + k
+            yield from _consistency_proof_subnodes(m - k, n - k, False, _o + k)
 
 
 @dataclass
@@ -153,34 +162,7 @@ class MerkleTree:
     def verify_inclusion_proof(self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]) -> bool:
         return MerkleNode.verify_proof(self.root, leaf_node, path, neighbours)
 
-    @classmethod
-    def consistency_proof_nodes(cls, old_width, new_width) -> Iterable[Tuple[int, int]]:
-        yield from cls._consistency_proof_subnodes(old_width, new_width, True)
-
-    @classmethod
-    def _consistency_proof_subnodes(cls, m: int, n: int, flag: bool, _o: int = 0) -> Iterable[Tuple[int, int]]:
-        assert 0 < m
-        if n == m:
-            if flag:
-                return ()
-            else:
-                yield _o+0, _o+n
-        else:
-            assert m < n
-            k = 2 ** (math.ceil(math.log2(n)) - 1)
-            if m <= k:
-                yield from cls._consistency_proof_subnodes(m, k, flag, _o)
-                yield _o+k, _o+n
-            else:
-                yield _o+0, _o+k
-                yield from cls._consistency_proof_subnodes(m - k, n-k, False, _o+k)
-
     def compute_consistency_proof(self, old_width) -> Sequence[MerkleNode]:
         return [
-            self.nodes[node_address] for node_address in self.consistency_proof_nodes(old_width, self.width)
+            self.nodes[node_address] for node_address in consistency_proof_nodes(old_width, self.width)
         ]
-
-
-def setup_crypto(app: Sanic):
-    app.ctx.crypto = Signer()
-
