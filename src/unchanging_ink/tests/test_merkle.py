@@ -101,14 +101,18 @@ def test_proof_verify(target, length):
     assert MerkleNode.verify_proof(head_node, leaf_node, path, proof)
 
 
-@pytest.fixture(scope="session")
+def standard_merkle_tree(width) -> MerkleTree:
+    return MerkleTree.from_sequence([str(i).encode() for i in range(width)])
+
+
+@pytest.fixture
 def merkle_tree_7() -> MerkleTree:
-    return MerkleTree.from_sequence([str(i).encode() for i in range(7)])
+    return standard_merkle_tree(7)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def merkle_tree_11() -> MerkleTree:
-    return MerkleTree.from_sequence([str(i).encode() for i in range(11)])
+    return standard_merkle_tree(11)
 
 
 def test_tree_verify(merkle_tree_11):
@@ -120,28 +124,37 @@ def test_tree_verify(merkle_tree_11):
     assert checking_tree.verify_inclusion_proof(leaf_node, path, proof)
 
 
-def test_consistency_proof_1(merkle_tree_7):
-    proof = merkle_tree_7.compute_consistency_proof(3)
+def test_consistency_proof_nodes_1(merkle_tree_7):
+    proof = consistency_proof_nodes(3, 7)
 
-    assert [(n.start, n.end) for n in proof] == [(0, 2), (2, 3), (3, 4), (4, 7)]
-
-
-def test_consistency_proof_2(merkle_tree_7):
-    proof = merkle_tree_7.compute_consistency_proof(4)
-
-    assert [(n.start, n.end) for n in proof] == [(4, 7)]
+    assert list(proof) == [(2, 3), (3, 4), (0, 2), (4, 7)]
 
 
-def test_consistence_proof_nodes():
+def test_consistency_proof_nodes_2(merkle_tree_7):
+    proof = consistency_proof_nodes(4, 7)
+
+    assert list(proof) == [(4, 7)]
+
+
+def test_consistency_proof_nodes_3():
     proof = consistency_proof_nodes(6, 7)
-    assert list(proof) == [(0, 4), (4, 6), (6, 7)]
+    assert list(proof) == [(4, 6), (6, 7), (0, 4)]
 
 
-def test_consistency_proof_verify(merkle_tree_7, merkle_tree_11):
-    old_head = merkle_tree_7.root.value
-    new_head = merkle_tree_11.root.value
-
+def test_consistency_proof_verify_1(merkle_tree_7, merkle_tree_11):
     proof = merkle_tree_11.compute_consistency_proof(merkle_tree_7.width)
 
-    print("Verifying")
-    assert verify_consistency_proof(merkle_tree_7.width, old_head, merkle_tree_11.width, new_head, proof)
+    assert verify_consistency_proof(merkle_tree_7.width, merkle_tree_7.root.value, merkle_tree_11.width, merkle_tree_11.root.value, proof)
+
+
+@pytest.mark.parametrize(
+    "old_width,new_width", [(o, n) for n in range(1, 17) for o in range(1, n+1)]
+)
+def test_consistency_proof_verify(old_width, new_width):
+    old_head = standard_merkle_tree(old_width).root.value
+    new_tree = standard_merkle_tree(new_width)
+    new_head = new_tree.root.value
+
+    proof = new_tree.compute_consistency_proof(old_width)
+
+    assert verify_consistency_proof(old_width, old_head, new_width, new_head, proof)

@@ -27,8 +27,8 @@ def _consistency_proof_subnodes(
             yield from _consistency_proof_subnodes(m, k, flag, _o)
             yield _o + k, _o + n
         else:
-            yield _o + 0, _o + k
             yield from _consistency_proof_subnodes(m - k, n - k, False, _o + k)
+            yield _o + 0, _o + k
 
 
 @dataclass
@@ -179,48 +179,50 @@ class MerkleTree:
     ) -> bool:
         return MerkleNode.verify_proof(self.root, leaf_node, path, neighbours)
 
-    def compute_consistency_proof(self, old_width) -> Sequence[MerkleNode]:
+    def compute_consistency_proof(self, old_width) -> Sequence[bytes]:
         return [
-            self.nodes[node_address]
+            self.nodes[node_address].value
             for node_address in consistency_proof_nodes(old_width, self.width)
         ]
 
 
-def verify_consistency_proof(old_width: int, old_head: bytes, new_width: int, new_head: bytes, proof: List[bytes]) -> bool:
+def verify_consistency_proof(old_width: int, old_head: bytes, new_width: int, new_head: bytes, proof: Sequence[bytes]) -> bool:
+    if old_width == new_width:
+        return old_head == new_head
+
     proof_addresses = list(consistency_proof_nodes(old_width, new_width))
 
     if len(proof_addresses) != len(proof):
         return False
 
-    nodes = OrderedDict(zip(proof_addresses, proof))
+    nodes = []
 
-    # Start at end of the old tree, move left until the old tree is fully covered
-    old_tree = nodes[[na for na in nodes.keys() if na[1] == old_width][0]]
-    while old_tree.start != 0:
-        left_na = [na for na in nodes.keys() if na[1] == old_tree.start][0]
-        old_tree = MerkleNode.combine(nodes[left_na], old_tree)
+    if 2**math.floor(math.log2(old_width)) == old_width:
+        # Add old tree as knowledge, to the start of the ordered dict
+        nodes.append(MerkleNode(start=0, end=old_width, value=old_head) )
 
-    if not (old_tree.start == 0 and old_tree.end == old_width and old_tree.value == old_head):
-        return False
+    for (na, val) in zip(proof_addresses, proof):
+        nodes.append(MerkleNode(*na, value=val))
 
-    # Add old tree as knowledge
-    nodes[(0, old_width)] = MerkleNode(start=0, end=old_width, value=old_head)
+    old_path = old_width - 1
+    new_path = new_width - 1
+    while old_path & 1:
+        old_path >>= 1
+        new_path >>= 1
 
-    # Start at the node that is that the right edge of the old tree. Then work upwards
-    new_tree = nodes[[na for na in nodes.keys() if na[1] == old_width][0]]
-    bit = 1
-    while not (new_tree.start == 0 and new_tree.end == new_width):
-        if new_tree.start & bit == 0:
-            # This is the left side. Find right side
-            right_na = [na for na in nodes.keys() if na[0] == new_tree.end][0]
-            new_tree = MerkleNode.combine(new_tree, nodes[right_na])
+    old_tree = new_tree = nodes[0]
+    for node in nodes[1:]:
+        if new_path == 0:
+            return False
+        if old_path & 1 or old_path == new_path:
+            old_tree = MerkleNode.combine(node, old_tree)
+            new_tree = MerkleNode.combine(node, new_tree)
+            while not old_path & 1 and old_path > 0:
+                old_path >>= 1
+                new_path >>= 1
         else:
-            # This is the right side. Find left side
-            left_na = [na for na in nodes.keys() if na[1] == new_tree.start][0]
-            new_tree = MerkleNode.combine(nodes[left_na], new_tree)
-        bit <<= 1
+            new_tree = MerkleNode.combine(new_tree, node)
+        old_path >>= 1
+        new_path >>= 1
 
-    if not (new_tree.start == 0 and new_tree.end == new_width and new_tree.value == new_head):
-        return False
-
-    return True
+    return new_path == 0 and old_tree.value == old_head and new_tree.value == new_head
