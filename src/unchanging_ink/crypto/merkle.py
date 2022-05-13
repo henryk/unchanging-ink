@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from hashlib import sha512
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -183,3 +184,43 @@ class MerkleTree:
             self.nodes[node_address]
             for node_address in consistency_proof_nodes(old_width, self.width)
         ]
+
+
+def verify_consistency_proof(old_width: int, old_head: bytes, new_width: int, new_head: bytes, proof: List[bytes]) -> bool:
+    proof_addresses = list(consistency_proof_nodes(old_width, new_width))
+
+    if len(proof_addresses) != len(proof):
+        return False
+
+    nodes = OrderedDict(zip(proof_addresses, proof))
+
+    # Start at end of the old tree, move left until the old tree is fully covered
+    old_tree = nodes[[na for na in nodes.keys() if na[1] == old_width][0]]
+    while old_tree.start != 0:
+        left_na = [na for na in nodes.keys() if na[1] == old_tree.start][0]
+        old_tree = MerkleNode.combine(nodes[left_na], old_tree)
+
+    if not (old_tree.start == 0 and old_tree.end == old_width and old_tree.value == old_head):
+        return False
+
+    # Add old tree as knowledge
+    nodes[(0, old_width)] = MerkleNode(start=0, end=old_width, value=old_head)
+
+    # Start at the node that is that the right edge of the old tree. Then work upwards
+    new_tree = nodes[[na for na in nodes.keys() if na[1] == old_width][0]]
+    bit = 1
+    while not (new_tree.start == 0 and new_tree.end == new_width):
+        if new_tree.start & bit == 0:
+            # This is the left side. Find right side
+            right_na = [na for na in nodes.keys() if na[0] == new_tree.end][0]
+            new_tree = MerkleNode.combine(new_tree, nodes[right_na])
+        else:
+            # This is the right side. Find left side
+            left_na = [na for na in nodes.keys() if na[1] == new_tree.start][0]
+            new_tree = MerkleNode.combine(nodes[left_na], new_tree)
+        bit <<= 1
+
+    if not (new_tree.start == 0 and new_tree.end == new_width and new_tree.value == new_head):
+        return False
+
+    return True
