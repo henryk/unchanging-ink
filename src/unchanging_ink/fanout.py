@@ -23,7 +23,6 @@ class Fanout:
 
 
 async def redis_fanout(app):
-    await asyncio.sleep(1)  # I don't know why I need this
     while True:
         redis = None
         try:
