@@ -42,12 +42,14 @@ COPY src /app/src
 RUN poetry install --no-dev -E worker
 
 FROM builder-base as tester
-RUN apt-get install -y libpq-dev
+RUN apt-get install -y libpq-dev redis-server
 RUN poetry install --no-dev --no-root -E worker -E test
 
 COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --no-dev -E worker -E test
+ENV PYTHONTRACEMALLOC=40
+ENV PYTHONASYNCIODEBUG=1
 ENTRYPOINT ["poetry", "run", "pytest", "--cov"]
 CMD []
 
