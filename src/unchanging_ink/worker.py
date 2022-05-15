@@ -5,6 +5,7 @@ import random
 import time
 from typing import Dict, Tuple
 
+import aioredis
 import orjson
 import redis
 import sentry_sdk
@@ -105,11 +106,11 @@ def run_upgrade(connection, cfg):
 
 
 async def main():
-    engine = create_async_engine(str(db.url))
-    r_conn = redis.Redis(host="redis", port=6379, db=0)
+    db_ending = create_async_engine(str(db.url))
+    r_conn = await aioredis.from_url("redis://redis/0")
 
     logger.info("Upgrading database")
-    async with engine.connect() as conn:
+    async with db_ending.connect() as conn:
         await conn.run_sync(run_upgrade, config.Config("alembic.ini"))
         await conn.commit()
 
@@ -117,13 +118,13 @@ async def main():
     queue = []
     while True:
         await asyncio.sleep(3)
-        async with engine.connect() as conn:
+        async with db_ending.connect() as conn:
             mth = await calculate_interval(conn)
-            r_conn.publish("mth-live", orjson.dumps(mth))
+            await r_conn.publish("mth-live", orjson.dumps(mth))
             queue.append(mth)
             if len(queue) > 5:
                 queue.pop(0)
-            r_conn.set("recent-mth", orjson.dumps(queue))
+            await r_conn.set("recent-mth", orjson.dumps(queue))
 
 
 if __name__ == "__main__":
