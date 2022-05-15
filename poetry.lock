@@ -823,7 +823,7 @@ worker = ["psycopg2", "alembic", "redis", "sentry-sdk"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4a02271ab9012bb95e4c026e5d083d0b9ea0214d6b69620b2636c7f640849c15"
+content-hash = "31fadcd4beb82b0a2fdcf8e51ffeef9958ab11f50a8458997a019bfce03e9c2b"
 
 [metadata.files]
 aiofiles = [
