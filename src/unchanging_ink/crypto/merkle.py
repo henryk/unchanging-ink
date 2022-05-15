@@ -49,7 +49,7 @@ class AbstractAsyncMerkleTree(ABC):
 
     @abstractmethod
     async def fetch_leaf_data(self, position: int) -> bytes:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @classmethod
     def consistency_proof_node_addresses(
@@ -256,14 +256,14 @@ class AbstractAsyncMerkleTree(ABC):
 class AbstractAsyncCachingMerkleTree(AbstractAsyncMerkleTree):
     @abstractmethod
     async def _getc(self, key: Tuple[int, int]) -> Optional[MerkleNode]:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @abstractmethod
     async def _setc(self, key: Tuple[int, int], value: MerkleNode):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def seed(self, data: Dict[Tuple[int, int], MerkleNode]):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @classmethod
     async def _from_sequence_with_seed(
@@ -289,7 +289,7 @@ class DictCachingMerkleTree(AbstractAsyncCachingMerkleTree):
         self._d: Dict[Tuple[int, int], MerkleNode] = {}
 
     async def fetch_leaf_data(self, position: int) -> MerkleNode:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def seed(self, data: Dict[Tuple[int, int], MerkleNode]):
         self._d.update(data)
