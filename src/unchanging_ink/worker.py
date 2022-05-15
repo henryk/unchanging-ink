@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import random
@@ -8,11 +9,12 @@ import orjson
 import redis
 import sentry_sdk
 import sqlalchemy
+from alembic import command, config, script, migration
 from nacl.encoding import Base64Encoder
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam
 
-from .crypto import MerkleNode
+from .crypto import MerkleNode, DictCachingMerkleTree
 from .models import interval, timestamp
 from .server import db
 
@@ -43,30 +45,30 @@ def formulate_proof(
     }
 
 
-def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
+async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> dict:
     retval = {
         "timestamp": datetime.datetime.now().isoformat(),
         "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64)),
     }
-    with conn.begin() as transaction:
+    async with conn.begin() as transaction:
         s = (
             timestamp.select(timestamp.c.interval.is_(None))
             .with_for_update()
             .order_by("timestamp", "hash")
         )
-        result = conn.execute(s)
+        result = await conn.execute(s)
 
         rows = list(result)
         if len(rows) == 0:
             return retval
 
-        merkle_node, full_index = MerkleNode.from_sequence_with_index(
+        it = await DictCachingMerkleTree.from_sequence(
             row["signature"] for row in rows
         )
-        print("New head", merkle_node)
+        print("New head", it.root)
 
-        ith_obj = {"ith": merkle_node.value}
-        max_id = conn.execute(
+        ith_obj = {"ith": it.root.value}
+        max_id = (await conn.execute(
             sqlalchemy.select(
                 [
                     sqlalchemy.func.max(
@@ -74,18 +76,18 @@ def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
                     ).label("maxid")
                 ]
             )
-        ).scalar()
+        )).scalar()
         ith_obj["id"] = 0 if max_id is None else max_id + 1
-        ith_b64 = Base64Encoder.encode(merkle_node.value).decode("us-ascii")
+        ith_b64 = Base64Encoder.encode(it.root.value).decode("us-ascii")
 
         proofs = []
         for i, row in enumerate(rows):
-            proofs.append(formulate_proof(full_index, i, row, ith_obj["id"], ith_b64))
+            proofs.append(formulate_proof({}, i, row, ith_obj["id"], ith_b64))
 
-        conn.execute(interval.insert().values(**ith_obj))
-        conn.execute("SET CONSTRAINTS ALL DEFERRED")
+        await conn.execute(interval.insert().values(**ith_obj))
+        await conn.execute("SET CONSTRAINTS ALL DEFERRED")
 
-        conn.execute(
+        await conn.execute(
             timestamp.update()
             .where(timestamp.c.id == bindparam("id_"))
             .values(
@@ -97,26 +99,26 @@ def calculate_interval(conn: sqlalchemy.engine.Connection) -> dict:
     return retval
 
 
-def main():
-    logger.info("Upgrading database")
-    import alembic.config
+def run_upgrade(connection, cfg):
+    cfg.attributes["connection"] = connection
+    command.upgrade(cfg, "head")
 
-    alembicArgs = [
-        "--raiseerr",
-        "upgrade",
-        "head",
-    ]
-    alembic.config.main(argv=alembicArgs)
 
-    engine = create_engine(str(db.url))
+async def main():
+    engine = create_async_engine(str(db.url))
     r_conn = redis.Redis(host="redis", port=6379, db=0)
+
+    logger.info("Upgrading database")
+    async with engine.connect() as conn:
+        await conn.run_sync(run_upgrade, config.Config("alembic.ini"))
+        await conn.commit()
 
     logger.info("Worker ready")
     queue = []
     while True:
-        time.sleep(3)
-        with engine.connect() as conn:
-            mth = calculate_interval(conn)
+        await asyncio.sleep(3)
+        async with engine.connect() as conn:
+            mth = await calculate_interval(conn)
             r_conn.publish("mth-live", orjson.dumps(mth))
             queue.append(mth)
             if len(queue) > 5:
@@ -126,4 +128,4 @@ def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    main()
+    asyncio.run(main())
