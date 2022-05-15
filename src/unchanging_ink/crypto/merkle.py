@@ -249,7 +249,7 @@ class AbstractAsyncMerkleTree(ABC):
         return cls(root=root)
 
     @classmethod
-    def from_root_value(cls, width:int, root_value: bytes) -> AbstractAsyncMerkleTree:
+    def from_root_value(cls, width: int, root_value: bytes) -> AbstractAsyncMerkleTree:
         return cls(root=MerkleNode(0, width, root_value))
 
 

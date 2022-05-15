@@ -1,6 +1,7 @@
 import pytest
 
-from unchanging_ink.crypto.merkle import DictCachingMerkleTree, AbstractAsyncMerkleTree, MerkleNode
+from unchanging_ink.crypto.merkle import (AbstractAsyncMerkleTree,
+                                          DictCachingMerkleTree, MerkleNode)
 
 
 class EmptyMerkleTreeUncached(AbstractAsyncMerkleTree):
@@ -118,14 +119,19 @@ async def test_proof_verify(target, length):
 async def test_tree_verify(merkle_tree_11):
     path, proof = await merkle_tree_11.compute_inclusion_proof(9)
 
-    checking_tree = EmptyMerkleTreeUncached.from_root_value(width=11, root_value=(await merkle_tree_11.calculate_node(0, merkle_tree_11.width)).value)
+    checking_tree = EmptyMerkleTreeUncached.from_root_value(
+        width=11,
+        root_value=(await merkle_tree_11.calculate_node(0, merkle_tree_11.width)).value,
+    )
     leaf_node = MerkleNode.from_leaf(9, str(9).encode())
 
     assert checking_tree.verify_inclusion_proof(leaf_node, path, proof)
 
 
 async def test_consistency_proof_nodes_1():
-    proof_node_addresses = AbstractAsyncMerkleTree.consistency_proof_node_addresses(3, 7)
+    proof_node_addresses = AbstractAsyncMerkleTree.consistency_proof_node_addresses(
+        3, 7
+    )
 
     assert list(proof_node_addresses) == [(2, 3), (3, 4), (0, 2), (4, 7)]
 
@@ -144,19 +150,36 @@ async def test_consistency_proof_nodes_3():
 async def test_consistency_proof_verify_1(merkle_tree_7, merkle_tree_11):
     proof = await merkle_tree_11.compute_consistency_proof(merkle_tree_7.width)
 
-    new_tree_11 = EmptyMerkleTreeUncached.from_root_value(width=11, root_value=(await merkle_tree_11.calculate_node(0, merkle_tree_11.width)).value)
-    assert new_tree_11.verify_consistency_proof(EmptyMerkleTreeUncached.from_root_value(width=7, root_value=(await merkle_tree_7.calculate_node(0, merkle_tree_7.width)).value), proof)
+    new_tree_11 = EmptyMerkleTreeUncached.from_root_value(
+        width=11,
+        root_value=(await merkle_tree_11.calculate_node(0, merkle_tree_11.width)).value,
+    )
+    assert new_tree_11.verify_consistency_proof(
+        EmptyMerkleTreeUncached.from_root_value(
+            width=7,
+            root_value=(
+                await merkle_tree_7.calculate_node(0, merkle_tree_7.width)
+            ).value,
+        ),
+        proof,
+    )
 
 
 @pytest.mark.parametrize(
-    "old_width,new_width", [(o, n) for n in range(1, 17) for o in range(1, n+1)]
+    "old_width,new_width", [(o, n) for n in range(1, 17) for o in range(1, n + 1)]
 )
 async def test_consistency_proof_verify(old_width, new_width):
-    old_head = (await StandardMerkleTreeUncached(width=old_width).calculate_node(0, old_width)).value
+    old_head = (
+        await StandardMerkleTreeUncached(width=old_width).calculate_node(0, old_width)
+    ).value
     new_tree = StandardMerkleTreeUncached(width=new_width)
     new_head = (await new_tree.calculate_node(0, new_width)).value
 
     proof = await new_tree.compute_consistency_proof(old_width)
 
-    assert EmptyMerkleTreeUncached.from_root_value(width=new_width, root_value=new_head).verify_consistency_proof(
-        EmptyMerkleTreeUncached.from_root_value(width=old_width, root_value=old_head), proof)
+    assert EmptyMerkleTreeUncached.from_root_value(
+        width=new_width, root_value=new_head
+    ).verify_consistency_proof(
+        EmptyMerkleTreeUncached.from_root_value(width=old_width, root_value=old_head),
+        proof,
+    )
