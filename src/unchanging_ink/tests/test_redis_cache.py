@@ -6,16 +6,17 @@ import aioredis
 import pytest
 
 from unchanging_ink.cache import AbstractRedisAsyncCachingMerkleTree
+
 from .test_merkle import StandardMerkleTreeUncached
 
-
-if sys.platform == 'win32':
+if sys.platform == "win32":
     # Work around https://github.com/kmike/port-for/issues/4
     import port_for.api as _a
 
     @wraps(_a._refuses_connection)
     def foo(*args, **kwargs):
         return True
+
     _a._refuses_connection = foo
     del _a, foo
 

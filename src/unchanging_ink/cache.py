@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Dict, Tuple, Optional
+from typing import Dict, Optional, Tuple
 
 from unchanging_ink.crypto import AbstractAsyncCachingMerkleTree, MerkleNode
 
@@ -23,4 +23,3 @@ class AbstractRedisAsyncCachingMerkleTree(AbstractAsyncCachingMerkleTree, ABC):
     async def _setc(self, key: Tuple[int, int], value: MerkleNode):
         key = "{},{}".format(*key).encode()
         await self._aiorc.set(key, value.value)
-

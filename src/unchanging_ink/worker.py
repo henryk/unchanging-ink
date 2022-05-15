@@ -10,12 +10,12 @@ import orjson
 import redis
 import sentry_sdk
 import sqlalchemy
-from alembic import command, config, script, migration
+from alembic import command, config, migration, script
 from nacl.encoding import Base64Encoder
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam
 
-from .crypto import MerkleNode, DictCachingMerkleTree
+from .crypto import DictCachingMerkleTree, MerkleNode
 from .models import interval, timestamp
 from .server import db
 
@@ -63,21 +63,21 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
         if len(rows) == 0:
             return retval
 
-        it = await DictCachingMerkleTree.from_sequence(
-            row["signature"] for row in rows
-        )
+        it = await DictCachingMerkleTree.from_sequence(row["signature"] for row in rows)
         print("New head", it.root)
 
         ith_obj = {"ith": it.root.value}
-        max_id = (await conn.execute(
-            sqlalchemy.select(
-                [
-                    sqlalchemy.func.max(
-                        interval.c.id, type_=sqlalchemy.types.String
-                    ).label("maxid")
-                ]
+        max_id = (
+            await conn.execute(
+                sqlalchemy.select(
+                    [
+                        sqlalchemy.func.max(
+                            interval.c.id, type_=sqlalchemy.types.String
+                        ).label("maxid")
+                    ]
+                )
             )
-        )).scalar()
+        ).scalar()
         ith_obj["id"] = 0 if max_id is None else max_id + 1
         ith_b64 = Base64Encoder.encode(it.root.value).decode("us-ascii")
 
