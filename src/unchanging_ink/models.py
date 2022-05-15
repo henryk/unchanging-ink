@@ -29,14 +29,6 @@ interval = sqlalchemy.Table(
     "interval",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.BigInteger, primary_key=True),
-    sqlalchemy.Column("ith", sqlalchemy.LargeBinary(length=64), nullable=False),
-)
-
-node = sqlalchemy.Table(
-    "node",
-    metadata,
-    sqlalchemy.Column("start", sqlalchemy.BigInteger, nullable=False),
-    sqlalchemy.Column("end", sqlalchemy.BigInteger, nullable=False),
-    sqlalchemy.Column("value", sqlalchemy.LargeBinary(length=64), nullable=False),
-    sqlalchemy.PrimaryKeyConstraint("start", "end", name="node_pk"),
+    sqlalchemy.Column("timestamp", sqlalchemy.String(length=32), nullable=False),
+    sqlalchemy.Column("itmh", sqlalchemy.LargeBinary(length=64), nullable=False),
 )
