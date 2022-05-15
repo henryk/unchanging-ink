@@ -1,34 +1,10 @@
 from __future__ import annotations
 
 import math
-from collections import OrderedDict
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from hashlib import sha512
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
-
-
-def consistency_proof_nodes(old_width, new_width) -> Iterable[Tuple[int, int]]:
-    yield from _consistency_proof_subnodes(old_width, new_width, True)
-
-
-def _consistency_proof_subnodes(
-    m: int, n: int, flag: bool, _o: int = 0
-) -> Iterable[Tuple[int, int]]:
-    assert 0 < m
-    if n == m:
-        if flag:
-            return ()
-        else:
-            yield _o + 0, _o + n
-    else:
-        assert m < n
-        k = 2 ** (math.ceil(math.log2(n)) - 1)
-        if m <= k:
-            yield from _consistency_proof_subnodes(m, k, flag, _o)
-            yield _o + k, _o + n
-        else:
-            yield from _consistency_proof_subnodes(m - k, n - k, False, _o + k)
-            yield _o + 0, _o + k
 
 
 @dataclass
@@ -45,6 +21,10 @@ class MerkleNode:
         else:
             self.height = int(math.ceil(math.log2(self.end - self.start))) + 1
 
+    def __add__(self, other):
+        assert isinstance(other, self.__class__)
+        return self.combine(self, other)
+
     @classmethod
     def combine(cls: MerkleNode, n1: MerkleNode, n2: MerkleNode) -> MerkleNode:
         assert n1.end == n2.start
@@ -56,37 +36,66 @@ class MerkleNode:
     def from_leaf(cls: MerkleNode, index: int, value: bytes) -> MerkleNode:
         return MerkleNode(index, index + 1, cls.hash_function(b"\x00" + value).digest())
 
-    @classmethod
-    def from_sequence_with_index(
-        cls: MerkleNode, values: Iterable[bytes]
-    ) -> Tuple[MerkleNode, Dict[Tuple[int, int], MerkleNode]]:
-        """Efficiently calculates the entire Merkle tree for a sequence of raw values.
 
-        Returns the root node and an index dictionary mapping (start, end) to nodes. (start inclusive, end exclusive)"""
-        stack: List[MerkleNode] = []
-        full_index: Dict[Tuple[int, int], MerkleNode] = {}
+class AbstractAsyncMerkleTree(ABC):
+    NODE_CLASS = MerkleNode
+    __slots__ = ("root", "width")
 
-        for i, value in enumerate(values):
-            while len(stack) > 1 and stack[-2].height == stack[-1].height:
-                stack[-2] = cls.combine(stack[-2], stack[-1])
-                del stack[-1]
-                full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
-            stack.append(cls.from_leaf(i, value))
-            full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
+    def __init__(
+        self, *, root: Optional[MerkleNode] = None, width: Optional[int] = None
+    ):
+        self.root: Optional[MerkleNode] = root
+        self.width = self.root.end if self.root else width
 
-        while len(stack) > 1:
-            stack[-2] = cls.combine(stack[-2], stack[-1])
-            del stack[-1]
-            full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
-
-        return_node = (
-            stack[0] if stack else MerkleNode(0, 0, cls.hash_function().digest())
-        )
-        return return_node, full_index
+    @abstractmethod
+    async def fetch_leaf_data(self, position: int) -> bytes:
+        raise NotImplementedError()
 
     @classmethod
-    def path_proof(
-        cls: MerkleNode, tree_index: Dict[Tuple[int, int], MerkleNode], x: int, n: int
+    def consistency_proof_node_addresses(
+        cls, old_width, new_width
+    ) -> Iterable[Tuple[int, int]]:
+        yield from cls._consistency_proof_subnode_addresses(old_width, new_width, True)
+
+    @classmethod
+    def _consistency_proof_subnode_addresses(
+        cls, m: int, n: int, flag: bool, _o: int = 0
+    ) -> Iterable[Tuple[int, int]]:
+        assert 0 < m
+        if n == m:
+            if flag:
+                return ()
+            else:
+                yield _o + 0, _o + n
+        else:
+            assert m < n
+            k = 2 ** (math.ceil(math.log2(n)) - 1)
+            if m <= k:
+                yield from cls._consistency_proof_subnode_addresses(m, k, flag, _o)
+                yield _o + k, _o + n
+            else:
+                yield from cls._consistency_proof_subnode_addresses(
+                    m - k, n - k, False, _o + k
+                )
+                yield _o + 0, _o + k
+
+    async def calculate_node(self, start: int, end: int) -> MerkleNode:
+        assert start < end
+
+        if start + 1 == end:
+            item = MerkleNode.from_leaf(start, await self.fetch_leaf_data(start))
+        else:
+            mask_length = (start ^ (end - 1)).bit_length()
+            middle = start + (1 << (mask_length - 1))
+
+            item = await self.calculate_node(start, middle) + await self.calculate_node(
+                middle, end
+            )
+
+        return item
+
+    async def compute_inclusion_proof(
+        self, position: int
     ) -> Tuple[int, Sequence[MerkleNode]]:
         current_read_bit: int = 1
         current_write_bit: int = 1
@@ -94,13 +103,13 @@ class MerkleNode:
         path: int = 0
         neighbours: List[MerkleNode] = []
 
-        mytree: MerkleNode = tree_index[(x, x + 1)]
-        while not (mytree.start == 0 and mytree.end == n):
+        mytree: MerkleNode = await self.calculate_node(position, position + 1)
+        while not (mytree.start == 0 and mytree.end == self.width):
             if mytree.start & current_read_bit == 0:
                 # This is the left side
-                otherend = min(n, mytree.end + current_width)
+                otherend = min(self.width, mytree.end + current_width)
                 if mytree.end != otherend:
-                    othertree = tree_index[(mytree.end, otherend)]
+                    othertree = await self.calculate_node(mytree.end, otherend)
                 else:
                     othertree = None
                 # Do not OR in current_write_bit
@@ -108,7 +117,7 @@ class MerkleNode:
                 # Right side
                 otherstart = max(0, mytree.start - current_width)
                 if mytree.start != otherstart:
-                    othertree = tree_index[(otherstart, mytree.start)]
+                    othertree = await self.calculate_node(otherstart, mytree.start)
                     path |= current_write_bit
                 else:
                     othertree = None
@@ -120,22 +129,20 @@ class MerkleNode:
                 # There is no other side
                 continue
 
-            if othertree.start == 0 and othertree.end == n:
+            if othertree.start == 0 and othertree.end == self.width:
                 break
 
             current_write_bit <<= 1
             neighbours.append(othertree)
 
-            mytree = tree_index[
-                (min(mytree.start, othertree.start), max(mytree.end, othertree.end))
-            ]
+            mytree = await self.calculate_node(
+                min(mytree.start, othertree.start), max(mytree.end, othertree.end)
+            )
 
         return path, neighbours
 
-    @classmethod
-    def verify_proof(
-        cls,
-        head_node: MerkleNode,
+    def verify_inclusion_proof(
+        self,
         leaf_node: MerkleNode,
         path: int,
         neighbours: Sequence[MerkleNode],
@@ -144,85 +151,151 @@ class MerkleNode:
         for neighbour in neighbours:
             if path & 1 == 0:
                 # Left side
-                current_node = MerkleNode.combine(current_node, neighbour)
+                current_node = current_node + neighbour
             else:
-                current_node = MerkleNode.combine(neighbour, current_node)
+                current_node = neighbour + current_node
             path >>= 1
-        return current_node.value == head_node.value
+        return current_node.value == self.root.value
 
-
-@dataclass
-class MerkleTree:
-    width: int
-    nodes: Dict[Tuple[int, int], MerkleNode]
-
-    @property
-    def root(self):
-        if self.width > 0:
-            return self.nodes[(0, self.width)]
-        raise ValueError
-
-    @classmethod
-    def from_root(cls: MerkleTree, root: MerkleNode) -> MerkleTree:
-        return cls(root.end - root.start, {(root.start, root.end): root})
-
-    @classmethod
-    def from_sequence(cls: MerkleTree, values: Iterable[bytes]) -> MerkleTree:
-        root, nodes = MerkleNode.from_sequence_with_index(values)
-        return cls(root.end - root.start, nodes)
-
-    def compute_inclusion_proof(self, x: int) -> Tuple[int, Sequence[MerkleNode]]:
-        return MerkleNode.path_proof(self.nodes, x, self.width)
-
-    def verify_inclusion_proof(
-        self, leaf_node: MerkleNode, path: int, neighbours: Sequence[MerkleNode]
-    ) -> bool:
-        return MerkleNode.verify_proof(self.root, leaf_node, path, neighbours)
-
-    def compute_consistency_proof(self, old_width) -> Sequence[bytes]:
+    async def compute_consistency_proof(self, old_width: int) -> Sequence[MerkleNode]:
         return [
-            self.nodes[node_address].value
-            for node_address in consistency_proof_nodes(old_width, self.width)
+            await self.calculate_node(*node_address)
+            for node_address in self.consistency_proof_node_addresses(
+                old_width, self.width
+            )
         ]
 
+    def verify_consistency_proof(
+        self, old_tree: AbstractAsyncMerkleTree, proof: Sequence[MerkleNode]
+    ) -> bool:
+        if old_tree.width == self.width:
+            return old_tree.root.value == self.root.value
 
-def verify_consistency_proof(old_width: int, old_head: bytes, new_width: int, new_head: bytes, proof: Sequence[bytes]) -> bool:
-    if old_width == new_width:
-        return old_head == new_head
+        proof_addresses = list(
+            self.consistency_proof_node_addresses(old_tree.width, self.width)
+        )
 
-    proof_addresses = list(consistency_proof_nodes(old_width, new_width))
-
-    if len(proof_addresses) != len(proof):
-        return False
-
-    nodes = []
-
-    if 2**math.floor(math.log2(old_width)) == old_width:
-        # Add old tree as knowledge, to the start of the ordered dict
-        nodes.append(MerkleNode(start=0, end=old_width, value=old_head) )
-
-    for (na, val) in zip(proof_addresses, proof):
-        nodes.append(MerkleNode(*na, value=val))
-
-    old_path = old_width - 1
-    new_path = new_width - 1
-    while old_path & 1:
-        old_path >>= 1
-        new_path >>= 1
-
-    old_tree = new_tree = nodes[0]
-    for node in nodes[1:]:
-        if new_path == 0:
+        if len(proof_addresses) != len(proof):
             return False
-        if old_path & 1 or old_path == new_path:
-            old_tree = MerkleNode.combine(node, old_tree)
-            new_tree = MerkleNode.combine(node, new_tree)
-            while not old_path & 1 and old_path > 0:
-                old_path >>= 1
-                new_path >>= 1
-        else:
-            new_tree = MerkleNode.combine(new_tree, node)
-        old_path >>= 1
-        new_path >>= 1
 
-    return new_path == 0 and old_tree.value == old_head and new_tree.value == new_head
+        nodes: List[MerkleNode] = []
+
+        if 2 ** math.floor(math.log2(old_tree.width)) == old_tree.width:
+            # Add old tree as knowledge, to the start of the ordered dict
+            nodes.append(old_tree.root)
+
+        nodes.extend(proof)
+
+        old_path = old_tree.width - 1
+        new_path = self.width - 1
+        while old_path & 1:
+            old_path >>= 1
+            new_path >>= 1
+
+        otree = ntree = nodes[0]
+        for node in nodes[1:]:
+            if new_path == 0:
+                return False
+            if old_path & 1 or old_path == new_path:
+                otree = node + otree
+                ntree = node + ntree
+                while not old_path & 1 and old_path > 0:
+                    old_path >>= 1
+                    new_path >>= 1
+            else:
+                ntree = ntree + node
+            old_path >>= 1
+            new_path >>= 1
+
+        return (
+            new_path == 0
+            and otree.value == old_tree.root.value
+            and ntree.value == self.root.value
+        )
+
+    @classmethod
+    async def from_sequence(
+        cls: AbstractAsyncMerkleTree, values: Iterable[bytes]
+    ) -> AbstractAsyncMerkleTree:
+        """Efficiently calculates the entire Merkle tree for a sequence of raw values."""
+        stack: List[MerkleNode] = []
+        full_index: Dict[Tuple[int, int], MerkleNode] = {}
+
+        for i, value in enumerate(values):
+            while len(stack) > 1 and stack[-2].height == stack[-1].height:
+                stack[-2] = stack[-2] + stack[-1]
+                del stack[-1]
+                full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
+            stack.append(cls.NODE_CLASS.from_leaf(i, value))
+            full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
+
+        while len(stack) > 1:
+            stack[-2] = stack[-2] + stack[-1]
+            del stack[-1]
+            full_index[(stack[-1].start, stack[-1].end)] = stack[-1]
+
+        return_node = (
+            stack[0]
+            if stack
+            else MerkleNode(0, 0, cls.NODE_CLASS.hash_function().digest())
+        )
+        return await cls._from_sequence_with_seed(return_node, full_index)
+
+    @classmethod
+    async def _from_sequence_with_seed(
+        cls, root: MerkleNode, index: Optional[Dict[Tuple[int, int], MerkleNode]] = None
+    ):
+        # Should be overridden in subclasses to store the index in cache
+        return cls(root=root)
+
+    @classmethod
+    def from_root_value(cls, width:int, root_value: bytes) -> AbstractAsyncMerkleTree:
+        return cls(root=MerkleNode(0, width, root_value))
+
+
+class AbstractAsyncCachingMerkleTree(AbstractAsyncMerkleTree):
+    @abstractmethod
+    async def _getc(self, key: Tuple[int, int]) -> Optional[MerkleNode]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def _setc(self, key: Tuple[int, int], value: MerkleNode):
+        raise NotImplementedError()
+
+    async def seed(self, data: Dict[Tuple[int, int], MerkleNode]):
+        raise NotImplementedError()
+
+    @classmethod
+    async def _from_sequence_with_seed(
+        cls, root: MerkleNode, index: Optional[Dict[Tuple[int, int], MerkleNode]] = None
+    ):
+        retval = cls(root=root)
+        await retval.seed(index)
+        return retval
+
+    async def calculate_node(self, start: int, end: int) -> MerkleNode:
+        key = (start, end)
+        if (retval := await self._getc(key)) is not None:
+            return retval
+
+        retval = await super().calculate_node(start, end)
+        await self._setc(key, retval)
+        return retval
+
+
+class DictCachingMerkleTree(AbstractAsyncCachingMerkleTree):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._d: Dict[Tuple[int, int], MerkleNode] = {}
+
+    async def fetch_leaf_data(self, position: int) -> MerkleNode:
+        raise NotImplementedError()
+
+    async def seed(self, data: Dict[Tuple[int, int], MerkleNode]):
+        self._d.update(data)
+
+    async def _getc(self, key: Tuple[int, int]) -> Optional[MerkleNode]:
+        return self._d.get(key, None)
+
+    async def _setc(self, key: Tuple[int, int], value: MerkleNode):
+        self._d[key] = value

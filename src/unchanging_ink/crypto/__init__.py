@@ -4,7 +4,7 @@ from nacl.encoding import Base64Encoder
 from nacl.signing import SigningKey
 from sanic import Sanic
 
-from .merkle import MerkleNode, MerkleTree, consistency_proof_nodes, verify_consistency_proof
+from .merkle import MerkleNode, AbstractAsyncMerkleTree, AbstractAsyncCachingMerkleTree, DictCachingMerkleTree
 
 
 class Signer:
