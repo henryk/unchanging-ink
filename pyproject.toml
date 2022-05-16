@@ -31,6 +31,8 @@ cbor2 = "^5.4.3"
 python-dateutil = {version = "^2.8.2", optional = true}
 pytest-asyncio = {version = "^0.18.3", optional = true}
 sanic-testing = {version = "^22.3.0", optional = true}
+pytest-async-sqlalchemy = {version = "^0.2.0", optional = true}
+aiosqlite = {version = "^0.17.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
@@ -38,13 +40,16 @@ isort = "^5.8.0"
 
 [tool.poetry.extras]
 worker = [ "psycopg2", "alembic", "redis", "sentry-sdk" ]
-test = [ "pytest", "pytest-asyncio", "coverage", "pytest-cov", "pytest-redis", "python-dateutil", "sanic-testing" ]
+test = [ "pytest", "pytest-asyncio", "coverage", "pytest-cov", "pytest-redis", "python-dateutil", "sanic-testing", "pytest-async-sqlalchemy", "aiosqlite" ]
 dev = [ "black", "isort" ]
 
 [tool.poetry.scripts]
 unchanging-ink = "unchanging_ink.server:init"
 unchanging-ink_worker = "unchanging_ink.worker:main"
 unchanging-ink_create_tables = "unchanging_ink.create_tables:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 branch = true
