@@ -6,6 +6,16 @@ from .fanout import Fanout, redis_fanout
 from .routes import setup_routes
 
 app = Sanic(__name__.replace(".", "-"))
+
+
+if "DB_USER" not in app.config:
+    app.config.update({
+        "DB_USER": "sanic",
+        "DB_HOST": "db",
+        "DB_PASSWORD": "toomanysecrets",
+        "DB_NAME": "sanic",
+    })
+
 db = Database(
     f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
 )
