@@ -2,15 +2,13 @@ import asyncio
 import datetime
 import logging
 import random
-import time
 from typing import Dict, Tuple
 
 import aioredis
 import orjson
-import redis
 import sentry_sdk
 import sqlalchemy
-from alembic import command, config, migration, script
+from alembic import command, config
 from nacl.encoding import Base64Encoder
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam
@@ -105,7 +103,7 @@ def run_upgrade(connection, cfg):
     command.upgrade(cfg, "head")
 
 
-async def main():
+async def async_main():
     db_ending = create_async_engine(str(db.url))
     r_conn = await aioredis.from_url("redis://redis/0")
 
@@ -127,6 +125,10 @@ async def main():
             await r_conn.set("recent-mth", orjson.dumps(queue))
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(main())
+    asyncio.run(async_main())
+
+
+if __name__ == "__main__":
+    main()
