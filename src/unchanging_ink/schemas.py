@@ -48,11 +48,25 @@ class TimestampStructure(CBORMixin):
 
 
 @dataclass
-class IntervalProofStructure:
-    mth: str
-    itmh: bytes
+class IntervalProofStructure(CBORMixin, JSONMixin):
     a: int
     path: list[bytes]
+
+    def as_json_data(self):
+        data = asdict(self)
+        data["path"] = [base64.b64encode(x).decode() for x in data["path"]]
+        return data
+
+
+@dataclass
+class IntervalProofStructureAugmented(IntervalProofStructure):
+    mth: Optional[str] = None
+    itmh: Optional[bytes] = None
+
+    def as_json_data(self):
+        data = super().as_json_data()
+        data["itmh"] = base64.b64encode(data["itmh"]).decode() if data["itmh"] else None
+        return data
 
 
 @dataclass
@@ -63,10 +77,18 @@ class Timestamp(CBORMixin, JSONMixin):
     version: str = "1"
     proof: Optional[IntervalProofStructure] = None
 
+    def __post_init__(self):
+        if isinstance(self.proof, bytes):
+            self.proof = IntervalProofStructure.from_cbor(self.proof)
+
     def as_json_data(self):
         data = asdict(self)
-        data["hash"] = base64.encodebytes(data["hash"]).decode()
-        del data["proof"]  # FIXME
+        data["hash"] = base64.b64encode(data["hash"]).decode()
+        if data["proof"]:
+            if "itmh" in data["proof"]:
+                data["proof"]["itmh"] = base64.b64encode(data["proof"]["itmh"]).decode()
+            if "path" in data["proof"]:
+                data["proof"]["path"] = [base64.b64encode(x).decode() for x in data["proof"]["path"]]
         return data
 
 
@@ -82,18 +104,28 @@ class TimestampWithId(Timestamp):
 
 
 @dataclass
-class IntervalTreeHead:
-    version: int
+class IntervalTreeHead(CBORMixin, JSONMixin):
     interval: int
-    timestamp: str
+    timestamp: datetime.datetime
     itmh: bytes
+    version: str = "1"
+
+    def as_json_data(self):
+        data = asdict(self)
+        data["itmh"] = base64.b64encode(data["itmh"]).decode()
+        return data
 
 
 @dataclass
-class MerkleTreeHead:
-    version: int
+class MerkleTreeHead(CBORMixin, JSONMixin):
     interval: int
     mth: bytes
+    version: str = "1"
+
+    def as_json_data(self):
+        data = asdict(self)
+        data["mth"] = base64.b64encode(data["mth"]).decode()
+        return data
 
 
 @dataclass

@@ -1,19 +1,17 @@
 import asyncio
 import datetime
 import logging
-import random
-from typing import Dict, Tuple
 
 import aioredis
 import orjson
 import sentry_sdk
 import sqlalchemy
 from alembic import command, config
-from nacl.encoding import Base64Encoder
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam, text
 
-from .crypto import DictCachingMerkleTree, MerkleNode
+from unchanging_ink.schemas import IntervalProofStructure, IntervalTreeHead
+from .crypto import DictCachingMerkleTree, AbstractAsyncMerkleTree
 from .models import interval, timestamp
 from .server import db
 
@@ -29,26 +27,26 @@ sentry_sdk.init(
 )
 
 
-def formulate_proof(
-    full_index: Dict[Tuple[int, int], MerkleNode],
+async def formulate_proof(
+    interval_tree: AbstractAsyncMerkleTree,
+    interval_tree_head: IntervalTreeHead,
     i: int,
-    row,
-    interval_id,
-    interval_hash_b64,
-):
-    # FIXME Draw the rest of the owl
+    row: dict,
+    mth: str,
+) -> dict:
+    a, path = await interval_tree.compute_inclusion_proof(i)
     return {
         "id_": row["id"],
-        "interval": interval_id,
-        "proof": {"ith": interval_hash_b64},
+        "interval": interval_tree_head.interval,
+        "proof": IntervalProofStructure(
+            a=a,
+            path=[node.value for node in path]
+        ).to_cbor(),
     }
 
 
 async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> dict:
-    retval = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z"),
-        "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64)),
-    }
+    now_ = datetime.datetime.now(datetime.timezone.utc)
     async with conn.begin() as transaction:
         s = (
             timestamp.select(timestamp.c.interval.is_(None))
@@ -58,13 +56,10 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
         result = await conn.execute(s)
 
         rows = list(result)
-        if len(rows) == 0:
-            return retval
 
-        it = await DictCachingMerkleTree.from_sequence(row["hash"] for row in rows)
-        print("New head", it.root)
+        interval_tree = await DictCachingMerkleTree.from_sequence(row["hash"] for row in rows)
+        print("New head", interval_tree.root)
 
-        ith_obj = {"itmh": it.root.value, "timestamp": retval["timestamp"]}
         max_id = (
             await conn.execute(
                 sqlalchemy.select(
@@ -76,26 +71,30 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
                 )
             )
         ).scalar()
-        ith_obj["id"] = 0 if max_id is None else max_id + 1
-        ith_b64 = Base64Encoder.encode(it.root.value).decode("us-ascii")
+        interval_tree_head = IntervalTreeHead(interval=0 if max_id is None else max_id + 1, timestamp=now_, itmh=interval_tree.root.value)
 
         proofs = []
         for i, row in enumerate(rows):
-            proofs.append(formulate_proof({}, i, row, ith_obj["id"], ith_b64))
+            proofs.append(await formulate_proof(interval_tree, interval_tree_head, i, row, "FIXME"))
 
-        await conn.execute(interval.insert().values(**ith_obj))
+        await conn.execute(interval.insert().values(
+            id=interval_tree_head.interval,
+            timestamp=now_.isoformat(timespec="microseconds").replace("+00:00", "Z"),
+            itmh=interval_tree_head.itmh,
+        ))
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
 
-        await conn.execute(
-            timestamp.update()
-            .where(timestamp.c.id == bindparam("id_"))
-            .values(
-                interval=bindparam("interval"),
-                proof=bindparam("proof"),
-            ),
-            proofs,
-        )
-    return retval
+        if proofs:
+            await conn.execute(
+                timestamp.update()
+                .where(timestamp.c.id == bindparam("id_"))
+                .values(
+                    interval=bindparam("interval"),
+                    proof=bindparam("proof"),
+                ),
+                proofs,
+            )
+    return orjson.loads(interval_tree_head.to_json())  # FIXME
 
 
 def run_upgrade(connection, cfg):

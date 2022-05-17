@@ -22,7 +22,7 @@ timestamp = sqlalchemy.Table(
         nullable=True,
         index=True,
     ),
-    sqlalchemy.Column("proof", sqlalchemy.JSON(), nullable=True),
+    sqlalchemy.Column("proof", sqlalchemy.LargeBinary(), nullable=True),
 )
 
 interval = sqlalchemy.Table(

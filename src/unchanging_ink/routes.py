@@ -47,6 +47,7 @@ def setup_routes(app: Sanic):
         if request.method == "GET":  # FIXME Remove
             query = timestamp.select()
 
+            # FIXME Augment with interval itmh and mth
             rows = await request.app.ctx.db.fetch_all(query)
             return json_response(
                 [
