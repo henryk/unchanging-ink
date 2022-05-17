@@ -33,6 +33,7 @@ pytest-asyncio = {version = "^0.18.3", optional = true}
 sanic-testing = {version = "^22.3.0", optional = true}
 pytest-async-sqlalchemy = {version = "^0.2.0", optional = true}
 aiosqlite = {version = "^0.17.0", optional = true}
+accept-types = "^0.4.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

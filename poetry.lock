@@ -1,4 +1,12 @@
 [[package]]
+name = "accept-types"
+version = "0.4.1"
+description = "Determine the best content to send in an HTTP response"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "aiofiles"
 version = "0.8.0"
 description = "File support for asyncio."
@@ -872,9 +880,13 @@ worker = ["psycopg2", "alembic", "redis", "sentry-sdk"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c95a60a6b7c5252fa329611dc67c9e86fe692ecbbc6c07c01124a7ed0fba595c"
+content-hash = "c933b6b3b0e29e56e3b3bf62279b2cb731a7331e6b25cd98f4e99247727ae082"
 
 [metadata.files]
+accept-types = [
+    {file = "accept-types-0.4.1.tar.gz", hash = "sha256:fb27099716d8f0360408c8ca86d69dbfed44455834b70d1506250abe521b535a"},
+    {file = "accept_types-0.4.1-py3-none-any.whl", hash = "sha256:c87feccdffb66b02f9343ff387d7fd5c451ccb2e1221fbd37ea0cedef5cf290f"},
+]
 aiofiles = [
     {file = "aiofiles-0.8.0-py3-none-any.whl", hash = "sha256:7a973fc22b29e9962d0897805ace5856e6a566ab1f0c8e5c91ff6c866519c937"},
     {file = "aiofiles-0.8.0.tar.gz", hash = "sha256:8334f23235248a3b2e83b2c3a78a22674f39969b96397126cc93664d9a901e59"},

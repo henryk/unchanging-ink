@@ -11,7 +11,7 @@ import sqlalchemy
 from alembic import command, config
 from nacl.encoding import Base64Encoder
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.sql.expression import bindparam
+from sqlalchemy.sql.expression import bindparam, text
 
 from .crypto import DictCachingMerkleTree, MerkleNode
 from .models import interval, timestamp
@@ -46,7 +46,7 @@ def formulate_proof(
 
 async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> dict:
     retval = {
-        "timestamp": datetime.datetime.now().isoformat(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z"),
         "hash": "".join(random.choice("ABCDEF0123456789") for _ in range(64)),
     }
     async with conn.begin() as transaction:
@@ -61,10 +61,10 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
         if len(rows) == 0:
             return retval
 
-        it = await DictCachingMerkleTree.from_sequence(row["signature"] for row in rows)
+        it = await DictCachingMerkleTree.from_sequence(row["hash"] for row in rows)
         print("New head", it.root)
 
-        ith_obj = {"ith": it.root.value}
+        ith_obj = {"itmh": it.root.value, "timestamp": retval["timestamp"]}
         max_id = (
             await conn.execute(
                 sqlalchemy.select(
@@ -84,7 +84,7 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
             proofs.append(formulate_proof({}, i, row, ith_obj["id"], ith_b64))
 
         await conn.execute(interval.insert().values(**ith_obj))
-        await conn.execute("SET CONSTRAINTS ALL DEFERRED")
+        await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
 
         await conn.execute(
             timestamp.update()
