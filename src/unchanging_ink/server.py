@@ -1,5 +1,5 @@
-from databases import Database
 from sanic import Sanic
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from .crypto import setup_crypto
 from .fanout import Fanout, redis_fanout
@@ -16,21 +16,16 @@ if "DB_USER" not in app.config:
         "DB_NAME": "sanic",
     })
 
-db = Database(
-    f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
-)
+db_url = f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
+engine = create_async_engine(db_url)
 
 
 def setup_database():
-    app.ctx.db = db
-
-    @app.listener("after_server_start")
-    async def connect_to_db(*args, **kwargs):
-        await app.ctx.db.connect()
+    app.ctx.engine = engine
 
     @app.listener("after_server_stop")
-    async def disconnect_from_db(*args, **kwargs):
-        await app.ctx.db.disconnect()
+    async def stop_db():
+        await engine.dispose()
 
 
 def setup_fanout(app):

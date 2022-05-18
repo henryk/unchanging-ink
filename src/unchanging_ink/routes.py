@@ -4,8 +4,7 @@ import uuid
 from typing import TypeVar, Type
 
 from accept_types import get_best_match
-from nacl.encoding import Base64Encoder
-from orjson import dumps as json_dumps
+
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import HTTPResponse
@@ -42,22 +41,31 @@ def data_to_response(request, data, *args, **kwargs) -> HTTPResponse:
 
 
 def setup_routes(app: Sanic):
+    def prefixed_url_for(*args, **kwargs):
+        # FIXME make work for _external=True
+        route = app.url_for(*args, **kwargs)
+        return "/api" + route
+
+    app.ctx.prefixed_url_for = prefixed_url_for
+
     @app.route("/ts/", version=1, methods=["GET", "POST"])  # FIXME Throttling
     async def request_timestamp(request: Request) -> HTTPResponse:
         if request.method == "GET":  # FIXME Remove
             query = timestamp.select()
 
-            # FIXME Augment with interval itmh and mth
-            rows = await request.app.ctx.db.fetch_all(query)
-            return json_response(
-                [
-                    TimestampWithId(**{
-                        k: v for (k, v) in row.items()
-                        if k not in ("tag", )
-                    }).as_json_data()
-                    for row in rows
-                ]
-            )
+            async with app.ctx.engine.begin() as conn:
+                # FIXME Augment with interval itmh and mth
+                result = await conn.execute(query)
+                rows = result.all()
+                return json_response(
+                    [
+                        TimestampWithId(**{
+                            k: v for (k, v) in row._asdict().items()
+                            if k not in ("tag", )
+                        }).as_json_data()
+                        for row in rows
+                    ]
+                )
 
         elif request.method == "POST":
             timestamp_request = data_from_request(request, TimestampRequest)
@@ -75,18 +83,22 @@ def setup_routes(app: Sanic):
                 "hash": hash_,
             }
 
-            await app.ctx.db.execute(query=timestamp.insert(), values=data)
+            async with app.ctx.engine.begin() as conn:
+                await conn.execute(timestamp.insert(), data)
 
             response = Timestamp(hash=hash_, timestamp=data["timestamp"])
 
-            return data_to_response(request, response, headers={"location": app.url_for('request_timestamp_one', id_=data["id"])})
+            return data_to_response(request, response, headers={"location": app.ctx.prefixed_url_for('request_timestamp_one', id_=data["id"])})
 
     @app.route("/ts/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
         query = timestamp.select(timestamp.c.id == id_)
-        row = await request.app.ctx.db.fetch_one(query)
+        async with app.ctx.engine.begin() as conn:
+            result = await conn.execute(query)
+            row = result.first()
+
         response = TimestampWithId(**{
-                        k: v for (k, v) in row.items()
+                        k: v for (k, v) in row._asdict().items()
                         if k not in ("tag", )
                     })
         return data_to_response(request, response)

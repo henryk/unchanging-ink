@@ -215,25 +215,6 @@ tomli = {version = "*", optional = true, markers = "extra == \"toml\""}
 toml = ["tomli"]
 
 [[package]]
-name = "databases"
-version = "0.5.5"
-description = "Async database support for Python."
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-asyncpg = {version = "*", optional = true, markers = "extra == \"postgresql\""}
-sqlalchemy = ">=1.4,<1.5"
-
-[package.extras]
-mysql = ["aiomysql"]
-mysql_asyncmy = ["asyncmy"]
-postgresql = ["asyncpg"]
-postgresql_aiopg = ["aiopg"]
-sqlite = ["aiosqlite"]
-
-[[package]]
 name = "greenlet"
 version = "1.1.2"
 description = "Lightweight in-process concurrent programming"
@@ -880,7 +861,7 @@ worker = ["psycopg2", "alembic", "redis", "sentry-sdk"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c933b6b3b0e29e56e3b3bf62279b2cb731a7331e6b25cd98f4e99247727ae082"
+content-hash = "ff24ddcf042f98c75d676b35f27f207481f1b628fd2073785cc12e73931c51e1"
 
 [metadata.files]
 accept-types = [
@@ -1112,10 +1093,6 @@ coverage = [
     {file = "coverage-6.3.3-cp39-cp39-win_amd64.whl", hash = "sha256:9c9441d57b0963cf8340268ad62fc83de61f1613034b79c2b1053046af0c5284"},
     {file = "coverage-6.3.3-pp36.pp37.pp38-none-any.whl", hash = "sha256:d522f1dc49127eab0bfbba4e90fa068ecff0899bbf61bf4065c790ddd6c177fe"},
     {file = "coverage-6.3.3.tar.gz", hash = "sha256:2781c43bffbbec2b8867376d4d61916f5e9c4cc168232528562a61d1b4b01879"},
-]
-databases = [
-    {file = "databases-0.5.5-py3-none-any.whl", hash = "sha256:97d9b9647216d1ab53ca61c059412b5c7b6e1f0bf8ce985477982ebcc7f278f3"},
-    {file = "databases-0.5.5.tar.gz", hash = "sha256:02c6b016c1c951c21cca281dc8e2e002c60dc44026c0084aabbd8c37514aeb37"},
 ]
 greenlet = [
     {file = "greenlet-1.1.2-cp27-cp27m-macosx_10_14_x86_64.whl", hash = "sha256:58df5c2a0e293bf665a51f8a100d3e9956febfbf1d9aaf8c0677cf70218910c6"},

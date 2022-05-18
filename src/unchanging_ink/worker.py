@@ -13,7 +13,7 @@ from sqlalchemy.sql.expression import bindparam, text
 from unchanging_ink.schemas import IntervalProofStructure, IntervalTreeHead
 from .crypto import DictCachingMerkleTree, AbstractAsyncMerkleTree
 from .models import interval, timestamp
-from .server import db
+from .server import engine
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +81,7 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
             id=interval_tree_head.interval,
             timestamp=now_.isoformat(timespec="microseconds").replace("+00:00", "Z"),
             itmh=interval_tree_head.itmh,
+            mth=b"FIXME",
         ))
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
 
@@ -103,25 +104,27 @@ def run_upgrade(connection, cfg):
 
 
 async def async_main():
-    db_ending = create_async_engine(str(db.url))
     r_conn = await aioredis.from_url("redis://redis/0")
 
     logger.info("Upgrading database")
-    async with db_ending.connect() as conn:
+    async with engine.connect() as conn:
         await conn.run_sync(run_upgrade, config.Config("alembic.ini"))
         await conn.commit()
 
     logger.info("Worker ready")
     queue = []
-    while True:
-        await asyncio.sleep(3)
-        async with db_ending.connect() as conn:
-            mth = await calculate_interval(conn)
-            await r_conn.publish("mth-live", orjson.dumps(mth))
-            queue.append(mth)
-            if len(queue) > 5:
-                queue.pop(0)
-            await r_conn.set("recent-mth", orjson.dumps(queue))
+    try:
+        while True:
+            await asyncio.sleep(3)
+            async with engine.connect() as conn:
+                mth = await calculate_interval(conn)
+                await r_conn.publish("mth-live", orjson.dumps(mth))
+                queue.append(mth)
+                if len(queue) > 5:
+                    queue.pop(0)
+                await r_conn.set("recent-mth", orjson.dumps(queue))
+    finally:
+        await engine.dispose()
 
 
 def main():

@@ -9,7 +9,6 @@ authors = ["Henryk Plötz <henryk@ploetzli.ch>"]
 python = "^3.8"
 sanic = "^22.3.2"
 pynacl = "^1.4.0"
-databases = {extras = ["postgresql"], version = "^0.5.5"}
 sqlalchemy = { version="^1.4", extras=["asyncio"] }
 SQLAlchemy-Utils = "^0.38.2"
 ujson = "^5.2.0"
