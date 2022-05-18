@@ -29,7 +29,7 @@ class AbstractRedisAsyncCachingMerkleTree(AbstractAsyncCachingMerkleTree, ABC):
 
     async def _setc(self, key: Tuple[int, int], value: MerkleNode):
         key = "{},{}".format(*key).encode()
-        await self._aiorc.set(key, value.value)
+        await self._aiorc.set(key, value.value, ex=60*60*24)
 
 
 @dataclass

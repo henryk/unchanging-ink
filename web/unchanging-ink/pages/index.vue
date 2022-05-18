@@ -117,7 +117,7 @@
                       mdiCheck
                     }}</v-icon></v-card-subtitle
                   >
-                  <v-card-text style="font-family: Roboto Mono, monospace">{{
+                  <v-card-text style="font-family: Roboto Mono, monospace; word-break: break-all">{{
                     item.hash
                   }}</v-card-text>
                 </v-card>
@@ -248,7 +248,7 @@ export default {
     tick(data) {
       const item = {
         time: data?.timestamp ?? 'not set',
-        hash: data?.hash ?? 'NOT SET',
+        hash: data?.mth ?? 'NOT SET',
         icon: [...Array(3)]
           .map((_) =>
             [...Array(5)]

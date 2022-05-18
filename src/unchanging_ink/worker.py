@@ -2,6 +2,7 @@ import asyncio
 import base64
 import datetime
 import logging
+from typing import Tuple
 
 import aioredis
 import orjson
@@ -53,8 +54,11 @@ async def formulate_proof(
 
 async def calculate_interval(
     conn: sqlalchemy.ext.asyncio.AsyncConnection,
-) -> MerkleTreeHead:
+) -> Tuple[str, MerkleTreeHead]:
     now_ = datetime.datetime.now(datetime.timezone.utc)
+    now_formatted = now_.isoformat(timespec="microseconds").replace(
+                    "+00:00", "Z"
+                )
     async with conn.begin() as transaction:
         s = (
             timestamp.select(timestamp.c.interval.is_(None))
@@ -90,9 +94,7 @@ async def calculate_interval(
         await conn.execute(
             interval.insert().values(
                 id=interval_tree_head.interval,
-                timestamp=now_.isoformat(timespec="microseconds").replace(
-                    "+00:00", "Z"
-                ),
+                timestamp=now_formatted,
                 itmh=interval_tree_head.itmh,
             )
         )
@@ -132,7 +134,7 @@ async def calculate_interval(
             )
 
         retval = MerkleTreeHead(interval=interval_tree_head.interval, mth=tree_root.value)
-    return retval
+    return now_formatted, retval
 
 
 def run_upgrade(connection, cfg):
@@ -154,9 +156,11 @@ async def async_main():
         while True:
             await asyncio.sleep(3)
             async with engine.connect() as conn:
-                mth = await calculate_interval(conn)
-                await r_conn.publish("mth-live", mth.to_json())
-                queue.append(orjson.loads(mth.to_json()))
+                now_formatted, mth = await calculate_interval(conn)
+                live_data = orjson.loads(mth.to_json())
+                live_data["timestamp"] = now_formatted
+                await r_conn.publish("mth-live", orjson.dumps(live_data))
+                queue.append(live_data)
                 if len(queue) > 5:
                     queue.pop(0)
                 await r_conn.set("recent-mth", orjson.dumps(queue))
