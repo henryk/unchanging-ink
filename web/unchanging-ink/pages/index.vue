@@ -249,15 +249,7 @@ export default {
       const item = {
         time: data?.timestamp ?? 'not set',
         hash: data?.mth ?? 'NOT SET',
-        icon: [...Array(3)]
-          .map((_) =>
-            [...Array(5)]
-              .map((_) =>
-                HEX_CHARS.charAt(Math.floor(Math.random() * HEX_CHARS.length))
-              )
-              .join('')
-          )
-          .join('\n'),
+        icon: (String(data?.interval) ?? '?').match(/.{1,3}/g).join('\n'),
       }
       this.rawItems.unshift(item)
       if (this.rawItems.length > 5) {
