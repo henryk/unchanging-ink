@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: bc2b8a664e47
+Revision ID: 5f4731f6220b
 Revises: 
-Create Date: 2022-05-18 08:24:52.273784
+Create Date: 2022-05-18 12:07:01.582842
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ import sqlalchemy_utils
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "bc2b8a664e47"
+revision = "5f4731f6220b"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,7 +23,6 @@ def upgrade():
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("timestamp", sa.String(length=32), nullable=False),
         sa.Column("itmh", sa.LargeBinary(length=64), nullable=False),
-        sa.Column("mth", sa.LargeBinary(length=64), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(

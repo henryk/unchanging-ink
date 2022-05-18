@@ -3,15 +3,17 @@ import logging
 import uuid
 from typing import Type, TypeVar
 
+import aioredis
 from accept_types import get_best_match
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.response import json as json_response
 
+from .cache import MainMerkleTree
 from .models import timestamp
-from .schemas import (Timestamp, TimestampRequest, TimestampStructure,
-                      TimestampWithId)
+from .schemas import (MerkleTreeHead, Timestamp, TimestampRequest,
+                      TimestampStructure, TimestampWithId)
 
 logger = logging.getLogger(__name__)
 
@@ -127,3 +129,16 @@ def setup_routes(app: Sanic):
         while True:
             data = await request.app.ctx.fanout.wait()
             await ws.send(data)
+
+    @app.route("/mth/<interval:int>", version=1, methods=["GET"])
+    async def request_mth_one(request, interval):
+        redis = await aioredis.from_url("redis://redis/0")
+        try:
+            async with app.ctx.engine.begin() as conn:
+                tree = MainMerkleTree(redis, conn)
+                node = await tree.calculate_node(0, interval+1)
+            response = MerkleTreeHead(interval=interval, mth=node.value)
+            return data_to_response(request, response)
+        finally:
+            if redis:
+                await redis.close()

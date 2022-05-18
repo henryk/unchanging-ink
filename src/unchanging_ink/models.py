@@ -31,5 +31,4 @@ interval = sqlalchemy.Table(
     sqlalchemy.Column("id", sqlalchemy.BigInteger, primary_key=True),
     sqlalchemy.Column("timestamp", sqlalchemy.String(length=32), nullable=False),
     sqlalchemy.Column("itmh", sqlalchemy.LargeBinary(length=64), nullable=False),
-    sqlalchemy.Column("mth", sqlalchemy.LargeBinary(length=64), nullable=False),
 )

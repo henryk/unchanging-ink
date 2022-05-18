@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import datetime
 import logging
 
@@ -10,7 +11,9 @@ from alembic import command, config
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam, text
 
-from unchanging_ink.schemas import IntervalProofStructure, IntervalTreeHead
+from unchanging_ink.cache import MainMerkleTree
+from unchanging_ink.schemas import (IntervalProofStructure, IntervalTreeHead,
+                                    MerkleTreeHead)
 
 from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
 from .models import interval, timestamp
@@ -40,12 +43,17 @@ async def formulate_proof(
         "id_": row["id"],
         "interval": interval_tree_head.interval,
         "proof": IntervalProofStructure(
-            a=a, path=[node.value for node in path]
+            a=a,
+            path=[node.value for node in path],
+            mth=mth,
+            itmh=interval_tree_head.itmh,
         ).to_cbor(),
     }
 
 
-async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> dict:
+async def calculate_interval(
+    conn: sqlalchemy.ext.asyncio.AsyncConnection,
+) -> MerkleTreeHead:
     now_ = datetime.datetime.now(datetime.timezone.utc)
     async with conn.begin() as transaction:
         s = (
@@ -79,14 +87,6 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
             itmh=interval_tree.root.value,
         )
 
-        proofs = []
-        for i, row in enumerate(rows):
-            proofs.append(
-                await formulate_proof(
-                    interval_tree, interval_tree_head, i, row, "FIXME"
-                )
-            )
-
         await conn.execute(
             interval.insert().values(
                 id=interval_tree_head.interval,
@@ -94,10 +94,31 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
                     "+00:00", "Z"
                 ),
                 itmh=interval_tree_head.itmh,
-                mth=b"FIXME",
             )
         )
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
+
+        redis = await aioredis.from_url("redis://redis/0")
+        try:
+            tree = MainMerkleTree(redis, conn)
+            tree_root = await tree.calculate_node(0, interval_tree_head.interval+1)
+        finally:
+            if redis:
+                await redis.close()
+
+        mth_b64 = base64.b64encode(tree_root.value).decode()
+
+        proofs = []
+        for i, row in enumerate(rows):
+            proofs.append(
+                await formulate_proof(
+                    interval_tree,
+                    interval_tree_head,
+                    i,
+                    row,
+                    f"dev.unchanging.ink/{interval_tree_head.interval}#v1:{mth_b64}",
+                )
+            )
 
         if proofs:
             await conn.execute(
@@ -109,7 +130,9 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
                 ),
                 proofs,
             )
-    return orjson.loads(interval_tree_head.to_json())  # FIXME
+
+        retval = MerkleTreeHead(interval=interval_tree_head.interval, mth=tree_root.value)
+    return retval
 
 
 def run_upgrade(connection, cfg):
@@ -132,8 +155,8 @@ async def async_main():
             await asyncio.sleep(3)
             async with engine.connect() as conn:
                 mth = await calculate_interval(conn)
-                await r_conn.publish("mth-live", orjson.dumps(mth))
-                queue.append(mth)
+                await r_conn.publish("mth-live", mth.to_json())
+                queue.append(orjson.loads(mth.to_json()))
                 if len(queue) > 5:
                     queue.pop(0)
                 await r_conn.set("recent-mth", orjson.dumps(queue))

@@ -30,6 +30,11 @@ class JSONMixin:
         return orjson.dumps(self.as_json_data())
 
 
+class HashMixin:
+    def calculate_hash(self) -> bytes:
+        return sha512(self.to_cbor()).digest()
+
+
 @dataclass
 class TimestampRequest(CBORMixin, JSONMixin):
     data: str
@@ -37,7 +42,7 @@ class TimestampRequest(CBORMixin, JSONMixin):
 
 
 @dataclass
-class TimestampStructure(CBORMixin):
+class TimestampStructure(HashMixin, CBORMixin):
     data: str
     timestamp: datetime.datetime
     typ: str = "ts"
@@ -51,20 +56,12 @@ class TimestampStructure(CBORMixin):
 class IntervalProofStructure(CBORMixin, JSONMixin):
     a: int
     path: list[bytes]
+    itmh: bytes
+    mth: str
 
     def as_json_data(self):
         data = asdict(self)
         data["path"] = [base64.b64encode(x).decode() for x in data["path"]]
-        return data
-
-
-@dataclass
-class IntervalProofStructureAugmented(IntervalProofStructure):
-    mth: Optional[str] = None
-    itmh: Optional[bytes] = None
-
-    def as_json_data(self):
-        data = super().as_json_data()
         data["itmh"] = base64.b64encode(data["itmh"]).decode() if data["itmh"] else None
         return data
 
@@ -106,16 +103,21 @@ class TimestampWithId(Timestamp):
 
 
 @dataclass
-class IntervalTreeHead(CBORMixin, JSONMixin):
+class IntervalTreeHead(HashMixin, CBORMixin, JSONMixin):
     interval: int
     timestamp: datetime.datetime
     itmh: bytes
     version: str = "1"
+    typ: str = "it"
 
     def as_json_data(self):
         data = asdict(self)
         data["itmh"] = base64.b64encode(data["itmh"]).decode()
         return data
+
+    @classmethod
+    def from_row(cls, row):
+        return cls(interval=row.id, timestamp=row.timestamp, itmh=row.itmh)
 
 
 @dataclass
