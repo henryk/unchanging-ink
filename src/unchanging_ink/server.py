@@ -9,12 +9,14 @@ app = Sanic(__name__.replace(".", "-"))
 
 
 if "DB_USER" not in app.config:
-    app.config.update({
-        "DB_USER": "sanic",
-        "DB_HOST": "db",
-        "DB_PASSWORD": "toomanysecrets",
-        "DB_NAME": "sanic",
-    })
+    app.config.update(
+        {
+            "DB_USER": "sanic",
+            "DB_HOST": "db",
+            "DB_PASSWORD": "toomanysecrets",
+            "DB_NAME": "sanic",
+        }
+    )
 
 db_url = f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
 engine = create_async_engine(db_url)

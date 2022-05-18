@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam, text
 
 from unchanging_ink.schemas import IntervalProofStructure, IntervalTreeHead
-from .crypto import DictCachingMerkleTree, AbstractAsyncMerkleTree
+
+from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
 from .models import interval, timestamp
 from .server import engine
 
@@ -39,8 +40,7 @@ async def formulate_proof(
         "id_": row["id"],
         "interval": interval_tree_head.interval,
         "proof": IntervalProofStructure(
-            a=a,
-            path=[node.value for node in path]
+            a=a, path=[node.value for node in path]
         ).to_cbor(),
     }
 
@@ -57,7 +57,9 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
 
         rows = list(result)
 
-        interval_tree = await DictCachingMerkleTree.from_sequence(row["hash"] for row in rows)
+        interval_tree = await DictCachingMerkleTree.from_sequence(
+            row["hash"] for row in rows
+        )
         print("New head", interval_tree.root)
 
         max_id = (
@@ -71,18 +73,30 @@ async def calculate_interval(conn: sqlalchemy.ext.asyncio.AsyncConnection) -> di
                 )
             )
         ).scalar()
-        interval_tree_head = IntervalTreeHead(interval=0 if max_id is None else max_id + 1, timestamp=now_, itmh=interval_tree.root.value)
+        interval_tree_head = IntervalTreeHead(
+            interval=0 if max_id is None else max_id + 1,
+            timestamp=now_,
+            itmh=interval_tree.root.value,
+        )
 
         proofs = []
         for i, row in enumerate(rows):
-            proofs.append(await formulate_proof(interval_tree, interval_tree_head, i, row, "FIXME"))
+            proofs.append(
+                await formulate_proof(
+                    interval_tree, interval_tree_head, i, row, "FIXME"
+                )
+            )
 
-        await conn.execute(interval.insert().values(
-            id=interval_tree_head.interval,
-            timestamp=now_.isoformat(timespec="microseconds").replace("+00:00", "Z"),
-            itmh=interval_tree_head.itmh,
-            mth=b"FIXME",
-        ))
+        await conn.execute(
+            interval.insert().values(
+                id=interval_tree_head.interval,
+                timestamp=now_.isoformat(timespec="microseconds").replace(
+                    "+00:00", "Z"
+                ),
+                itmh=interval_tree_head.itmh,
+                mth=b"FIXME",
+            )
+        )
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
 
         if proofs:

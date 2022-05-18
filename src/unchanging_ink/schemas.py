@@ -1,7 +1,7 @@
 import base64
 import datetime
 import uuid
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from hashlib import sha512
 from typing import Optional
 
@@ -88,7 +88,9 @@ class Timestamp(CBORMixin, JSONMixin):
             if "itmh" in data["proof"]:
                 data["proof"]["itmh"] = base64.b64encode(data["proof"]["itmh"]).decode()
             if "path" in data["proof"]:
-                data["proof"]["path"] = [base64.b64encode(x).decode() for x in data["proof"]["path"]]
+                data["proof"]["path"] = [
+                    base64.b64encode(x).decode() for x in data["proof"]["path"]
+                ]
         return data
 
 

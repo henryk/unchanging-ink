@@ -5,6 +5,7 @@ from sanic_testing import TestManager
 @pytest.fixture
 def app():
     from ..server import app, setup_routes
+
     setup_routes(app)
     TestManager(app)
 

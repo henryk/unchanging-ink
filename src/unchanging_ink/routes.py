@@ -1,21 +1,21 @@
 import datetime
 import logging
 import uuid
-from typing import TypeVar, Type
+from typing import Type, TypeVar
 
 from accept_types import get_best_match
-
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import HTTPResponse
 from sanic.response import json as json_response
 
 from .models import timestamp
-from .schemas import TimestampStructure, Timestamp, TimestampWithId, TimestampRequest
+from .schemas import (Timestamp, TimestampRequest, TimestampStructure,
+                      TimestampWithId)
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def data_from_request(request: Request, clazz: Type[T]) -> T:
@@ -26,15 +26,18 @@ def data_from_request(request: Request, clazz: Type[T]) -> T:
 
 
 def data_to_response(request, data, *args, **kwargs) -> HTTPResponse:
-    return_types = ['application/json', 'application/cbor']
-    return_types.sort(key=lambda x: (x != 'application/cbor', x))
-    return_type = get_best_match(request.headers.get('accept', request.headers.get('content-type', '*')), return_types)
+    return_types = ["application/json", "application/cbor"]
+    return_types.sort(key=lambda x: (x != "application/cbor", x))
+    return_type = get_best_match(
+        request.headers.get("accept", request.headers.get("content-type", "*")),
+        return_types,
+    )
 
     if return_type == "application/cbor":
-        kwargs['content_type'] = 'application/cbor'
+        kwargs["content_type"] = "application/cbor"
         return HTTPResponse(data.to_cbor(), *args, **kwargs)
     elif return_type == "application/json":
-        kwargs['content_type'] = 'application/json'
+        kwargs["content_type"] = "application/json"
         return HTTPResponse(data.to_json(), *args, **kwargs)
     else:
         return HTTPResponse(status=406)
@@ -59,10 +62,13 @@ def setup_routes(app: Sanic):
                 rows = result.all()
                 return json_response(
                     [
-                        TimestampWithId(**{
-                            k: v for (k, v) in row._asdict().items()
-                            if k not in ("tag", )
-                        }).as_json_data()
+                        TimestampWithId(
+                            **{
+                                k: v
+                                for (k, v) in row._asdict().items()
+                                if k not in ("tag",)
+                            }
+                        ).as_json_data()
                         for row in rows
                     ]
                 )
@@ -79,7 +85,9 @@ def setup_routes(app: Sanic):
 
             data = {
                 "id": st_id,
-                "timestamp": now.isoformat(timespec="microseconds").replace("+00:00", "Z"),
+                "timestamp": now.isoformat(timespec="microseconds").replace(
+                    "+00:00", "Z"
+                ),
                 "hash": hash_,
             }
 
@@ -88,7 +96,15 @@ def setup_routes(app: Sanic):
 
             response = Timestamp(hash=hash_, timestamp=data["timestamp"])
 
-            return data_to_response(request, response, headers={"location": app.ctx.prefixed_url_for('request_timestamp_one', id_=data["id"])})
+            return data_to_response(
+                request,
+                response,
+                headers={
+                    "location": app.ctx.prefixed_url_for(
+                        "request_timestamp_one", id_=data["id"]
+                    )
+                },
+            )
 
     @app.route("/ts/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
@@ -97,10 +113,9 @@ def setup_routes(app: Sanic):
             result = await conn.execute(query)
             row = result.first()
 
-        response = TimestampWithId(**{
-                        k: v for (k, v) in row._asdict().items()
-                        if k not in ("tag", )
-                    })
+        response = TimestampWithId(
+            **{k: v for (k, v) in row._asdict().items() if k not in ("tag",)}
+        )
         return data_to_response(request, response)
 
     @app.route("/hello")
