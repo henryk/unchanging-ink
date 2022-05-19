@@ -2,7 +2,7 @@ import asyncio
 import base64
 import datetime
 import logging
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import aioredis
 import orjson
@@ -15,7 +15,7 @@ from sqlalchemy.sql.expression import bindparam, text
 
 from unchanging_ink.cache import MainMerkleTree
 from unchanging_ink.schemas import (IntervalProofStructure, IntervalTreeHead,
-                                    MerkleTreeHead, MerkleTreeConsistencyProof)
+                                    MerkleTreeConsistencyProof, MerkleTreeHead)
 
 from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
 from .models import interval, timestamp
@@ -54,11 +54,14 @@ async def formulate_proof(
 
 
 async def calculate_interval(
-    conn: sqlalchemy.ext.asyncio.AsyncConnection, redisconn: Redis,
+    conn: sqlalchemy.ext.asyncio.AsyncConnection,
+    redisconn: Redis,
 ) -> Tuple[str, MerkleTreeHead, Optional[MerkleTreeConsistencyProof]]:
-    now_ = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="microseconds").replace(
-                    "+00:00", "Z"
-                )
+    now_ = (
+        datetime.datetime.now(datetime.timezone.utc)
+        .isoformat(timespec="microseconds")
+        .replace("+00:00", "Z")
+    )
     async with conn.begin() as transaction:
         s = (
             timestamp.select(timestamp.c.interval.is_(None))
@@ -101,7 +104,7 @@ async def calculate_interval(
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
 
         tree = MainMerkleTree(redisconn, conn)
-        tree_root = await tree.recalculate_root(interval_tree_head.interval+1)
+        tree_root = await tree.recalculate_root(interval_tree_head.interval + 1)
 
         mth_b64 = base64.b64encode(tree_root.value).decode()
 
@@ -131,12 +134,18 @@ async def calculate_interval(
         if interval_tree_head.interval == 0:
             append_proof = None
         else:
-            proof_nodes = await tree.compute_consistency_proof(interval_tree_head.interval-1)
-            append_proof = MerkleTreeConsistencyProof(interval_tree_head.interval-1, interval_tree_head.interval, nodes=[
-                node.value for node in proof_nodes
-            ])
+            proof_nodes = await tree.compute_consistency_proof(
+                interval_tree_head.interval - 1
+            )
+            append_proof = MerkleTreeConsistencyProof(
+                interval_tree_head.interval - 1,
+                interval_tree_head.interval,
+                nodes=[node.value for node in proof_nodes],
+            )
 
-        retval = MerkleTreeHead(interval=interval_tree_head.interval, mth=tree_root.value)
+        retval = MerkleTreeHead(
+            interval=interval_tree_head.interval, mth=tree_root.value
+        )
     return now_, retval, append_proof
 
 

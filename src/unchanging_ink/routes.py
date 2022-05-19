@@ -26,7 +26,9 @@ def data_from_request(request: Request, clazz: Type[T]) -> T:
         return clazz.from_json(request.body)
 
 
-def data_to_response(request: Request, data, *args, immutable=False, **kwargs) -> HTTPResponse:
+def data_to_response(
+    request: Request, data, *args, immutable=False, **kwargs
+) -> HTTPResponse:
     return_types = ["application/json", "application/cbor"]
     return_types.sort(key=lambda x: (x != "application/cbor", x))
     return_type = get_best_match(
@@ -35,13 +37,14 @@ def data_to_response(request: Request, data, *args, immutable=False, **kwargs) -
     )
 
     headers = kwargs.get("headers", {})
-    kwargs['headers'] = headers
+    kwargs["headers"] = headers
 
-    if immutable and request.method.lower() in ['get', 'head', 'options']:
-        headers['Vary'] = ", ".join([x.strip() for x in headers.get('Vary', '').split(",") if x.strip()]+[
-            x for x in ['accept', 'content-type'] if x in request.headers
-        ])
-        headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    if immutable and request.method.lower() in ["get", "head", "options"]:
+        headers["Vary"] = ", ".join(
+            [x.strip() for x in headers.get("Vary", "").split(",") if x.strip()]
+            + [x for x in ["accept", "content-type"] if x in request.headers]
+        )
+        headers["Cache-Control"] = "public, max-age=31536000, immutable"
 
     if return_type == "application/cbor":
         kwargs["content_type"] = "application/cbor"
@@ -84,9 +87,11 @@ def setup_routes(app: Sanic):
 
         elif request.method == "POST":
             timestamp_request = data_from_request(request, TimestampRequest)
-            now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="microseconds").replace(
-                    "+00:00", "Z"
-                )
+            now = (
+                datetime.datetime.now(datetime.timezone.utc)
+                .isoformat(timespec="microseconds")
+                .replace("+00:00", "Z")
+            )
             data = timestamp_request.data
             options = timestamp_request.options  # FIXME Implement options
 
@@ -142,6 +147,6 @@ def setup_routes(app: Sanic):
         async with app.ctx.engine.begin() as conn:
             async with app.ctx.redis.client() as redisconn:
                 tree = MainMerkleTree(redisconn, conn)
-                node = await tree.calculate_node(0, interval+1)
+                node = await tree.calculate_node(0, interval + 1)
         response = MerkleTreeHead(interval=interval, mth=node.value)
         return data_to_response(request, response, immutable=True)
