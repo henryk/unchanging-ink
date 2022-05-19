@@ -7,7 +7,7 @@ from .fanout import Fanout, redis_fanout
 from .routes import setup_routes
 
 app = Sanic(__name__.replace(".", "-"))
-
+app.config.REAL_IP_HEADER = "X-Real-IP"
 
 if "DB_USER" not in app.config:
     app.config.update(
