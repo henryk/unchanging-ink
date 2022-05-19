@@ -1,3 +1,4 @@
+import aioredis
 from sanic import Sanic
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -19,6 +20,7 @@ if "DB_USER" not in app.config:
     )
 
 db_url = f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
+redis_url = "redis://redis/0"
 engine = create_async_engine(db_url)
 
 
@@ -37,8 +39,19 @@ def setup_fanout(app):
         app.add_task(redis_fanout)
 
 
+def setup_redis(app):
+    @app.listener("before_server_start")
+    async def open_redis(*args, **kwargs):
+        app.ctx.redis = await aioredis.from_url(redis_url)
+
+    @app.listener("after_server_stop")
+    async def close_redis():
+        await app.ctx.redis.close()
+
+
 def setup():
     setup_database()
+    setup_redis(app)
     setup_routes(app)
     setup_crypto(app)
     setup_fanout(app)

@@ -3,8 +3,6 @@ import os
 from asyncio import wait_for
 from typing import Any, Optional
 
-import aioredis
-
 
 class Fanout:
     def __init__(self):
@@ -24,10 +22,8 @@ class Fanout:
 
 async def redis_fanout(app):
     while True:
-        redis = None
         try:
-            redis = await aioredis.from_url("redis://redis/0")
-            pubsub = redis.pubsub()
+            pubsub = app.ctx.redis.pubsub()
             await pubsub.subscribe("mth-live")
             while True:
                 message = await pubsub.get_message(
@@ -44,6 +40,3 @@ async def redis_fanout(app):
             prf = str(os.getpid()) + ": "
             print(prf + ("\n" + prf).join(bt.splitlines()))
             await asyncio.sleep(1)
-        finally:
-            if redis:
-                await redis.close()

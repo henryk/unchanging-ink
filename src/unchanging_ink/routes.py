@@ -3,7 +3,6 @@ import logging
 import uuid
 from typing import Type, TypeVar
 
-import aioredis
 from accept_types import get_best_match
 from sanic import Sanic
 from sanic.request import Request
@@ -59,7 +58,6 @@ def setup_routes(app: Sanic):
             query = timestamp.select()
 
             async with app.ctx.engine.begin() as conn:
-                # FIXME Augment with interval itmh and mth
                 result = await conn.execute(query)
                 rows = result.all()
                 return json_response(
@@ -132,13 +130,9 @@ def setup_routes(app: Sanic):
 
     @app.route("/mth/<interval:int>", version=1, methods=["GET"])
     async def request_mth_one(request, interval):
-        redis = await aioredis.from_url("redis://redis/0")
-        try:
-            async with app.ctx.engine.begin() as conn:
-                tree = MainMerkleTree(redis, conn)
+        async with app.ctx.engine.begin() as conn:
+            async with app.ctx.redis.client() as redisconn:
+                tree = MainMerkleTree(redisconn, conn)
                 node = await tree.calculate_node(0, interval+1)
-            response = MerkleTreeHead(interval=interval, mth=node.value)
-            return data_to_response(request, response)
-        finally:
-            if redis:
-                await redis.close()
+        response = MerkleTreeHead(interval=interval, mth=node.value)
+        return data_to_response(request, response)
