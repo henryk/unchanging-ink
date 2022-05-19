@@ -2,7 +2,7 @@ import asyncio
 import base64
 import datetime
 import logging
-from typing import Tuple
+from typing import Tuple, Optional
 
 import aioredis
 import orjson
@@ -15,7 +15,7 @@ from sqlalchemy.sql.expression import bindparam, text
 
 from unchanging_ink.cache import MainMerkleTree
 from unchanging_ink.schemas import (IntervalProofStructure, IntervalTreeHead,
-                                    MerkleTreeHead)
+                                    MerkleTreeHead, MerkleTreeConsistencyProof)
 
 from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
 from .models import interval, timestamp
@@ -55,7 +55,7 @@ async def formulate_proof(
 
 async def calculate_interval(
     conn: sqlalchemy.ext.asyncio.AsyncConnection, redisconn: Redis,
-) -> Tuple[str, MerkleTreeHead]:
+) -> Tuple[str, MerkleTreeHead, Optional[MerkleTreeConsistencyProof]]:
     now_ = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="microseconds").replace(
                     "+00:00", "Z"
                 )
@@ -101,7 +101,7 @@ async def calculate_interval(
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
 
         tree = MainMerkleTree(redisconn, conn)
-        tree_root = await tree.calculate_node(0, interval_tree_head.interval+1)
+        tree_root = await tree.recalculate_root(interval_tree_head.interval+1)
 
         mth_b64 = base64.b64encode(tree_root.value).decode()
 
@@ -128,8 +128,16 @@ async def calculate_interval(
                 proofs,
             )
 
+        if interval_tree_head.interval == 0:
+            append_proof = None
+        else:
+            proof_nodes = await tree.compute_consistency_proof(interval_tree_head.interval-1)
+            append_proof = MerkleTreeConsistencyProof(interval_tree_head.interval-1, interval_tree_head.interval, nodes=[
+                node.value for node in proof_nodes
+            ])
+
         retval = MerkleTreeHead(interval=interval_tree_head.interval, mth=tree_root.value)
-    return now_, retval
+    return now_, retval, append_proof
 
 
 def run_upgrade(connection, cfg):
@@ -138,8 +146,6 @@ def run_upgrade(connection, cfg):
 
 
 async def async_main():
-    r_conn = await aioredis.from_url("redis://redis/0")
-
     logger.info("Upgrading database")
     async with engine.connect() as conn:
         await conn.run_sync(run_upgrade, config.Config("alembic.ini"))
@@ -152,14 +158,15 @@ async def async_main():
             await asyncio.sleep(3)
             async with engine.connect() as conn:
                 async with aioredis.from_url(redis_url) as redisconn:
-                    now_, mth = await calculate_interval(conn, redisconn)
+                    now_, mth, append_proof = await calculate_interval(conn, redisconn)
                     live_data = mth.as_json_data()
                     live_data["timestamp"] = now_
-                    await r_conn.publish("mth-live", orjson.dumps(live_data))
+                    live_data["proof"] = append_proof.as_json_data()
+                    await redisconn.publish("mth-live", orjson.dumps(live_data))
                     queue.append(live_data)
                     if len(queue) > 5:
                         queue.pop(0)
-                    await r_conn.set("recent-mth", orjson.dumps(queue))
+                    await redisconn.set("recent-mth", orjson.dumps(queue))
     finally:
         await engine.dispose()
 

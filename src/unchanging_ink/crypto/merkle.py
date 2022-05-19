@@ -273,6 +273,12 @@ class AbstractAsyncCachingMerkleTree(AbstractAsyncMerkleTree):
         await retval.seed(index)
         return retval
 
+    async def recalculate_root(self, width: int) -> MerkleNode:
+        root = await self.calculate_node(0, width)
+        self.root = root
+        self.width = width
+        return root
+
     async def calculate_node(self, start: int, end: int) -> MerkleNode:
         key = (start, end)
         if (retval := await self._getc(key)) is not None:

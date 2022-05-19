@@ -133,8 +133,13 @@ class MerkleTreeHead(CBORMixin, JSONMixin):
 
 
 @dataclass
-class MerkleTreeConsistencyProof:
-    version: int
+class MerkleTreeConsistencyProof(CBORMixin, JSONMixin):
     old_interval: int
     new_interval: int
     nodes: list[bytes]
+    version: str = "1"
+
+    def as_json_data(self):
+        data = asdict(self)
+        data["nodes"] = [base64.b64encode(x).decode() for x in data["nodes"]]
+        return data
