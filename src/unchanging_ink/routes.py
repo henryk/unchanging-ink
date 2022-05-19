@@ -12,7 +12,7 @@ from sanic.response import json as json_response
 from .cache import MainMerkleTree
 from .models import timestamp
 from .schemas import (MerkleTreeHead, Timestamp, TimestampRequest,
-                      TimestampStructure, TimestampWithId)
+                      TimestampStructure, TimestampWithId, MerkleTreeConsistencyProof)
 
 logger = logging.getLogger(__name__)
 
@@ -144,9 +144,18 @@ def setup_routes(app: Sanic):
 
     @app.route("/mth/<interval:int>", version=1, methods=["GET"])
     async def request_mth_one(request, interval):
-        async with app.ctx.engine.begin() as conn:
-            async with app.ctx.redis.client() as redisconn:
-                tree = MainMerkleTree(redisconn, conn)
-                node = await tree.calculate_node(0, interval + 1)
+        async with app.ctx.engine.begin() as conn, app.ctx.redis.client() as redisconn:
+            tree = MainMerkleTree(redisconn, conn)
+            node = await tree.calculate_node(0, interval + 1)
         response = MerkleTreeHead(interval=interval, mth=node.value)
+        return data_to_response(request, response, immutable=True)
+
+    @app.route("/mth/<new_interval:int>/from/<old_interval:int>", version=1, methods=["GET"])
+    async def request_mth_proof(request, new_interval, old_interval):
+        async with app.ctx.engine.begin() as conn, app.ctx.redis.client() as redisconn:
+            tree = MainMerkleTree(redisconn, conn, width=new_interval)
+            proof = await tree.compute_consistency_proof(old_interval)
+        response = MerkleTreeConsistencyProof(old_interval, new_interval, [
+            node.value for node in proof
+        ])
         return data_to_response(request, response, immutable=True)
