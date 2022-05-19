@@ -8,6 +8,7 @@ import aioredis
 import orjson
 import sentry_sdk
 import sqlalchemy
+from aioredis import Redis
 from alembic import command, config
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam, text
@@ -18,7 +19,7 @@ from unchanging_ink.schemas import (IntervalProofStructure, IntervalTreeHead,
 
 from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
 from .models import interval, timestamp
-from .server import engine
+from .server import engine, redis_url
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +54,9 @@ async def formulate_proof(
 
 
 async def calculate_interval(
-    conn: sqlalchemy.ext.asyncio.AsyncConnection,
+    conn: sqlalchemy.ext.asyncio.AsyncConnection, redisconn: Redis,
 ) -> Tuple[str, MerkleTreeHead]:
-    now_ = datetime.datetime.now(datetime.timezone.utc)
-    now_formatted = now_.isoformat(timespec="microseconds").replace(
+    now_ = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="microseconds").replace(
                     "+00:00", "Z"
                 )
     async with conn.begin() as transaction:
@@ -94,19 +94,14 @@ async def calculate_interval(
         await conn.execute(
             interval.insert().values(
                 id=interval_tree_head.interval,
-                timestamp=now_formatted,
+                timestamp=now_,
                 itmh=interval_tree_head.itmh,
             )
         )
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
 
-        redis = await aioredis.from_url("redis://redis/0")
-        try:
-            tree = MainMerkleTree(redis, conn)
-            tree_root = await tree.calculate_node(0, interval_tree_head.interval+1)
-        finally:
-            if redis:
-                await redis.close()
+        tree = MainMerkleTree(redisconn, conn)
+        tree_root = await tree.calculate_node(0, interval_tree_head.interval+1)
 
         mth_b64 = base64.b64encode(tree_root.value).decode()
 
@@ -134,7 +129,7 @@ async def calculate_interval(
             )
 
         retval = MerkleTreeHead(interval=interval_tree_head.interval, mth=tree_root.value)
-    return now_formatted, retval
+    return now_, retval
 
 
 def run_upgrade(connection, cfg):
@@ -156,14 +151,15 @@ async def async_main():
         while True:
             await asyncio.sleep(3)
             async with engine.connect() as conn:
-                now_formatted, mth = await calculate_interval(conn)
-                live_data = orjson.loads(mth.to_json())
-                live_data["timestamp"] = now_formatted
-                await r_conn.publish("mth-live", orjson.dumps(live_data))
-                queue.append(live_data)
-                if len(queue) > 5:
-                    queue.pop(0)
-                await r_conn.set("recent-mth", orjson.dumps(queue))
+                async with aioredis.from_url(redis_url) as redisconn:
+                    now_, mth = await calculate_interval(conn, redisconn)
+                    live_data = mth.as_json_data()
+                    live_data["timestamp"] = now_
+                    await r_conn.publish("mth-live", orjson.dumps(live_data))
+                    queue.append(live_data)
+                    if len(queue) > 5:
+                        queue.pop(0)
+                    await r_conn.set("recent-mth", orjson.dumps(queue))
     finally:
         await engine.dispose()
 

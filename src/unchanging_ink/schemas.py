@@ -44,7 +44,7 @@ class TimestampRequest(CBORMixin, JSONMixin):
 @dataclass
 class TimestampStructure(HashMixin, CBORMixin):
     data: str
-    timestamp: datetime.datetime
+    timestamp: str
     typ: str = "ts"
     version: str = "1"
 
@@ -105,7 +105,7 @@ class TimestampWithId(Timestamp):
 @dataclass
 class IntervalTreeHead(HashMixin, CBORMixin, JSONMixin):
     interval: int
-    timestamp: datetime.datetime
+    timestamp: str
     itmh: bytes
     version: str = "1"
     typ: str = "it"
