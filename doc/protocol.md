@@ -47,9 +47,11 @@ Content-Type: application/cbor
 }
 ````
 
-The only currently defined version is `"1"` (as a string). In this version, a SHA-512 hash is calculated over the CBOR representation of this timestamp structure. This hash is designated `hash` in the following.
+The only currently defined version is `"1"` (as a string). In this version, a SHA-512 hash is calculated over the canonical CBOR representation of this timestamp structure. This hash is designated `hash` in the following.
 
 **NOTE:** Internal operations always use CBOR, even if input/output is JSON.
+
+**NOTE:** There can be multiple representations that are considered "canonical" in CBOR. See [The several canons of CBOR](https://www.imperialviolet.org/2022/04/17/canonsofcbor.html). This service currently uses the "three-step ordering" described in that article.
 
 The response contains all data necessary to construct this data and is delivered with a `Location` header that specifies the REST API location of the response.
 
@@ -63,6 +65,7 @@ Location: /api/v1/ts/154084e6-9573-41a1-9ab4-f2724dae23b3/
 {
     "hash": h'53C650E2F30364B9603D73016FA9....FIXME...86402B600C96765900D625F3C86425604023E8418CC1442EC902DADF6'
     "timestamp": "2021-04-05T23:39:42.944682Z",
+    "id": "154084e6-9573-41a1-9ab4-f2724dae23b3",
     "typ": "ts",
     "version": "1"
 }
@@ -198,3 +201,61 @@ GET /api/v1/mth/current HTTP/1.1
 ````
 
 #### Response
+
+## Data structures
+
+### Timestamp nucleus
+````cbor
+{
+    "data": "<TEXT>",
+    "timestamp": "<TS>",
+    "typ": "ts",
+    "version": "1"
+}
+````
+
+### Timestamp representation
+
+````cbor
+{
+    "hash": h'<HASH>'
+    "timestamp": "<TS>",
+    "id": "<UUID>",
+    "typ": "ts",
+    "version": "1"
+}
+````
+
+### Interval tree head nucleus
+
+````cbor
+{
+    "interval": <INT>,
+    "timestamp": "<TS>",
+    "itmh": h'<TREEHASH>',
+    "typ": "it",
+    "version": "1"
+}
+````
+
+### Interval tree head representation
+
+````cbor
+{
+    "interval": <INT>,
+    "timestamp": "<TS>",
+    "itmh": h'<TREEHASH>',
+    "typ": "it",
+    "version": "1"
+}
+````
+
+### Merkle tree head representation
+
+````cbor
+{
+    "interval": <INT>,
+    "mth": h'<TREEHASH>',
+    "version": "1"
+}
+````
