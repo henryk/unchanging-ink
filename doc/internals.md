@@ -10,3 +10,31 @@
 * set ith_n := {n, timestamp_n, itmh_n}
 * commit new ith_n, calculate new mth_n
 * announce mth_n, ith_n, consistency proof between mth_{n-1} and mth_n
+
+````
+    TIMESTAMP                                 INTERVAL
+
+ ´-------------`                          ´´=============``
+ |   data      |                          ||  interval   ||
+´+-------------+`                         ||  timestamp  ||  SHA512  
+||  timestamp  ||   SHA512                ||  typ        +----------> ihash
+||  typ        +------\                   ||  version    ||             |
+||  version    ||     |              /--> ||  ith        ||             v
++`=============´+     |   *********  |    |`-------------`|          *********
+|   hash        |  <--^-->* ITREE *--/    |   mth         | <------- * MTREE *
+|   id          |         *********       |   proof       |          *********
+|   proof       |                         `---------------´
++---------------+
+.   tag         .
+.................
+````
+
+**hash**: Hash of individual timestamp entry (contains `data` which is never stored anywhere)<br>
+**tag**: Stored in database but not returned in any API<br>
+**ITREE** (*interval tree*): Virtual merkle tree containing all **hash** of one interval. Not persisted anywhere.<br>
+**ith** (*interval tree head*): head of **ITREE** for one interval
+
+**ihash** (*interval hash*): Hash of interval (contains `ith`)<br>
+**MTREE** (*main tree*): Main merkle tree, containing all **ihash** up to and including interval<br>
+**mth** (*main tree head*): head of **MTREE** at the time of interval
+
