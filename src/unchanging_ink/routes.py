@@ -74,13 +74,7 @@ def setup_routes(app: Sanic):
                 rows = result.all()
                 return json_response(
                     [
-                        TimestampWithId(
-                            **{
-                                k: v
-                                for (k, v) in row._asdict().items()
-                                if k not in ("tag",)
-                            }
-                        ).as_json_data()
+                        TimestampWithId.from_dict(row).as_json_data()
                         for row in rows
                     ]
                 )
@@ -93,7 +87,10 @@ def setup_routes(app: Sanic):
                 .replace("+00:00", "Z")
             )
             data = timestamp_request.data
-            options = timestamp_request.options  # FIXME Implement options
+            options = timestamp_request.options
+
+            tag = next((option[4:] for option in options if option.startswith("tag:") and len(option) <= 40), None)
+            wait = "wait" in options
 
             hash_ = TimestampStructure(data=data, timestamp=now).calculate_hash()
 
@@ -103,19 +100,28 @@ def setup_routes(app: Sanic):
                 "id": st_id,
                 "timestamp": now,
                 "hash": hash_,
+                "tag": tag
             }
 
             async with app.ctx.engine.begin() as conn:
                 await conn.execute(timestamp.insert(), data)
 
-            response = Timestamp(hash=hash_, timestamp=now)
+            if wait:
+                await request.app.ctx.fanout.wait()
+                async with app.ctx.engine.begin() as conn:
+                    result = await conn.execute(timestamp.select().where(timestamp.c.id==st_id))
+                    row = result.first()
+                    response = TimestampWithId.from_dict(row._asdict())
+
+            else:
+                response = TimestampWithId.from_dict(data)
 
             return data_to_response(
                 request,
                 response,
                 headers={
                     "location": app.ctx.prefixed_url_for(
-                        "request_timestamp_one", id_=data["id"]
+                        "request_timestamp_one", id_=response.id,
                     )
                 },
             )
@@ -127,9 +133,7 @@ def setup_routes(app: Sanic):
             result = await conn.execute(query)
             row = result.first()
 
-        response = TimestampWithId(
-            **{k: v for (k, v) in row._asdict().items() if k not in ("tag",)}
-        )
+        response = TimestampWithId.from_dict(row._asdict())
         return data_to_response(request, response)
 
     @app.route("/hello")

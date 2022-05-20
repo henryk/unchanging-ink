@@ -165,17 +165,18 @@ async def async_main():
     try:
         while True:
             await asyncio.sleep(3)
-            async with engine.connect() as conn:
-                async with aioredis.from_url(redis_url) as redisconn:
+            async with aioredis.from_url(redis_url) as redisconn:
+                async with engine.connect() as conn:
                     now_, mth, append_proof = await calculate_interval(conn, redisconn)
-                    live_data = mth.as_json_data()
-                    live_data["timestamp"] = now_
-                    live_data["proof"] = append_proof.as_json_data()
-                    await redisconn.publish("mth-live", orjson.dumps(live_data))
-                    queue.append(live_data)
-                    if len(queue) > 5:
-                        queue.pop(0)
-                    await redisconn.set("recent-mth", orjson.dumps(queue))
+                    await conn.commit()
+                live_data = mth.as_json_data()
+                live_data["timestamp"] = now_
+                live_data["proof"] = append_proof.as_json_data()
+                await redisconn.publish("mth-live", orjson.dumps(live_data))
+                queue.append(live_data)
+                if len(queue) > 5:
+                    queue.pop(0)
+                await redisconn.set("recent-mth", orjson.dumps(queue))
     finally:
         await engine.dispose()
 

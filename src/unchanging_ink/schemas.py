@@ -101,6 +101,10 @@ class TimestampWithId(Timestamp):
         data["id"] = str(data["id"])
         return data
 
+    @classmethod
+    def from_dict(cls, row):
+        return cls(**{k: v for (k, v) in row.items() if k not in ("tag",)})
+
 
 @dataclass
 class IntervalTreeHead(HashMixin, CBORMixin, JSONMixin):
