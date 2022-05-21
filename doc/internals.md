@@ -38,3 +38,6 @@
 **MTREE** (*main tree*): Main merkle tree, containing all **ihash** up to and including interval<br>
 **mth** (*main tree head*): head of **MTREE** at the time of interval
 
+External representation
+
+dev.unchanging.ink/ts#v1:base64(cbor([interval,timestamp,a,path]))

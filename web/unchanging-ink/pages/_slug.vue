@@ -2,14 +2,21 @@
   <pre>{{ mth }}</pre>
 </template>
 <script>
+import { decodeFirst } from 'cbor'
+
 export default {
   async asyncData({ params }) {
-    const mth = await fetch(`http://backend:8000/v1/mth/${params.slug}`, {
+    const response = await fetch(`http://backend:8000/v1/mth/${params.slug}`, {
       headers: {
-        Accept: 'application/json',
+        Accept: 'application/cbor',
       },
-    }).then((res) => res.json())
-    return { mth }
+    })
+    if (response.ok) {
+      const data = await response.body
+      const mth = await decodeFirst(data)
+      return { mth }
+    }
+    return {}
   },
 }
 </script>
