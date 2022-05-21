@@ -47,7 +47,7 @@ Content-Type: application/cbor
 }
 ````
 
-The only currently defined version is `"1"` (as a string). In this version, a SHA-512 hash is calculated over the canonical CBOR representation of this timestamp structure. This hash is designated `hash` in the following.
+The only currently defined version is `"1"` (as a string). In this version, a SHA-3 hash is calculated over the canonical CBOR representation of this timestamp structure. This hash is designated `hash` in the following.
 
 **NOTE:** Internal operations always use CBOR, even if input/output is JSON.
 
@@ -142,7 +142,7 @@ def verify(hash: bytes, itmh: bytes, a: int, path: List[bytes]) -> bool:
     return current == itmh  # `current` should now be the interval tree merkle hash
 ````
 
-`hashfunc` is SHA-512 for version 1.
+`hashfunc` is SHA-3 for version 1.
 
 ### Main Merkle tree
 

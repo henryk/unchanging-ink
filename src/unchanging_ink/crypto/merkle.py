@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from hashlib import sha512
+from hashlib import sha3_256
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 
@@ -13,7 +13,7 @@ class MerkleNode:
     end: int
     value: bytes
     height: Optional[int] = field(init=False)
-    hash_function = sha512
+    hash_function = sha3_256
 
     def __post_init__(self):
         if self.end == self.start:

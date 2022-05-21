@@ -1,5 +1,5 @@
  * Input: data_x  (implicit: timestamp_x)
- * Set hash_x := sha512(CBOR(data_x, timestamp_x, typ, version))
+ * Set hash_x := sha3(CBOR(data_x, timestamp_x, typ, version))
 
 
  * set I_n := list of x  (that are not in I_{n-1})
@@ -16,8 +16,8 @@
 
  ´-------------`                          ´´=============``
  |   data      |                          ||  interval   ||
-´+-------------+`                         ||  timestamp  ||  SHA512  
-||  timestamp  ||   SHA512                ||  typ        +----------> ihash
+´+-------------+`                         ||  timestamp  ||  SHA3  
+||  timestamp  ||   SHA3                  ||  typ        +----------> ihash
 ||  typ        +------\                   ||  version    ||             |
 ||  version    ||     |              /--> ||  ith        ||             v
 +`=============´+     |   *********  |    |`-------------`|          *********

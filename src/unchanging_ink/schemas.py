@@ -2,7 +2,7 @@ import base64
 import datetime
 import uuid
 from dataclasses import asdict, dataclass, field
-from hashlib import sha512
+from hashlib import sha3_256
 from typing import Optional
 
 import cbor2
@@ -32,7 +32,7 @@ class JSONMixin:
 
 class HashMixin:
     def calculate_hash(self) -> bytes:
-        return sha512(self.to_cbor()).digest()
+        return sha3_256(self.to_cbor()).digest()
 
 
 @dataclass
@@ -49,7 +49,7 @@ class TimestampStructure(HashMixin, CBORMixin):
     version: str = "1"
 
     def calculate_hash(self) -> bytes:
-        return sha512(self.to_cbor()).digest()
+        return sha3_256(self.to_cbor()).digest()
 
 
 @dataclass
