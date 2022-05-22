@@ -16,7 +16,6 @@ from .cache import MainMerkleTree
 from .models import timestamp
 from .schemas import (MerkleTreeConsistencyProof, MerkleTreeHead,
                       TimestampRequest, TimestampStructure, TimestampWithId)
-from .server import authority_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +59,9 @@ def data_to_response(
         return HTTPResponse(status=406)
 
 
-def compact_encoding(response: TimestampWithId):
+def compact_encoding(app: Sanic, response: TimestampWithId):
     return (
-        f"{authority_base_url}/{response.interval}#v1,{response.timestamp},"
+        f"{app.config.AUTHORITY}/{response.interval}#v1,{response.timestamp},"
         + base64.urlsafe_b64encode(cbor2.dumps([response.proof.a, response.proof.path]))
         .decode()
         .rstrip("=")
@@ -96,7 +95,7 @@ def setup_routes(app: Sanic):
             tag = None
             wait = False
             compact = False
-            for (k, v) in request.query_args:
+            for (k, v) in request.get_query_args(keep_blank_values=True):
                 if k == "tag" and len(v) <= 36:
                     tag = v
                 elif k == "wait":
@@ -150,14 +149,14 @@ def setup_routes(app: Sanic):
             }
 
             if compact:
-                return text(compact_encoding(response))
+                return text(compact_encoding(app, response))
             else:
                 return data_to_response(request, response, headers=headers)
 
     @app.route("/ts/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
         compact = False
-        for (k, v) in request.query_args:
+        for (k, v) in request.get_query_args(keep_blank_values=True):
             if k == "compact":
                 compact = True
 
@@ -169,7 +168,7 @@ def setup_routes(app: Sanic):
         response = TimestampWithId.from_dict(row._asdict())
 
         if compact:
-            return text(compact_encoding(response))
+            return text(compact_encoding(app, response))
 
         return data_to_response(
             request, response
