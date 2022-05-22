@@ -1,7 +1,6 @@
 import base64
-import datetime
 import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from hashlib import sha3_256
 from typing import Optional
 
@@ -38,7 +37,6 @@ class HashMixin:
 @dataclass
 class TimestampRequest(CBORMixin, JSONMixin):
     data: str
-    options: list[str] = field(default_factory=list)
 
 
 @dataclass

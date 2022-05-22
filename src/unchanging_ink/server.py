@@ -19,9 +19,15 @@ if "DB_USER" not in app.config:
         }
     )
 
+if "AUTHORITY" not in app.config:
+    app.config.update({
+        "AUTHORITY": "dev.unchanging.ink"
+    })
+
 db_url = f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
 redis_url = "redis://redis/0"
 engine = create_async_engine(db_url)
+authority_base_url = f"{app.config.AUTHORITY}"
 
 
 def setup_database():

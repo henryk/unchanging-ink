@@ -19,7 +19,7 @@ from unchanging_ink.schemas import (IntervalProofStructure, IntervalTreeHead,
 
 from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
 from .models import interval, timestamp
-from .server import engine, redis_url
+from .server import engine, redis_url, authority_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ async def calculate_interval(
                     interval_tree_head,
                     i,
                     row,
-                    f"dev.unchanging.ink/{interval_tree_head.interval}#v1:{mth_b64url}",
+                    f"{authority_base_url}/{interval_tree_head.interval}#v1:{mth_b64url}",
                 )
             )
 

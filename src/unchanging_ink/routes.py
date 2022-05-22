@@ -7,14 +7,16 @@ from typing import Type, TypeVar
 import cbor2
 from accept_types import get_best_match
 from sanic import Sanic
+from sanic.exceptions import PayloadTooLarge
 from sanic.request import Request
-from sanic.response import HTTPResponse
+from sanic.response import HTTPResponse, text
 from sanic.response import json as json_response
 
 from .cache import MainMerkleTree
 from .models import timestamp
 from .schemas import (MerkleTreeConsistencyProof, MerkleTreeHead,
                       TimestampRequest, TimestampStructure, TimestampWithId)
+from .server import authority_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ def data_to_response(
 
 def compact_encoding(response: TimestampWithId):
     return (
-        f"dev.unchanging.ink/{response.interval}#v1,{response.timestamp},"
+        f"{authority_base_url}/{response.interval}#v1,{response.timestamp},"
         + base64.urlsafe_b64encode(cbor2.dumps([response.proof.a, response.proof.path]))
         .decode()
         .rstrip("=")
@@ -91,25 +93,32 @@ def setup_routes(app: Sanic):
                 )
 
         elif request.method == "POST":
-            timestamp_request = data_from_request(request, TimestampRequest)
+            tag = None
+            wait = False
+            compact = False
+            for (k, v) in request.query_args:
+                if k == "tag" and len(v) <= 36:
+                    tag = v
+                elif k == "wait":
+                    wait = True
+                elif k == "compact":
+                    compact = True
+                    wait = True
+
+            if compact:
+                data = request.body
+            else:
+                timestamp_request = data_from_request(request, TimestampRequest)
+                data = timestamp_request.data
+
+            if len(data) > 256:
+                raise PayloadTooLarge()
+
             now = (
                 datetime.datetime.now(datetime.timezone.utc)
                 .isoformat(timespec="microseconds")
                 .replace("+00:00", "Z")
             )
-            data = timestamp_request.data
-            # FIXME Get options from GET parameters
-            options = timestamp_request.options
-
-            tag = next(
-                (
-                    option[4:]
-                    for option in options
-                    if option.startswith("tag:") and len(option) <= 40
-                ),
-                None,
-            )
-            wait = "wait" in options
 
             hash_ = TimestampStructure(data=data, timestamp=now).calculate_hash()
 
@@ -139,21 +148,31 @@ def setup_routes(app: Sanic):
                     id_=response.id,
                 )
             }
-            if wait:
-                headers["X-Compact"] = compact_encoding(response)
 
-            return data_to_response(request, response, headers=headers)
+            if compact:
+                return text(compact_encoding(response))
+            else:
+                return data_to_response(request, response, headers=headers)
 
     @app.route("/ts/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
+        compact = False
+        for (k, v) in request.query_args:
+            if k == "compact":
+                compact = True
+
         query = timestamp.select(timestamp.c.id == id_)
         async with app.ctx.engine.begin() as conn:
             result = await conn.execute(query)
             row = result.first()
 
         response = TimestampWithId.from_dict(row._asdict())
+
+        if compact:
+            return text(compact_encoding(response))
+
         return data_to_response(
-            request, response, headers={"X-Compact": compact_encoding(response)}
+            request, response
         )
 
     @app.route("/hello")
