@@ -20,6 +20,7 @@
         - docker-compose.yml
         - Dockerfile
         - default.conf
+        - nginx.conf
         - redis.conf
     - name: Set environment
       ansible.builtin.template:
