@@ -1,8 +1,10 @@
+import base64
 import datetime
 import logging
 import uuid
 from typing import Type, TypeVar
 
+import cbor2
 from accept_types import get_best_match
 from sanic import Sanic
 from sanic.request import Request
@@ -11,8 +13,8 @@ from sanic.response import json as json_response
 
 from .cache import MainMerkleTree
 from .models import timestamp
-from .schemas import (MerkleTreeHead, Timestamp, TimestampRequest,
-                      TimestampStructure, TimestampWithId, MerkleTreeConsistencyProof)
+from .schemas import (MerkleTreeConsistencyProof, MerkleTreeHead,
+                      TimestampRequest, TimestampStructure, TimestampWithId)
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,15 @@ def data_to_response(
         return HTTPResponse(status=406)
 
 
+def compact_encoding(response: TimestampWithId):
+    return (
+        f"dev.unchanging.ink/{response.interval}#v1,{response.timestamp},"
+        + base64.urlsafe_b64encode(cbor2.dumps([response.proof.a, response.proof.path]))
+        .decode()
+        .rstrip("=")
+    )
+
+
 def setup_routes(app: Sanic):
     def prefixed_url_for(*args, **kwargs):
         # FIXME make work for _external=True
@@ -74,7 +85,7 @@ def setup_routes(app: Sanic):
                 rows = result.all()
                 return json_response(
                     [
-                        TimestampWithId.from_dict(row).as_json_data()
+                        TimestampWithId.from_dict(row._asdict()).as_json_data()
                         for row in rows
                     ]
                 )
@@ -87,44 +98,51 @@ def setup_routes(app: Sanic):
                 .replace("+00:00", "Z")
             )
             data = timestamp_request.data
+            # FIXME Get options from GET parameters
             options = timestamp_request.options
 
-            tag = next((option[4:] for option in options if option.startswith("tag:") and len(option) <= 40), None)
+            tag = next(
+                (
+                    option[4:]
+                    for option in options
+                    if option.startswith("tag:") and len(option) <= 40
+                ),
+                None,
+            )
             wait = "wait" in options
 
             hash_ = TimestampStructure(data=data, timestamp=now).calculate_hash()
 
             st_id = uuid.uuid4()
 
-            data = {
-                "id": st_id,
-                "timestamp": now,
-                "hash": hash_,
-                "tag": tag
-            }
+            data = {"id": st_id, "timestamp": now, "hash": hash_, "tag": tag}
 
             async with app.ctx.engine.begin() as conn:
                 await conn.execute(timestamp.insert(), data)
 
             if wait:
+                # FIXME Timeout
                 await request.app.ctx.fanout.wait()
                 async with app.ctx.engine.begin() as conn:
-                    result = await conn.execute(timestamp.select().where(timestamp.c.id==st_id))
+                    result = await conn.execute(
+                        timestamp.select().where(timestamp.c.id == st_id)
+                    )
                     row = result.first()
                     response = TimestampWithId.from_dict(row._asdict())
 
             else:
                 response = TimestampWithId.from_dict(data)
 
-            return data_to_response(
-                request,
-                response,
-                headers={
-                    "location": app.ctx.prefixed_url_for(
-                        "request_timestamp_one", id_=response.id,
-                    )
-                },
-            )
+            headers = {
+                "location": app.ctx.prefixed_url_for(
+                    "request_timestamp_one",
+                    id_=response.id,
+                )
+            }
+            if wait:
+                headers["X-Compact"] = compact_encoding(response)
+
+            return data_to_response(request, response, headers=headers)
 
     @app.route("/ts/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
@@ -134,7 +152,9 @@ def setup_routes(app: Sanic):
             row = result.first()
 
         response = TimestampWithId.from_dict(row._asdict())
-        return data_to_response(request, response)
+        return data_to_response(
+            request, response, headers={"X-Compact": compact_encoding(response)}
+        )
 
     @app.route("/hello")
     async def hello(request: Request) -> HTTPResponse:
@@ -154,12 +174,14 @@ def setup_routes(app: Sanic):
         response = MerkleTreeHead(interval=interval, mth=node.value)
         return data_to_response(request, response, immutable=True)
 
-    @app.route("/mth/<new_interval:int>/from/<old_interval:int>", version=1, methods=["GET"])
+    @app.route(
+        "/mth/<new_interval:int>/from/<old_interval:int>", version=1, methods=["GET"]
+    )
     async def request_mth_proof(request, new_interval, old_interval):
         async with app.ctx.engine.begin() as conn, app.ctx.redis.client() as redisconn:
             tree = MainMerkleTree(redisconn, conn, width=new_interval)
             proof = await tree.compute_consistency_proof(old_interval)
-        response = MerkleTreeConsistencyProof(old_interval, new_interval, [
-            node.value for node in proof
-        ])
+        response = MerkleTreeConsistencyProof(
+            old_interval, new_interval, [node.value for node in proof]
+        )
         return data_to_response(request, response, immutable=True)

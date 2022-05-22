@@ -106,7 +106,7 @@ async def calculate_interval(
         tree = MainMerkleTree(redisconn, conn)
         tree_root = await tree.recalculate_root(interval_tree_head.interval + 1)
 
-        mth_b64 = base64.b64encode(tree_root.value).decode()
+        mth_b64url = base64.urlsafe_b64encode(tree_root.value).decode().rstrip("=")
 
         proofs = []
         for i, row in enumerate(rows):
@@ -116,7 +116,7 @@ async def calculate_interval(
                     interval_tree_head,
                     i,
                     row,
-                    f"dev.unchanging.ink/{interval_tree_head.interval}#v1:{mth_b64}",
+                    f"dev.unchanging.ink/{interval_tree_head.interval}#v1:{mth_b64url}",
                 )
             )
 
@@ -131,7 +131,7 @@ async def calculate_interval(
                 proofs,
             )
 
-        if interval_tree_head.interval == 0:
+        if interval_tree_head.interval < 2:
             append_proof = None
         else:
             proof_nodes = await tree.compute_consistency_proof(
@@ -171,7 +171,9 @@ async def async_main():
                     await conn.commit()
                 live_data = mth.as_json_data()
                 live_data["timestamp"] = now_
-                live_data["proof"] = append_proof.as_json_data()
+                live_data["proof"] = (
+                    append_proof.as_json_data() if append_proof else None
+                )
                 await redisconn.publish("mth-live", orjson.dumps(live_data))
                 queue.append(live_data)
                 if len(queue) > 5:
