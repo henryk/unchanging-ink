@@ -26,7 +26,7 @@ if "AUTHORITY" not in app.config:
 
 db_url = f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
 redis_url = "redis://redis/0"
-engine = create_async_engine(db_url)
+engine = create_async_engine(db_url, pool_size=200, max_overflow=50)
 authority_base_url = f"{app.config.AUTHORITY}"
 
 
