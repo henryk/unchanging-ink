@@ -26,12 +26,16 @@ if "AUTHORITY" not in app.config:
 
 db_url = f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
 redis_url = "redis://redis/0"
-engine = create_async_engine(db_url, pool_size=200, max_overflow=50)
+engine = create_async_engine(db_url, pool_size=0, max_overflow=-1)
 authority_base_url = f"{app.config.AUTHORITY}"
 
 
 def setup_database():
     app.ctx.engine = engine
+
+    @app.listener("before_server_start")
+    async def prepare_db(*args, **kwargs):
+        await engine.dispose(close=False)
 
     @app.listener("after_server_stop")
     async def stop_db():
