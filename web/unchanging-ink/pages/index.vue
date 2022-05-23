@@ -49,6 +49,8 @@
                   :disabled="
                     !createInput.text.length && !createInput.files.length
                   "
+                  :loading="createLoading"
+                  @click="doCreate"
                   ><v-icon dark>{{ mdiStamper }}</v-icon>
                   {{ $t('createTimestamp') }}</v-btn
                 ></v-card-actions
@@ -103,38 +105,11 @@
         <v-card-text style="max-height: 35em; overflow-y: hidden">
           <v-timeline v-show="items.length" clipped dense>
             <transition-group name="slide-y-transition">
-              <v-timeline-item
+              <timeline-item-card
                 v-for="item in items"
                 :key="item.time"
-                fill-dot
-                color="primary"
-                right
-              >
-                <v-card>
-                  <v-card-subtitle
-                    >{{ item.time }}
-                    <v-icon color="success">{{
-                      mdiCheck
-                    }}</v-icon></v-card-subtitle
-                  >
-                  <v-card-text style="font-family: Roboto Mono, monospace; word-break: break-all">{{
-                    item.hash
-                  }}</v-card-text>
-                </v-card>
-                <template #icon>
-                  <v-avatar
-                    ><span
-                      class="white--text"
-                      style="
-                        font-family: Roboto Mono, monospace;
-                        line-height: 0.9;
-                        white-space: pre-line;
-                      "
-                      >{{ item.icon }}</span
-                    ></v-avatar
-                  ></template
-                >
-              </v-timeline-item>
+                :item="item"
+              ></timeline-item-card>
             </transition-group>
           </v-timeline>
         </v-card-text>
@@ -144,17 +119,18 @@
 </template>
 <script>
 import { promisify } from 'util'
-import { mdiStamper, mdiPause, mdiPlay, mdiCheck } from '@mdi/js'
+import { mdiStamper, mdiPause, mdiPlay } from '@mdi/js'
 import redis from 'redis'
-const HEX_CHARS = '0123456789ABCDEF'
+import TimelineItemCard from '../components/TimelineItemCard'
+import { computeHash } from '../utils/hashing'
 
 export default {
+  components: { TimelineItemCard },
   data() {
     return {
       mdiStamper,
       mdiPause,
       mdiPlay,
-      mdiCheck,
       selectedTab: 'create',
       rawItems: [],
       pausedItems: [],
@@ -162,6 +138,7 @@ export default {
       pauseBackground: false,
       cbHandle: null,
       extendedOptionsOpen: false,
+      createLoading: false,
       createInput: {
         text: '',
         files: [],
@@ -174,13 +151,14 @@ export default {
       },
     }
   },
-  // eslint-disable-next-line require-await
   async fetch() {
-    const client = redis.createClient('redis://redis/0')
-    const getAsync = promisify(client.get).bind(client)
-    const val = await getAsync('recent-mth')
-    const recent = JSON.parse(val)
-    ;(recent ?? []).forEach((item) => this.tick(item))
+    if (process.server) {
+      const client = redis.createClient('redis://redis/0')
+      const getAsync = promisify(client.get).bind(client)
+      const val = await getAsync('recent-mth')
+      const recent = JSON.parse(val)
+      ;(recent ?? []).forEach((item) => this.tick(item))
+    }
   },
   head() {
     return {
@@ -256,6 +234,28 @@ export default {
         this.rawItems.pop()
       }
       return true
+    },
+    async doCreate() {
+      try {
+        this.createLoading = true
+        const hash = await computeHash(this.createInput)
+        const request = { data: hash }
+        const response = await fetch('/api/v1/ts/?wait', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(request),
+        })
+        if (response) {
+          console.log({ response })
+          const ts = await response.json()
+          console.log({ ts })
+        }
+      } finally {
+        this.createLoading = false
+      }
     },
     doverHandler(event) {
       event.preventDefault()
