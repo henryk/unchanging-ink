@@ -42,12 +42,15 @@ export default {
       required: false,
       default: null,
     },
+    items: {
+      type: Array,
+      required: true,
+    }
   },
   data() {
     return {
       mdiPause,
       mdiPlay,
-      rawItems: [],
       pausedItems: [],
       pauseMover: false,
       pauseBackground: false,
@@ -55,7 +58,7 @@ export default {
   },
   computed: {
     items() {
-      return this.paused ? this.pausedItems : this.rawItems
+      return this.paused ? this.pausedItems : this.items
     },
     paused() {
       return this.pauseMover || this.pauseBackground
@@ -64,7 +67,7 @@ export default {
   watch: {
     paused(newVal) {
       if (newVal) {
-        this.pausedItems = [...this.rawItems]
+        this.pausedItems = [...this.items]
       }
     },
   },
@@ -78,12 +81,6 @@ export default {
   methods: {
     handleVisibilityChange() {
       this.pauseBackground = document.hidden
-    },
-    tick(item) {
-      this.rawItems.unshift(item)
-      if (this.rawItems.length > 5) {
-        this.rawItems.pop()
-      }
     },
   },
 }

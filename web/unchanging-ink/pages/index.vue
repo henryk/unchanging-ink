@@ -106,6 +106,7 @@
     <v-col cols="12" md="6">
       <timeline-card
         ref="timeline"
+        :items="tickItems"
         :progress-to-next="progressToNext"
       ></timeline-card>
     </v-col>
@@ -133,6 +134,7 @@ export default {
       extendedOptionsOpen: false,
       createLoading: false,
       createPending: false,
+      tickItems: [],
       lastTicks: [],
       lastTick: new Date(),
       createInput: {
@@ -238,6 +240,10 @@ export default {
         time: data?.timestamp ?? 'not set',
         hash: data?.mth ?? 'NOT SET',
         icon: (String(data?.interval) ?? '?').match(/.{1,3}/g).join('\n'),
+      }
+      this.tickItems.unshift(item)
+      if (this.tickItems.length > 5) {
+        this.tickItems.pop()
       }
       if (this.$refs.timeline) {
         this.$refs.timeline.tick(item)
