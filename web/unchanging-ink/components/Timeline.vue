@@ -5,7 +5,9 @@
     @mouseleave="pauseMover = false"
   >
     <template #progress>
-      <v-progress-linear :value="progressToNext"></v-progress-linear>
+      <v-progress-linear
+        :value="!paused ? progressToNext : null"
+      ></v-progress-linear>
     </template>
     <v-card-title class="headline">
       {{ $t('liveView') }}
@@ -35,12 +37,7 @@ export default {
   name: 'TimelineCard',
   components: { TimelineItemCard },
   props: {
-    estimatedNextTick: {
-      type: Date,
-      required: false,
-      default: null,
-    },
-    averageTickDurationMillis: {
+    progressToNext: {
       type: Number,
       required: false,
       default: null,
@@ -48,8 +45,6 @@ export default {
   },
   data() {
     return {
-      now: new Date(),
-      nowInterval: null,
       mdiPause,
       mdiPlay,
       rawItems: [],
@@ -65,29 +60,6 @@ export default {
     paused() {
       return this.pauseMover || this.pauseBackground
     },
-    progressToNext() {
-      if (
-        this.paused ||
-        !this.estimatedNextTick ||
-        !this.averageTickDurationMillis
-      ) {
-        return null
-      }
-      let diff =
-        (this.estimatedNextTick - this.now) / this.averageTickDurationMillis
-      if (diff < 0) {
-        diff = 0
-      }
-      if (diff > 1.0) {
-        diff = 1.0
-      }
-      diff = (1.0 - diff) * 100
-      diff = (100.0 / 80.0) * diff - (20 * 100) / 80
-      if (diff < 0) {
-        diff = 0
-      }
-      return diff
-    },
   },
   watch: {
     paused(newVal) {
@@ -102,20 +74,10 @@ export default {
       this.handleVisibilityChange,
       false
     )
-    this.nowInterval = window.setInterval(this.nowHandler, 100)
-  },
-  beforeDestroy() {
-    if (this.nowInterval !== null) {
-      window.clearInterval(this.nowInterval)
-      this.nowInterval = null
-    }
   },
   methods: {
     handleVisibilityChange() {
       this.pauseBackground = document.hidden
-    },
-    nowHandler() {
-      this.now = new Date()
     },
     tick(item) {
       this.rawItems.unshift(item)

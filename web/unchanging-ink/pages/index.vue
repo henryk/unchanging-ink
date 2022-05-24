@@ -97,8 +97,7 @@
     <v-col cols="12" md="6">
       <timeline-card
         ref="timeline"
-        :estimated-next-tick="estimatedNextTick"
-        :average-tick-duration-millis="averageTickDurationMillis"
+        :progress-to-next="progressToNext"
       ></timeline-card>
     </v-col>
   </v-row>
@@ -117,8 +116,9 @@ export default {
   data() {
     return {
       mdiStamper,
+      now: new Date(),
+      nowInterval: null,
       selectedTab: 'create',
-      cbHandle: null,
       extendedOptionsOpen: false,
       createLoading: false,
       lastTicks: [],
@@ -182,14 +182,34 @@ export default {
     estimatedNextTick() {
       return new Date(this.lastTick.getTime() + this.averageTickDurationMillis)
     },
+    progressToNext() {
+      if (!this.estimatedNextTick || !this.averageTickDurationMillis) {
+        return null
+      }
+      let diff =
+        (this.estimatedNextTick - this.now) / this.averageTickDurationMillis
+      if (diff < 0) {
+        diff = 0
+      }
+      if (diff > 1.0) {
+        diff = 1.0
+      }
+      diff = (1.0 - diff) * 100
+      diff = (100.0 / 80.0) * diff - (20 * 100) / 80
+      if (diff < 0) {
+        diff = 0
+      }
+      return diff
+    },
   },
   mounted() {
+    this.nowInterval = window.setInterval(this.nowHandler, 100)
     this.$options.sockets.onmessage = this.receiveMessage
   },
   beforeDestroy() {
-    if (this.cbHandle) {
-      window.clearInterval(this.cbHandle)
-      this.cbHandle = null
+    if (this.nowInterval !== null) {
+      window.clearInterval(this.nowInterval)
+      this.nowInterval = null
     }
     delete this.$options.sockets.onmessage
   },
@@ -197,6 +217,9 @@ export default {
     receiveMessage(event) {
       const data = JSON.parse(event?.data ?? '')
       this.tick(data)
+    },
+    nowHandler() {
+      this.now = new Date()
     },
     tick(data) {
       const item = {
