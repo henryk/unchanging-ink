@@ -16,10 +16,10 @@
       ><v-icon v-else>{{ mdiPlay }}</v-icon>
     </v-card-title>
     <v-card-text style="max-height: 35em; overflow-y: hidden">
-      <v-timeline v-show="items.length" clipped dense>
+      <v-timeline v-show="displayItems.length" clipped dense>
         <transition-group name="slide-y-transition">
           <timeline-item-card
-            v-for="item in items"
+            v-for="item in displayItems"
             :key="item.time"
             :item="item"
           ></timeline-item-card>
@@ -45,7 +45,7 @@ export default {
     items: {
       type: Array,
       required: true,
-    }
+    },
   },
   data() {
     return {
@@ -57,7 +57,7 @@ export default {
     }
   },
   computed: {
-    items() {
+    displayItems() {
       return this.paused ? this.pausedItems : this.items
     },
     paused() {
