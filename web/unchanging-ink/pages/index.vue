@@ -52,10 +52,19 @@
                   :loading="createLoading"
                   @click="doCreate"
                   ><v-icon dark>{{ mdiStamper }}</v-icon>
-                  {{ $t('createTimestamp') }}</v-btn
-                ></v-card-actions
-              ></v-expand-transition
-            >
+                  {{ $t('createTimestamp') }}
+                  <template #loader>
+                    <v-progress-linear
+                      color="white"
+                      height="23"
+                      striped
+                      class="mx-2"
+                      :query="true"
+                      :indeterminate="createPending"
+                      :value="createPending ? null : progressToNext"
+                    ></v-progress-linear>
+                  </template> </v-btn></v-card-actions
+            ></v-expand-transition>
           </v-tab-item>
           <v-tab-item key="verify">
             <v-card-text @dragover="doverHandler" @drop="dropHandler">
@@ -109,6 +118,8 @@ import redis from 'redis'
 import { computeHash } from '../utils/hashing'
 import TimelineCard from '../components/Timeline'
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export default {
   components: {
     TimelineCard,
@@ -121,6 +132,7 @@ export default {
       selectedTab: 'create',
       extendedOptionsOpen: false,
       createLoading: false,
+      createPending: false,
       lastTicks: [],
       lastTick: new Date(),
       createInput: {
@@ -240,9 +252,10 @@ export default {
     async doCreate() {
       try {
         this.createLoading = true
+        this.createPending = true
         const hash = await computeHash(this.createInput)
         const request = { data: hash }
-        const response = await fetch('/api/v1/ts/?wait', {
+        const response = await fetch('/api/v1/ts/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -250,13 +263,32 @@ export default {
           },
           body: JSON.stringify(request),
         })
+        let ts = null
         if (response) {
           console.log({ response })
-          const ts = await response.json()
+          ts = await response.json()
           console.log({ ts })
+        }
+        let retryCounter = 0
+        while (retryCounter < 5 && ts && !ts?.proof) {
+          retryCounter++
+          this.createPending = false
+          const waitTime = this.estimatedNextTick - new Date() + 1000
+          await sleep(waitTime)
+          const response = await fetch('/api/v1/ts/' + ts.id + '/', {
+            headers: {
+              Accept: 'application/json',
+            },
+          })
+          if (response) {
+            console.log({ response2: response })
+            ts = await response.json()
+            console.log({ ts })
+          }
         }
       } finally {
         this.createLoading = false
+        this.createPending = false
       }
     },
     doverHandler(event) {
