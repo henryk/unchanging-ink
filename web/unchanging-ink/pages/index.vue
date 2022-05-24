@@ -95,50 +95,34 @@
       </v-card>
     </v-col>
     <v-col cols="12" md="6">
-      <v-card @mouseenter="pauseMover = true" @mouseleave="pauseMover = false">
-        <v-card-title class="headline">
-          {{ $t('liveView') }}
-          <v-spacer></v-spacer>
-          <v-icon v-if="paused">{{ mdiPause }}</v-icon
-          ><v-icon v-else>{{ mdiPlay }}</v-icon>
-        </v-card-title>
-        <v-card-text style="max-height: 35em; overflow-y: hidden">
-          <v-timeline v-show="items.length" clipped dense>
-            <transition-group name="slide-y-transition">
-              <timeline-item-card
-                v-for="item in items"
-                :key="item.time"
-                :item="item"
-              ></timeline-item-card>
-            </transition-group>
-          </v-timeline>
-        </v-card-text>
-      </v-card>
+      <timeline-card
+        ref="timeline"
+        :estimated-next-tick="estimatedNextTick"
+        :average-tick-duration-millis="averageTickDurationMillis"
+      ></timeline-card>
     </v-col>
   </v-row>
 </template>
 <script>
 import { promisify } from 'util'
-import { mdiStamper, mdiPause, mdiPlay } from '@mdi/js'
+import { mdiStamper } from '@mdi/js'
 import redis from 'redis'
-import TimelineItemCard from '../components/TimelineItemCard'
 import { computeHash } from '../utils/hashing'
+import TimelineCard from '../components/Timeline'
 
 export default {
-  components: { TimelineItemCard },
+  components: {
+    TimelineCard,
+  },
   data() {
     return {
       mdiStamper,
-      mdiPause,
-      mdiPlay,
       selectedTab: 'create',
-      rawItems: [],
-      pausedItems: [],
-      pauseMover: false,
-      pauseBackground: false,
       cbHandle: null,
       extendedOptionsOpen: false,
       createLoading: false,
+      lastTicks: [],
+      lastTick: new Date(),
       createInput: {
         text: '',
         files: [],
@@ -166,12 +150,6 @@ export default {
     }
   },
   computed: {
-    items() {
-      return this.paused ? this.pausedItems : this.rawItems
-    },
-    paused() {
-      return this.pauseMover || this.pauseBackground
-    },
     hashItems() {
       return [
         { text: 'SHA-512', value: 'sha512' },
@@ -192,21 +170,21 @@ export default {
         return ''
       }
     },
-  },
-  watch: {
-    paused(newVal) {
-      if (newVal) {
-        this.pausedItems = [...this.rawItems]
+    averageTickDurationMillis() {
+      if (this.lastTicks.length > 1) {
+        return (
+          (this.lastTicks[0] - this.lastTicks[this.lastTicks.length - 1]) /
+          this.lastTicks.length
+        )
       }
+      return 1000.0
+    },
+    estimatedNextTick() {
+      return new Date(this.lastTick.getTime() + this.averageTickDurationMillis)
     },
   },
   mounted() {
     this.$options.sockets.onmessage = this.receiveMessage
-    document.addEventListener(
-      'visibilitychange',
-      this.handleVisibilityChange,
-      false
-    )
   },
   beforeDestroy() {
     if (this.cbHandle) {
@@ -220,18 +198,19 @@ export default {
       const data = JSON.parse(event?.data ?? '')
       this.tick(data)
     },
-    handleVisibilityChange() {
-      this.pauseBackground = document.hidden
-    },
     tick(data) {
       const item = {
         time: data?.timestamp ?? 'not set',
         hash: data?.mth ?? 'NOT SET',
         icon: (String(data?.interval) ?? '?').match(/.{1,3}/g).join('\n'),
       }
-      this.rawItems.unshift(item)
-      if (this.rawItems.length > 5) {
-        this.rawItems.pop()
+      if (this.$refs.timeline) {
+        this.$refs.timeline.tick(item)
+      }
+      if (data?.timestamp) {
+        this.lastTicks.unshift(new Date(data.timestamp))
+        this.lastTicks = this.lastTicks.slice(0, 5)
+        this.lastTick = new Date()
       }
       return true
     },
@@ -288,7 +267,6 @@ de:
   verifyTimestamp: Zeitstempel überprüfen
   createOrVerify: Erzeugen oder Überprüfen
   homepage: Startseite
-  liveView: Live-Ansicht
   dropTextOrDragFile: Hier Text eintragen oder Datei ziehen
   optionAddMoreFiles: 'Optional: Mehr Dateien hinzufügen'
   alternateSelectFile: 'Alternativ: Datei wählen'
@@ -299,7 +277,6 @@ en:
   createTimestamp: Create timestamp
   verifyTimestamp: Verify timestamp
   createOrVerify: Create or Verify
-  liveView: Live View
   homepage: Home Page
   dropTextOrDragFile: Enter text or drag and drop file here
   optionAddMoreFiles: 'Optional: Add more files'
