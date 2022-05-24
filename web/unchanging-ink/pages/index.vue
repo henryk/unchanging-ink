@@ -245,9 +245,6 @@ export default {
       if (this.tickItems.length > 5) {
         this.tickItems.pop()
       }
-      if (this.$refs.timeline) {
-        this.$refs.timeline.tick(item)
-      }
       if (data?.timestamp) {
         this.lastTicks.unshift(new Date(data.timestamp))
         this.lastTicks = this.lastTicks.slice(0, 5)
