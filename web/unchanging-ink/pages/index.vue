@@ -1,116 +1,132 @@
 <template>
-  <v-row>
-    <v-col cols="12" md="6">
-      <v-card>
-        <v-card-title class="headline">{{ $t('createOrVerify') }}</v-card-title>
-        <v-tabs v-model="selectedTab" color="primary" grow>
-          <v-tab key="create">{{ $t('createTimestamp') }}</v-tab>
-          <v-tab key="verify" disabled>{{ $t('verifyTimestamp') }}</v-tab>
-        </v-tabs>
-        <v-tabs-items v-model="selectedTab" color="primary">
-          <v-tab-item key="create">
-            <v-card-text @dragover="doverHandler" @drop="dropHandler">
-              <v-textarea
-                v-model="createInput.text"
-                :disabled="!!createInput.files.length"
-                :placeholder="textPlaceholder"
-              ></v-textarea>
-              <v-file-input
-                v-model="createInput.files"
-                :placeholder="filesPlaceholder"
-                chips
-                multiple
-                counter
-                :disabled="!!createInput.text.length"
-              ></v-file-input>
-              <v-expansion-panels v-model="extendedOptionsOpen">
-                <v-expansion-panel>
-                  <v-expansion-panel-header>{{
-                    $t('extendedOptions')
-                  }}</v-expansion-panel-header>
-                  <v-expansion-panel-content>
-                    <v-select
-                      v-model="createInput.hash"
-                      :items="hashItems"
-                      :label="$t('hashfunction')"
-                    ></v-select>
-                  </v-expansion-panel-content>
-                </v-expansion-panel>
-              </v-expansion-panels>
-            </v-card-text>
-            <v-expand-transition
-              ><v-card-actions
-                v-show="createInput.text.length || createInput.files.length"
-                ><v-spacer></v-spacer
-                ><v-btn
-                  large
-                  dark
-                  color="primary"
-                  :disabled="
-                    !createInput.text.length && !createInput.files.length
-                  "
-                  :loading="createLoading"
-                  @click="doCreate"
-                  ><v-icon dark>{{ mdiStamper }}</v-icon>
-                  {{ $t('createTimestamp') }}
-                  <template #loader>
-                    <v-progress-linear
-                      color="white"
-                      height="23"
-                      striped
-                      class="mx-2"
-                      :query="true"
-                      :indeterminate="createPending"
-                      :value="createPending ? null : progressToNext"
-                    ></v-progress-linear>
-                  </template> </v-btn></v-card-actions
-            ></v-expand-transition>
-          </v-tab-item>
-          <v-tab-item key="verify">
-            <v-card-text @dragover="doverHandler" @drop="dropHandler">
-              <v-textarea
-                v-model="createInput.text"
-                :disabled="!!createInput.files.length"
-                :placeholder="textPlaceholder"
-              ></v-textarea>
-              <v-file-input
-                v-model="createInput.files"
-                :placeholder="filesPlaceholder"
-                chips
-                multiple
-                counter
-                :disabled="!!createInput.text.length"
-              ></v-file-input>
-            </v-card-text>
-            <v-expand-transition
-              ><v-card-actions
-                v-show="createInput.text.length || createInput.files.length"
-                ><v-text-field placeholder="proof"></v-text-field
-                ><v-spacer></v-spacer
-                ><v-btn
-                  large
-                  dark
-                  color="primary"
-                  :disabled="
-                    !createInput.text.length && !createInput.files.length
-                  "
-                  ><v-icon dark>{{ mdiStamper }}</v-icon>
-                  {{ $t('verifyTimestamp') }}</v-btn
-                ></v-card-actions
-              ></v-expand-transition
-            >
-          </v-tab-item>
-        </v-tabs-items>
-      </v-card>
-    </v-col>
-    <v-col cols="12" md="6">
-      <timeline-card
-        ref="timeline"
-        :items="tickItems"
-        :progress-to-next="progressToNext"
-      ></timeline-card>
-    </v-col>
-  </v-row>
+  <v-container>
+    <v-row>
+      <v-col cols="12" md="6">
+        <v-card>
+          <v-card-title class="headline">{{
+            $t('createOrVerify')
+          }}</v-card-title>
+          <v-tabs v-model="selectedTab" color="primary" grow>
+            <v-tab key="create">{{ $t('createTimestamp') }}</v-tab>
+            <v-tab key="verify" disabled>{{ $t('verifyTimestamp') }}</v-tab>
+          </v-tabs>
+          <v-tabs-items v-model="selectedTab" color="primary">
+            <v-tab-item key="create">
+              <v-card-text @dragover="doverHandler" @drop="dropHandler">
+                <v-textarea
+                  v-model="createInput.text"
+                  :disabled="!!createInput.files.length"
+                  :placeholder="textPlaceholder"
+                ></v-textarea>
+                <v-file-input
+                  v-model="createInput.files"
+                  :placeholder="filesPlaceholder"
+                  chips
+                  multiple
+                  counter
+                  :disabled="!!createInput.text.length"
+                ></v-file-input>
+                <v-expansion-panels v-model="extendedOptionsOpen">
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>{{
+                      $t('extendedOptions')
+                    }}</v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-select
+                        v-model="createInput.hash"
+                        :items="hashItems"
+                        :label="$t('hashfunction')"
+                      ></v-select>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+              </v-card-text>
+              <v-expand-transition
+                ><v-card-actions
+                  v-show="createInput.text.length || createInput.files.length"
+                  ><v-spacer></v-spacer
+                  ><v-btn
+                    large
+                    dark
+                    color="primary"
+                    :disabled="
+                      !createInput.text.length && !createInput.files.length
+                    "
+                    :loading="createLoading"
+                    @click="doCreate"
+                    ><v-icon dark>{{ mdiStamper }}</v-icon>
+                    {{ $t('createTimestamp') }}
+                    <template #loader>
+                      <v-progress-linear
+                        color="white"
+                        height="23"
+                        striped
+                        class="mx-2"
+                        :query="true"
+                        :indeterminate="createPending"
+                        :value="createPending ? null : progressToNext"
+                      ></v-progress-linear>
+                    </template> </v-btn></v-card-actions
+              ></v-expand-transition>
+            </v-tab-item>
+            <v-tab-item key="verify">
+              <v-card-text @dragover="doverHandler" @drop="dropHandler">
+                <v-textarea
+                  v-model="createInput.text"
+                  :disabled="!!createInput.files.length"
+                  :placeholder="textPlaceholder"
+                ></v-textarea>
+                <v-file-input
+                  v-model="createInput.files"
+                  :placeholder="filesPlaceholder"
+                  chips
+                  multiple
+                  counter
+                  :disabled="!!createInput.text.length"
+                ></v-file-input>
+              </v-card-text>
+              <v-expand-transition
+                ><v-card-actions
+                  v-show="createInput.text.length || createInput.files.length"
+                  ><v-text-field placeholder="proof"></v-text-field
+                  ><v-spacer></v-spacer
+                  ><v-btn
+                    large
+                    dark
+                    color="primary"
+                    :disabled="
+                      !createInput.text.length && !createInput.files.length
+                    "
+                    ><v-icon dark>{{ mdiStamper }}</v-icon>
+                    {{ $t('verifyTimestamp') }}</v-btn
+                  ></v-card-actions
+                ></v-expand-transition
+              >
+            </v-tab-item>
+          </v-tabs-items>
+        </v-card>
+      </v-col>
+      <v-col cols="12" md="6">
+        <timeline-card
+          ref="timeline"
+          :items="tickItems"
+          :progress-to-next="progressToNext"
+        ></timeline-card>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col v-if="createdTimestamps.length" cols="12" md="6">
+        <v-card>
+          <v-card-title class="headline">{{
+            $t('createdTimestamps')
+          }}</v-card-title>
+          <v-card-text v-for="ts in createdTimestamps" :key="ts.id">
+            <pre>{{ JSON.stringify(ts, null, 2) }}</pre>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 <script>
 import { promisify } from 'util'
@@ -136,6 +152,7 @@ export default {
       tickItems: [],
       lastTicks: [],
       lastTick: new Date(),
+      createdTimestamps: [],
       UiTs: new TimestampService('/api/'),
       createInput: {
         text: '',
@@ -265,7 +282,7 @@ export default {
           },
           waitTimeEstimator: () => this.estimatedNextTick - new Date() + 1000,
         })
-        console.log({ ts })
+        this.createdTimestamps.unshift(ts)
       } finally {
         this.createLoading = false
         this.createPending = false
@@ -308,6 +325,7 @@ de:
   hashfunction: Hash-Funktion
   extendedOptions: Erweiterte Einstellungen
   rawHash: Rohdaten/ungehasht (max 256 Bytes)
+  createdTimestamps: Zuletzt erzeugte Zeitstempel
 en:
   createTimestamp: Create timestamp
   verifyTimestamp: Verify timestamp
@@ -319,4 +337,5 @@ en:
   hashfunction: Hash function
   extendedOptions: Extended Options
   rawHash: raw/no hash (max 256 bytes)
+  createdTimestamps: Created timestamps
 </i18n>
