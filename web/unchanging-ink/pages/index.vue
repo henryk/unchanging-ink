@@ -118,8 +118,7 @@ import { mdiStamper } from '@mdi/js'
 import redis from 'redis'
 import { computeHash } from '../utils/hashing'
 import TimelineCard from '../components/Timeline'
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+import { TimestampService } from '../utils/uits'
 
 export default {
   components: {
@@ -137,6 +136,7 @@ export default {
       tickItems: [],
       lastTicks: [],
       lastTick: new Date(),
+      UiTs: new TimestampService('/api/'),
       createInput: {
         text: '',
         files: [],
@@ -217,6 +217,7 @@ export default {
     },
   },
   mounted() {
+    this.UiTs = new TimestampService('/api/') // Client side
     this.nowInterval = window.setInterval(this.nowHandler, 100)
     this.$options.sockets.onmessage = this.receiveMessage
   },
@@ -257,38 +258,14 @@ export default {
         this.createLoading = true
         this.createPending = true
         const hash = await computeHash(this.createInput)
-        const request = { data: hash }
-        const response = await fetch('/api/v1/ts/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
+        const ts = await this.UiTs.getTimestamp(hash, {
+          // eslint-disable-next-line require-await
+          firstStepCallback: async () => {
+            this.createPending = false
           },
-          body: JSON.stringify(request),
+          waitTimeEstimator: () => this.estimatedNextTick - new Date() + 1000,
         })
-        let ts = null
-        if (response) {
-          console.log({ response })
-          ts = await response.json()
-          console.log({ ts })
-        }
-        let retryCounter = 0
-        while (retryCounter < 5 && ts && !ts?.proof) {
-          retryCounter++
-          this.createPending = false
-          const waitTime = this.estimatedNextTick - new Date() + 1000
-          await sleep(waitTime)
-          const response = await fetch('/api/v1/ts/' + ts.id + '/', {
-            headers: {
-              Accept: 'application/json',
-            },
-          })
-          if (response) {
-            console.log({ response2: response })
-            ts = await response.json()
-            console.log({ ts })
-          }
-        }
+        console.log({ ts })
       } finally {
         this.createLoading = false
         this.createPending = false
