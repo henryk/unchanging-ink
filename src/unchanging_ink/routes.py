@@ -9,7 +9,7 @@ from accept_types import get_best_match
 from sanic import Sanic
 from sanic.exceptions import PayloadTooLarge
 from sanic.request import Request
-from sanic.response import HTTPResponse, text
+from sanic.response import HTTPResponse, text, json
 from sanic.response import json as json_response
 
 from .cache import MainMerkleTree
@@ -203,3 +203,12 @@ def setup_routes(app: Sanic):
             old_interval, new_interval, [node.value for node in proof]
         )
         return data_to_response(request, response, immutable=True)
+
+    @app.route("/trace", version=1, methods=["GET"])
+    async def trace(request):
+        return json({
+            "headers": list(request.headers.items()),
+            "url": app.url_for('trace'),
+            "url_ext": app.url_for('trace', _external=True),
+            "config": {k: str(v) for k, v in app.config.items()},
+        })
