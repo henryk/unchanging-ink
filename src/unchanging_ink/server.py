@@ -24,6 +24,11 @@ if "AUTHORITY" not in app.config:
         "AUTHORITY": "dev.unchanging.ink"
     })
 
+if "SERVER_NAME" not in app.config:
+    app.config.update({
+        "SERVER_NAME": "https://" + app.config.AUTHORITY + "/api"
+    })
+
 db_url = f"postgresql+asyncpg://{app.config.DB_USER}:{app.config.DB_PASSWORD}@{app.config.DB_HOST}/{app.config.DB_NAME}"
 redis_url = "redis://redis/0"
 engine = create_async_engine(db_url)

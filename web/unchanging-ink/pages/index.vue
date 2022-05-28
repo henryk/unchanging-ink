@@ -109,7 +109,7 @@
       <v-col cols="12" md="6">
         <timeline-card
           ref="timeline"
-          :items="tickItems"
+          :items="UiTs.tickItems"
           :progress-to-next="progressToNext"
         ></timeline-card>
       </v-col>
@@ -140,6 +140,13 @@ export default {
   components: {
     TimelineCard,
   },
+  asyncData({ req }) {
+    return {
+      UiTs: new TimestampService(
+        req.protocol + '//' + req.host + ':' + req.port
+      ),
+    }
+  },
   data() {
     return {
       mdiStamper,
@@ -149,11 +156,8 @@ export default {
       extendedOptionsOpen: false,
       createLoading: false,
       createPending: false,
-      tickItems: [],
-      lastTicks: [],
-      lastTick: new Date(),
       createdTimestamps: [],
-      UiTs: new TimestampService('/api/'),
+      UiTs: null,
       createInput: {
         text: '',
         files: [],
@@ -172,7 +176,7 @@ export default {
       const getAsync = promisify(client.get).bind(client)
       const val = await getAsync('recent-mth')
       const recent = JSON.parse(val)
-      ;(recent ?? []).forEach((item) => this.tick(item))
+      ;(recent ?? []).forEach((item) => this.UiTs.tick(item))
     }
   },
   head() {
@@ -201,24 +205,16 @@ export default {
         return ''
       }
     },
-    averageTickDurationMillis() {
-      if (this.lastTicks.length > 1) {
-        return (
-          (this.lastTicks[0] - this.lastTicks[this.lastTicks.length - 1]) /
-          this.lastTicks.length
-        )
-      }
-      return 1000.0
-    },
-    estimatedNextTick() {
-      return new Date(this.lastTick.getTime() + this.averageTickDurationMillis)
-    },
     progressToNext() {
-      if (!this.estimatedNextTick || !this.averageTickDurationMillis) {
+      if (
+        !this.UiTs.estimatedNextTick ||
+        !this.UiTs.averageTickDurationMillis
+      ) {
         return null
       }
       let diff =
-        (this.estimatedNextTick - this.now) / this.averageTickDurationMillis
+        (this.UiTs.estimatedNextTick - this.now) /
+        this.UiTs.averageTickDurationMillis
       if (diff < 0) {
         diff = 0
       }
@@ -234,41 +230,21 @@ export default {
     },
   },
   mounted() {
-    this.UiTs = new TimestampService('/api/') // Client side
+    this.UiTs = new TimestampService(window.location.origin) // Client side
+    this.UiTs.openLiveConnection()
     this.nowInterval = window.setInterval(this.nowHandler, 100)
-    this.$options.sockets.onmessage = this.receiveMessage
   },
   beforeDestroy() {
     if (this.nowInterval !== null) {
       window.clearInterval(this.nowInterval)
       this.nowInterval = null
     }
-    delete this.$options.sockets.onmessage
+    this.UiTs.closeLiveConnection()
+    delete this.UiTs
   },
   methods: {
-    receiveMessage(event) {
-      const data = JSON.parse(event?.data ?? '')
-      this.tick(data)
-    },
     nowHandler() {
       this.now = new Date()
-    },
-    tick(data) {
-      const item = {
-        time: data?.timestamp ?? 'not set',
-        hash: data?.mth ?? 'NOT SET',
-        icon: (String(data?.interval) ?? '?').match(/.{1,3}/g).join('\n'),
-      }
-      this.tickItems.unshift(item)
-      if (this.tickItems.length > 5) {
-        this.tickItems.pop()
-      }
-      if (data?.timestamp) {
-        this.lastTicks.unshift(new Date(data.timestamp))
-        this.lastTicks = this.lastTicks.slice(0, 5)
-        this.lastTick = new Date()
-      }
-      return true
     },
     async doCreate() {
       try {
@@ -280,7 +256,8 @@ export default {
           firstStepCallback: async () => {
             this.createPending = false
           },
-          waitTimeEstimator: () => this.estimatedNextTick - new Date() + 1000,
+          waitTimeEstimator: () =>
+            this.UiTs.estimatedNextTick - new Date() + 1000,
         })
         this.createdTimestamps.unshift(ts)
       } finally {
