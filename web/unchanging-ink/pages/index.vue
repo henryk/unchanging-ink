@@ -140,11 +140,9 @@ export default {
   components: {
     TimelineCard,
   },
-  asyncData({ req }) {
+  asyncData() {
     return {
-      UiTs: new TimestampService(
-        req.protocol + '//' + req.host + ':' + req.port
-      ),
+      UiTs: new TimestampService(process.env.AUTHORITY),
     }
   },
   data() {
@@ -256,8 +254,6 @@ export default {
           firstStepCallback: async () => {
             this.createPending = false
           },
-          waitTimeEstimator: () =>
-            this.UiTs.estimatedNextTick - new Date() + 1000,
         })
         this.createdTimestamps.unshift(ts)
       } finally {

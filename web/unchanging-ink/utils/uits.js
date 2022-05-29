@@ -3,7 +3,6 @@ import { sleep } from './misc'
 const DEFAULT_OPTIONS_GET_TIMESTAMP = {
   wait: false,
   maxRetries: 5,
-  waitTimeEstimator: () => 1000,
   // eslint-disable-next-line require-await
   firstStepCallback: async () => null,
 }
@@ -52,8 +51,9 @@ export class TimestampService {
     }
     this.ws = null
     this.tickItems = []
-    this.lastTicks = []
-    this.lastTick = new Date()
+    console.log(
+      `Created new TimestampService for ${this.authority} at ${this.baseUrl}`
+    )
   }
 
   openLiveConnection() {
@@ -78,23 +78,23 @@ export class TimestampService {
       hash: data?.mth ?? 'NOT SET',
       icon: (String(data?.interval) ?? '?').match(/.{1,3}/g).join('\n'),
     }
+    if (data?.timestamp) {
+      item.timeobj = new Date(data.timestamp)
+      item.received = new Date()
+    }
     this.tickItems.unshift(item)
     if (this.tickItems.length > 5) {
       this.tickItems.pop()
-    }
-    if (data?.timestamp) {
-      this.lastTicks.unshift(new Date(data.timestamp))
-      this.lastTicks = this.lastTicks.slice(0, 5)
-      this.lastTick = new Date()
     }
     return true
   }
 
   get averageTickDurationMillis() {
-    if (this.lastTicks.length > 1) {
+    if (this.tickItems.length > 1) {
       return (
-        (this.lastTicks[0] - this.lastTicks[this.lastTicks.length - 1]) /
-        this.lastTicks.length
+        (this.tickItems[0].received -
+          this.tickItems[this.tickItems.length - 1].received) /
+        this.tickItems.length
       )
     }
     return 1000.0
@@ -102,6 +102,12 @@ export class TimestampService {
 
   get estimatedNextTick() {
     return new Date(this.lastTick.getTime() + this.averageTickDurationMillis)
+  }
+
+  get lastTick() {
+    if (this.tickItems && this.tickItems.length > 0) {
+      return this.tickItems[0].received
+    }
   }
 
   closeLiveConnection() {
@@ -154,7 +160,7 @@ export class TimestampService {
     let retryCounter = 0
     while (retryCounter < 5 && ts && !ts?.proof) {
       retryCounter++
-      const waitTime = options_.waitTimeEstimator()
+      const waitTime = this.estimatedNextTick - new Date() + 1000
       await sleep(waitTime)
       response = await fetch(this.baseUrl + 'v1/ts/' + ts.id + '/', {
         headers: {

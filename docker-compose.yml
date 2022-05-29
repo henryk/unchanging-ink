@@ -72,6 +72,7 @@ services:
     environment:
       HOST: "0"
       PORT: "3000"
+      AUTHORITY: "dev.unchanging.ink"
     read_only: true
     depends_on:
       - redis
