@@ -9,13 +9,16 @@ from accept_types import get_best_match
 from sanic import Sanic
 from sanic.exceptions import PayloadTooLarge
 from sanic.request import Request
-from sanic.response import HTTPResponse, text, json
+from sanic.response import HTTPResponse
+from sanic.response import json
 from sanic.response import json as json_response
+from sanic.response import text
 
 from .cache import MainMerkleTree
-from .models import timestamp, interval as interval_model
-from .schemas import (MainTreeConsistencyProof, Interval,
-                      TimestampRequest, TimestampStructure, TimestampWithId, MainHead)
+from .models import interval as interval_model
+from .models import timestamp
+from .schemas import (Interval, MainHead, MainTreeConsistencyProof,
+                      TimestampRequest, TimestampStructure, TimestampWithId)
 
 logger = logging.getLogger(__name__)
 
@@ -170,9 +173,7 @@ def setup_routes(app: Sanic):
         if compact:
             return text(compact_encoding(app, response))
 
-        return data_to_response(
-            request, response
-        )
+        return data_to_response(request, response)
 
     @app.route("/hello")
     async def hello(request: Request) -> HTTPResponse:
@@ -188,10 +189,8 @@ def setup_routes(app: Sanic):
     async def request_mth_one(request, interval):
         async with app.ctx.engine.begin() as conn, app.ctx.redis.client() as redisconn:
             tree = MainMerkleTree(redisconn, conn)
-            root_node = await tree.recalculate_root(interval+1)
-            proof_nodes = await tree.compute_consistency_proof(
-                interval - 1
-            )
+            root_node = await tree.recalculate_root(interval + 1)
+            proof_nodes = await tree.compute_consistency_proof(interval - 1)
             if interval < 2:
                 append_proof = None
             else:
@@ -207,6 +206,7 @@ def setup_routes(app: Sanic):
             row = result.first()
 
         from unchanging_ink.server import authority_base_url
+
         response = MainHead(
             authority=authority_base_url,
             interval=Interval.from_row(row),

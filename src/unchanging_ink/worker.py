@@ -14,12 +14,14 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam, text
 
 from unchanging_ink.cache import MainMerkleTree
-from unchanging_ink.schemas import (IntervalProofStructure, CompactRepr, ConcreteTime, Interval,
-                                    MainTreeConsistencyProof, MainHead)
+from unchanging_ink.schemas import (CompactRepr, ConcreteTime, Interval,
+                                    IntervalProofStructure, MainHead,
+                                    MainTreeConsistencyProof)
 
 from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
-from .models import interval as interval_model, timestamp
-from .server import engine, redis_url, authority_base_url
+from .models import interval as interval_model
+from .models import timestamp
+from .server import authority_base_url, engine, redis_url
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +137,7 @@ async def calculate_interval(
         if interval.index < 2:
             append_proof = None
         else:
-            proof_nodes = await tree.compute_consistency_proof(
-                interval.index - 1
-            )
+            proof_nodes = await tree.compute_consistency_proof(interval.index - 1)
             append_proof = MainTreeConsistencyProof(
                 interval.index - 1,
                 interval.index,
@@ -148,7 +148,7 @@ async def calculate_interval(
             authority=authority_base_url,
             interval=interval,
             mth=tree_root.value,
-            proof=append_proof
+            proof=append_proof,
         )
     return retval
 

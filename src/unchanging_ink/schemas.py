@@ -7,8 +7,8 @@ from typing import Optional, TypeVar
 import cbor2
 import orjson
 
-ConcreteTime = TypeVar('ConcreteTime', bound=str)
-CompactRepr = TypeVar('CompactRepr', bound=str)
+ConcreteTime = TypeVar("ConcreteTime", bound=str)
+CompactRepr = TypeVar("CompactRepr", bound=str)
 
 
 class CBORMixin:
