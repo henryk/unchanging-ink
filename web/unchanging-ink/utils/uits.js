@@ -42,6 +42,13 @@ class InconsistencyError extends Error {
   }
 }
 
+class TimestampServerError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'TimestampServerError'
+  }
+}
+
 export class TimestampService {
   constructor(authority) {
     this.authority = canonizeAuthority(authority)
@@ -102,20 +109,19 @@ export class TimestampService {
     this.tick(data)
   }
 
-  tick(data, preload = false) {
+  tick(mh, preload = false) {
+    console.log(mh)
     const item = {
-      time: data?.timestamp ?? 'not set',
-      hash: data?.mth ?? 'NOT SET',
-      icon: (String(data?.interval) ?? '?').match(/.{1,3}/g).join('\n'),
+      time: mh?.interval?.timestamp ?? 'not set',
+      hash: mh?.mth ?? 'NOT SET',
+      icon: (String(mh?.interval?.index) ?? '?').match(/.{1,3}/g).join('\n'),
     }
 
-    item.timeobj = new Date(data.timestamp)
+    item.timeobj = new Date(mh.timestamp)
     item.received = preload ? item.timeobj : new Date()
 
-    const parts = parseCompactTs(data.mth)
-    this.updateState(parts.authority, 'mth', {
-      interval: parts.interval,
-      mth: parts.mth,
+    this.updateState(mh.authority, 'mh', {
+      mh,
       received: item.received,
     })
 
@@ -139,13 +145,18 @@ export class TimestampService {
   }
 
   get estimatedNextTick() {
-    return new Date(this.lastTick.getTime() + this.averageTickDurationMillis)
+    const lastTick = this.lastTick
+    if (!lastTick) {
+      return null
+    }
+    return new Date(lastTick.getTime() + this.averageTickDurationMillis)
   }
 
   get lastTick() {
     if (this.tickItems && this.tickItems.length > 0) {
       return this.tickItems[0].received
     }
+    return null
   }
 
   closeLiveConnection() {
@@ -189,7 +200,7 @@ export class TimestampService {
       ts = await response.json()
     }
     if (!response || !ts || !ts.id) {
-      return null
+      throw new TimestampServerError('null response from server')
     }
     if (ts && ts.proof) {
       return ts
@@ -219,7 +230,7 @@ export class TimestampService {
       })
       return ts
     }
-    return null
+    throw new TimestampServerError('Timed out waiting for interval from server')
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
