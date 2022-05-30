@@ -100,13 +100,22 @@ export class TimestampService {
     this.ws = new WebSocket(
       this.baseUrl.replace(/^http/i, 'ws') + 'v1/mth/live'
     )
-    // FIXME reconnect?
     this.ws.onmessage = (event) => this._wsmessage(event)
+    this.ws.onclose = (event) => this._wsclose(event)
   }
 
   _wsmessage(event) {
     const data = JSON.parse(event?.data ?? '')
     this.tick(data)
+  }
+
+  _wsclose() {
+    // FIXME multiple retries?
+    console.log('Live socket is closed, trying to reconnect in 10s')
+    this.closeLiveConnection()
+    setTimeout(() => {
+      this.openLiveConnection()
+    }, 10000)
   }
 
   tick(mh, preload = false) {
@@ -161,6 +170,7 @@ export class TimestampService {
 
   closeLiveConnection() {
     if (this.ws) {
+      this.ws.onclose = undefined
       this.ws.close()
       delete this.ws
       this.ws = null
