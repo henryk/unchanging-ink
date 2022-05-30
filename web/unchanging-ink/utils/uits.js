@@ -1,3 +1,5 @@
+import SHA3 from 'sha3'
+import { encodeCanonical } from 'cbor'
 import { sleep } from './misc'
 
 const DEFAULT_OPTIONS_GET_TIMESTAMP = {
@@ -23,6 +25,9 @@ export function parseCompactTs(c) {
 }
 
 function canonizeAuthority(s) {
+  if (!s) {
+    return
+  }
   let retval = s.replace(/\/*$/, '')
   if (retval.toLowerCase().startsWith('https://')) {
     retval = retval.replace(/^https:\/\//i, '')
@@ -31,6 +36,41 @@ function canonizeAuthority(s) {
     }
   }
   return retval.toLowerCase()
+}
+
+export function createTimestampHash(data, timestamp) {
+  const tsStruct = {
+    data,
+    timestamp,
+    typ: 'ts',
+    version: '1',
+  }
+  return new SHA3(256).update(encodeCanonical(tsStruct)).digest()
+}
+
+function verifyTsProof(hash, { ith, a, path }) {
+  let current = new SHA3(256)
+    .update(Buffer.from([0]))
+    .update(hash)
+    .digest()
+  for (const nodeB64 of path) {
+    const node = Buffer.from(nodeB64, 'base64')
+    if ((a & 1) !== 0) {
+      current = new SHA3(256)
+        .update(Buffer.from([1]))
+        .update(node)
+        .update(current)
+        .digest()
+    } else {
+      current = new SHA3(256)
+        .update(Buffer.from([1]))
+        .update(current)
+        .update(node)
+        .digest()
+    }
+    a >>= 1
+  }
+  return current.compare(Buffer.from(ith, 'base64')) === 0
 }
 
 const SOURCE_DIRECT_SET = 'direct'
@@ -61,7 +101,6 @@ export class TimestampService {
     this.knownHead = {
       interval: null,
       mth: null,
-      source: null,
     }
     this.ws = null
     this.tickItems = []
@@ -91,6 +130,23 @@ export class TimestampService {
     if (canonizeAuthority(authority) !== this.authority) {
       throw new InconsistencyError('Authority mismatch')
     }
+    if (type === 'mh') {
+      const { mh } = data
+      if (
+        !this.knownHead?.interval ||
+        this.knownHead.interval < mh.interval.index
+      ) {
+        this.knownHead = {
+          interval: mh.interval.index,
+          mth: Buffer.from(mh.mth, 'base64'),
+        }
+      }
+      this.cacheIth[mh.interval.index] = Buffer.from(mh.interval.ith, 'base64')
+      this.cacheMtree[`0-${mh.interval.index + 1}`] = Buffer.from(
+        mh.mth,
+        'base64'
+      )
+    }
   }
 
   openLiveConnection() {
@@ -119,7 +175,6 @@ export class TimestampService {
   }
 
   tick(mh, preload = false) {
-    console.log(mh)
     const item = {
       time: mh?.interval?.timestamp ?? 'not set',
       hash: mh?.mth ?? 'NOT SET',
@@ -150,7 +205,7 @@ export class TimestampService {
         this.tickItems.length
       )
     }
-    return 1000.0
+    return 5000.0
   }
 
   get estimatedNextTick() {
@@ -219,7 +274,7 @@ export class TimestampService {
     let retryCounter = 0
     while (retryCounter < 5 && ts && !ts?.proof) {
       retryCounter++
-      const waitTime = this.estimatedNextTick - new Date() + 1000
+      const waitTime = Math.max(this.estimatedNextTick - new Date(), 0) + 1000
       await sleep(waitTime)
       response = await fetch(this.baseUrl + 'v1/ts/' + ts.id + '/', {
         headers: {
@@ -243,6 +298,13 @@ export class TimestampService {
     throw new TimestampServerError('Timed out waiting for interval from server')
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async verifyTimestamp(data, ts, options = DEFAULT_OPTIONS_VERIFY_TIMESTAMP) {}
+  async verifyTimestamp(data, ts, options = DEFAULT_OPTIONS_VERIFY_TIMESTAMP) {
+    const hash = createTimestampHash(data, ts.timestamp)
+    if (ts?.hash) {
+      if (Buffer.from(ts.hash, 'base64').compare(hash) !== 0) {
+        return false
+      }
+    }
+    return verifyTsProof(hash, ts.proof)
+  }
 }
