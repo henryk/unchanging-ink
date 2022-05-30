@@ -198,12 +198,12 @@ export class TimestampService {
   }
 
   get averageTickDurationMillis() {
-    if (this.tickItems.length > 1) {
-      return (
-        (this.tickItems[0].received -
-          this.tickItems[this.tickItems.length - 1].received) /
-        this.tickItems.length
-      )
+    const diffs = this.tickItems
+      .slice(1)
+      .map((v, i) => this.tickItems[i].received - v.received)
+      .filter((v) => v >= 1000)
+    if (diffs.length > 0) {
+      return diffs.reduce((partial, v) => partial + v, 0) / diffs.length
     }
     return 5000.0
   }
@@ -274,7 +274,7 @@ export class TimestampService {
     let retryCounter = 0
     while (retryCounter < 5 && ts && !ts?.proof) {
       retryCounter++
-      const waitTime = Math.max(this.estimatedNextTick - new Date(), 0) + 1000
+      const waitTime = Math.max(this.estimatedNextTick - new Date(), 500) + 500
       await sleep(waitTime)
       response = await fetch(this.baseUrl + 'v1/ts/' + ts.id + '/', {
         headers: {
