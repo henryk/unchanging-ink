@@ -35,6 +35,13 @@ function canonizeAuthority(s) {
 
 const SOURCE_DIRECT_SET = 'direct'
 
+class InconsistencyError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'InconsistencyError'
+  }
+}
+
 export class TimestampService {
   constructor(authority) {
     this.authority = canonizeAuthority(authority)
@@ -51,9 +58,32 @@ export class TimestampService {
     }
     this.ws = null
     this.tickItems = []
+    this._listeners = {}
+    this._listener_next_idx = 0
     console.log(
       `Created new TimestampService for ${this.authority} at ${this.baseUrl}`
     )
+  }
+
+  addListener(f) {
+    this._listeners[this._listener_next_idx] = f
+    this._listener_next_idx++
+  }
+
+  removeListener(idx) {
+    delete this._listeners[idx]
+  }
+
+  callListeners(item) {
+    for (const listener of Object.values(this._listeners)) {
+      listener(item)
+    }
+  }
+
+  updateState(authority, type, data) {
+    if (canonizeAuthority(authority) !== this.authority) {
+      throw new InconsistencyError('Authority mismatch')
+    }
   }
 
   openLiveConnection() {
@@ -72,20 +102,28 @@ export class TimestampService {
     this.tick(data)
   }
 
-  tick(data) {
+  tick(data, preload = false) {
     const item = {
       time: data?.timestamp ?? 'not set',
       hash: data?.mth ?? 'NOT SET',
       icon: (String(data?.interval) ?? '?').match(/.{1,3}/g).join('\n'),
     }
-    if (data?.timestamp) {
-      item.timeobj = new Date(data.timestamp)
-      item.received = new Date()
-    }
+
+    item.timeobj = new Date(data.timestamp)
+    item.received = preload ? item.timeobj : new Date()
+
+    const parts = parseCompactTs(data.mth)
+    this.updateState(parts.authority, 'mth', {
+      interval: parts.interval,
+      mth: parts.mth,
+      received: item.received,
+    })
+
     this.tickItems.unshift(item)
     if (this.tickItems.length > 5) {
       this.tickItems.pop()
     }
+    this.callListeners(item)
     return true
   }
 
@@ -172,6 +210,13 @@ export class TimestampService {
       }
     }
     if (ts && ts.proof) {
+      const components = parseCompactTs(ts.proof.mth)
+      this.updateState(components.authority, 'mth', {
+        interval: components.interval,
+        mth: components.mth,
+        ith: ts.proof.ith,
+        received: new Date(),
+      })
       return ts
     }
     return null

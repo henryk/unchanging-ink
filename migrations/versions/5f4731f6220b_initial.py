@@ -22,7 +22,7 @@ def upgrade():
         "interval",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("timestamp", sa.String(length=32), nullable=False),
-        sa.Column("itmh", sa.LargeBinary(length=64), nullable=False),
+        sa.Column("ith", sa.LargeBinary(length=64), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(

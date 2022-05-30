@@ -109,7 +109,7 @@
       <v-col cols="12" md="6">
         <timeline-card
           ref="timeline"
-          :items="UiTs.tickItems"
+          :items="tickItems"
           :progress-to-next="progressToNext"
         ></timeline-card>
       </v-col>
@@ -135,6 +135,7 @@ import redis from 'redis'
 import { computeHash } from '../utils/hashing'
 import TimelineCard from '../components/Timeline'
 import { TimestampService } from '../utils/uits'
+import { sleep } from '../utils/misc'
 
 export default {
   components: {
@@ -156,6 +157,8 @@ export default {
       createPending: false,
       createdTimestamps: [],
       UiTs: null,
+      tickListener: null,
+      tickItems: [],
       createInput: {
         text: '',
         files: [],
@@ -174,7 +177,8 @@ export default {
       const getAsync = promisify(client.get).bind(client)
       const val = await getAsync('recent-mth')
       const recent = JSON.parse(val)
-      ;(recent ?? []).forEach((item) => this.UiTs.tick(item))
+      ;(recent ?? []).forEach((item) => this.UiTs.tick(item, true))
+      this.tickItems = JSON.parse(JSON.stringify(this.UiTs.tickItems))
     }
   },
   head() {
@@ -229,6 +233,10 @@ export default {
   },
   mounted() {
     this.UiTs = new TimestampService(window.location.origin) // Client side
+    this.tickListener = this.UiTs.addListener((item) => {
+      this.tickItems.unshift(item)
+      this.$forceUpdate()
+    })
     this.UiTs.openLiveConnection()
     this.nowInterval = window.setInterval(this.nowHandler, 100)
   },
@@ -238,6 +246,10 @@ export default {
       this.nowInterval = null
     }
     this.UiTs.closeLiveConnection()
+    if (this.tickListener !== null) {
+      this.UiTs.removeListener(this.tickListener)
+      this.tickListener = null
+    }
     delete this.UiTs
   },
   methods: {
@@ -255,6 +267,8 @@ export default {
             this.createPending = false
           },
         })
+        await sleep(1000)
+        console.log(await this.UiTs.verifyTimestamp(hash, ts))
         this.createdTimestamps.unshift(ts)
       } finally {
         this.createLoading = false

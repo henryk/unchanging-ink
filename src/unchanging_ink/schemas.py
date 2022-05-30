@@ -2,10 +2,13 @@ import base64
 import uuid
 from dataclasses import asdict, dataclass
 from hashlib import sha3_256
-from typing import Optional
+from typing import Optional, TypeVar
 
 import cbor2
 import orjson
+
+ConcreteTime = TypeVar('ConcreteTime', bound=str)
+CompactRepr = TypeVar('CompactRepr', bound=str)
 
 
 class CBORMixin:
@@ -42,7 +45,7 @@ class TimestampRequest(CBORMixin, JSONMixin):
 @dataclass
 class TimestampStructure(HashMixin, CBORMixin):
     data: str
-    timestamp: str
+    timestamp: ConcreteTime
     typ: str = "ts"
     version: str = "1"
 
@@ -54,20 +57,20 @@ class TimestampStructure(HashMixin, CBORMixin):
 class IntervalProofStructure(CBORMixin, JSONMixin):
     a: int
     path: list[bytes]
-    itmh: bytes
-    mth: str
+    ith: bytes
+    mth: CompactRepr
 
     def as_json_data(self):
         data = asdict(self)
         data["path"] = [base64.b64encode(x).decode() for x in data["path"]]
-        data["itmh"] = base64.b64encode(data["itmh"]).decode() if data["itmh"] else None
+        data["ith"] = base64.b64encode(data["ith"]).decode() if data["ith"] else None
         return data
 
 
 @dataclass
 class Timestamp(CBORMixin, JSONMixin):
     hash: bytes
-    timestamp: str
+    timestamp: ConcreteTime
     typ: str = "ts"
     version: str = "1"
     proof: Optional[IntervalProofStructure] = None
@@ -80,8 +83,8 @@ class Timestamp(CBORMixin, JSONMixin):
         data = asdict(self)
         data["hash"] = base64.b64encode(data["hash"]).decode()
         if data["proof"]:
-            if "itmh" in data["proof"]:
-                data["proof"]["itmh"] = base64.b64encode(data["proof"]["itmh"]).decode()
+            if "ith" in data["proof"]:
+                data["proof"]["ith"] = base64.b64encode(data["proof"]["ith"]).decode()
             if "path" in data["proof"]:
                 data["proof"]["path"] = [
                     base64.b64encode(x).decode() for x in data["proof"]["path"]
@@ -105,37 +108,25 @@ class TimestampWithId(Timestamp):
 
 
 @dataclass
-class IntervalTreeHead(HashMixin, CBORMixin, JSONMixin):
-    interval: int
-    timestamp: str
-    itmh: bytes
+class Interval(HashMixin, CBORMixin, JSONMixin):
+    index: int
+    timestamp: ConcreteTime
+    ith: bytes
     version: str = "1"
     typ: str = "it"
 
     def as_json_data(self):
         data = asdict(self)
-        data["itmh"] = base64.b64encode(data["itmh"]).decode()
+        data["ith"] = base64.b64encode(data["ith"]).decode()
         return data
 
     @classmethod
     def from_row(cls, row):
-        return cls(interval=row.id, timestamp=row.timestamp, itmh=row.itmh)
+        return cls(index=row.id, timestamp=row.timestamp, ith=row.ith)
 
 
 @dataclass
-class MerkleTreeHead(CBORMixin, JSONMixin):
-    interval: int
-    mth: bytes
-    version: str = "1"
-
-    def as_json_data(self):
-        data = asdict(self)
-        data["mth"] = base64.b64encode(data["mth"]).decode()
-        return data
-
-
-@dataclass
-class MerkleTreeConsistencyProof(CBORMixin, JSONMixin):
+class MainTreeConsistencyProof(CBORMixin, JSONMixin):
     old_interval: int
     new_interval: int
     nodes: list[bytes]
@@ -144,4 +135,20 @@ class MerkleTreeConsistencyProof(CBORMixin, JSONMixin):
     def as_json_data(self):
         data = asdict(self)
         data["nodes"] = [base64.b64encode(x).decode() for x in data["nodes"]]
+        return data
+
+
+@dataclass
+class MainHead(CBORMixin, JSONMixin):
+    authority: str
+    interval: Interval
+    mth: bytes
+    version: str = "1"
+    proof: Optional[MainTreeConsistencyProof] = None
+
+    def as_json_data(self):
+        data = asdict(self)
+        data["proof"] = self.proof.as_json_data() if self.proof else None
+        data["interval"] = self.interval.as_json_data()
+        data["mth"] = base64.b64encode(data["mth"]).decode()
         return data

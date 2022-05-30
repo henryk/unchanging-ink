@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from unchanging_ink.crypto import AbstractAsyncCachingMerkleTree, MerkleNode
 from unchanging_ink.models import interval
-from unchanging_ink.schemas import IntervalTreeHead
+from unchanging_ink.schemas import Interval
 
 MAX_CACHE_WIDTH = 128
 
@@ -90,5 +90,5 @@ class MainMerkleTree(AbstractRedisAsyncCachingMerkleTree):
             result = await self._conn.execute(query)
             row = result.first()
 
-        ith = IntervalTreeHead.from_row(row)
+        ith = Interval.from_row(row)
         return ith.calculate_hash()
