@@ -159,14 +159,24 @@ def setup_routes(app: Sanic):
     @app.route("/ts/<id_:uuid>", version=1, methods=["GET"])  # FIXME Throttling
     async def request_timestamp_one(request: Request, id_: uuid.UUID) -> HTTPResponse:
         compact = False
+        wait = False
         for (k, v) in request.get_query_args(keep_blank_values=True):
             if k == "compact":
                 compact = True
+            elif k == "wait":
+                wait = True
 
         query = timestamp.select(timestamp.c.id == id_)
         async with app.ctx.engine.begin() as conn:
             result = await conn.execute(query)
             row = result.first()
+
+            if wait and not row.proof:
+                # FIXME Timeout
+                await request.app.ctx.fanout.wait()
+
+                result = await conn.execute(query)
+                row = result.first()
 
         response = TimestampWithId.from_dict(row._asdict())
 
