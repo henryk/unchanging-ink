@@ -273,17 +273,27 @@ export class TimestampService {
     await options_.firstStepCallback()
     let retryCounter = 0
     while (retryCounter < 5 && ts && !ts?.proof) {
-      retryCounter++
-      const waitTime = Math.max(this.estimatedNextTick - new Date(), 500) + 500
+      const waitTime = Math.max(
+        this.estimatedNextTick - new Date(),
+        retryCounter === 0 ? 500 : 1000
+      )
       await sleep(waitTime)
-      response = await fetch(this.baseUrl + 'v1/ts/' + ts.id + '/', {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
+      response = await fetch(
+        this.baseUrl +
+          'v1/ts/' +
+          ts.id +
+          '/' +
+          (retryCounter === 0 ? '?wait' : ''),
+        {
+          headers: {
+            Accept: 'application/json',
+          },
+        }
+      )
       if (response) {
         ts = await response.json()
       }
+      retryCounter++
     }
     if (ts && ts.proof) {
       const components = parseCompactTs(ts.proof.mth)
