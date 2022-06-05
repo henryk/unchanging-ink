@@ -16,7 +16,7 @@ from sqlalchemy.sql.expression import bindparam, text
 from unchanging_ink.cache import MainMerkleTree
 from unchanging_ink.schemas import (CompactRepr, ConcreteTime, Interval,
                                     IntervalProofStructure, MainHead,
-                                    MainTreeConsistencyProof)
+                                    MainTreeConsistencyProof, MainHeadWithConsistency, MainTreeInclusionProof)
 
 from .crypto import AbstractAsyncMerkleTree, DictCachingMerkleTree
 from .models import interval as interval_model
@@ -58,7 +58,7 @@ async def formulate_proof(
 async def calculate_interval(
     conn: sqlalchemy.ext.asyncio.AsyncConnection,
     redisconn: Redis,
-) -> MainHead:
+) -> MainHeadWithConsistency:
     now_ = (
         datetime.datetime.now(datetime.timezone.utc)
         .isoformat(timespec="microseconds")
@@ -144,11 +144,20 @@ async def calculate_interval(
                 nodes=[node.value for node in proof_nodes],
             )
 
-        retval = MainHead(
+        a, path = await tree.compute_inclusion_proof(interval.index)
+        inclusion_proof = MainTreeInclusionProof(
+            head=interval.index,
+            leaf=None,
+            a=a,
+            nodes=[node.value for node in path],
+        )
+
+        retval = MainHeadWithConsistency(
             authority=authority_base_url,
             interval=interval,
             mth=tree_root.value,
-            proof=append_proof,
+            inclusion=inclusion_proof,
+            consistency=append_proof,
         )
     return retval
 

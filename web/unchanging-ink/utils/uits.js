@@ -48,13 +48,12 @@ export function createTimestampHash(data, timestamp) {
   return new SHA3(256).update(encodeCanonical(tsStruct)).digest()
 }
 
-function verifyTsProof(hash, { ith, a, path }) {
+function _verifyInclusionProof({ hash, head, a, path }) {
   let current = new SHA3(256)
     .update(Buffer.from([0]))
     .update(hash)
     .digest()
-  for (const nodeB64 of path) {
-    const node = Buffer.from(nodeB64, 'base64')
+  for (const node of path) {
     if ((a & 1) !== 0) {
       current = new SHA3(256)
         .update(Buffer.from([1]))
@@ -70,7 +69,33 @@ function verifyTsProof(hash, { ith, a, path }) {
     }
     a >>= 1
   }
-  return current.compare(Buffer.from(ith, 'base64')) === 0
+  return current.compare(head) === 0
+}
+
+/**
+ * Verify a timestamp proof
+ * @param hash Hash of timestamp nucleus, a Buffer
+ * @param ith Interval tree hash, base64
+ * @param a Node address, see protocol documentation, Number
+ * @param path Node path, see protocol documentation, Array of base64
+ * @returns {boolean} True iff hash is verified to be included in ith, per a and path
+ */
+function verifyTsProof(hash, { ith, a, path }) {
+  return _verifyInclusionProof({
+    hash,
+    head: Buffer.from(ith, 'base64'),
+    a,
+    path: path.map((item) => Buffer.from(item, 'base64')),
+  })
+}
+
+function verifyIntervalProof(ihash, mth, { a, path }) {
+  return _verifyInclusionProof({
+    hash: ihash,
+    head: Buffer.from(mth, 'base64'),
+    a,
+    path: path.map((item) => Buffer.from(item, 'base64')),
+  })
 }
 
 const SOURCE_DIRECT_SET = 'direct'

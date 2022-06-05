@@ -139,16 +139,48 @@ class MainTreeConsistencyProof(CBORMixin, JSONMixin):
 
 
 @dataclass
-class MainHead(CBORMixin, JSONMixin):
+class MainTreeInclusionProof(CBORMixin, JSONMixin):
+    head: int
+    leaf: Optional[int]
+    a: int
+    nodes: list[bytes]
+    version: str = "1"
+
+    def as_json_data(self):
+        data = asdict(self)
+        data["nodes"] = [base64.b64encode(x).decode() for x in data["nodes"]]
+        return data
+
+
+@dataclass
+class MainHeadBase(CBORMixin, JSONMixin):
     authority: str
     interval: Interval
     mth: bytes
     version: str = "1"
-    proof: Optional[MainTreeConsistencyProof] = None
 
     def as_json_data(self):
         data = asdict(self)
-        data["proof"] = self.proof.as_json_data() if self.proof else None
         data["interval"] = self.interval.as_json_data()
         data["mth"] = base64.b64encode(data["mth"]).decode()
+        return data
+
+
+@dataclass
+class MainHead(MainHeadBase):
+    inclusion: Optional[MainTreeInclusionProof] = None
+
+    def as_json_data(self):
+        data = super().as_json_data()
+        data["inclusion"] = self.inclusion.as_json_data() if self.inclusion else None
+        return data
+
+
+@dataclass
+class MainHeadWithConsistency(MainHead):
+    consistency: Optional[MainTreeConsistencyProof] = None
+
+    def as_json_data(self):
+        data = super().as_json_data()
+        data["consistency"] = self.consistency.as_json_data() if self.consistency else None
         return data
