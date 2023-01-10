@@ -59,12 +59,13 @@ async def calculate_interval(
     conn: sqlalchemy.ext.asyncio.AsyncConnection,
     redisconn: Redis,
 ) -> MainHeadWithConsistency:
-    now_ = (
-        datetime.datetime.now(datetime.timezone.utc)
-        .isoformat(timespec="microseconds")
-        .replace("+00:00", "Z")
-    )
+    logger.debug("Starting calculate_interval()")
     async with conn.begin() as transaction:
+        now_ = (
+            datetime.datetime.now(datetime.timezone.utc)
+            .isoformat(timespec="microseconds")
+            .replace("+00:00", "Z")
+        )
         s = (
             timestamp.select(timestamp.c.interval.is_(None))
             .with_for_update()
@@ -73,6 +74,7 @@ async def calculate_interval(
         result = await conn.execute(s)
 
         rows = list(result)
+        logger.debug("Have %i new rows", len(rows))
 
         interval_tree = await DictCachingMerkleTree.from_sequence(
             row["hash"] for row in rows
@@ -104,9 +106,11 @@ async def calculate_interval(
             )
         )
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
+        logger.debug("Interval inserted: %s", interval)
 
         tree = MainMerkleTree(redisconn, conn)
         tree_root = await tree.recalculate_root(interval.index + 1)
+        logger.debug("New tree root: %s", tree_root)
 
         mth_b64url = base64.urlsafe_b64encode(tree_root.value).decode().rstrip("=")
         mth = f"{authority_base_url}/{interval.index}#v1:{mth_b64url}"
@@ -123,6 +127,7 @@ async def calculate_interval(
                 )
             )
 
+        logger.debug("Inserting %i proofs", len(proofs))
         if proofs:
             await conn.execute(
                 timestamp.update()
@@ -144,6 +149,7 @@ async def calculate_interval(
                 nodes=[node.value for node in proof_nodes],
             )
 
+        logger.debug("Computing current inclusion proof")
         a, path = await tree.compute_inclusion_proof(interval.index)
         inclusion_proof = MainTreeInclusionProof(
             head=interval.index,
@@ -159,6 +165,7 @@ async def calculate_interval(
             inclusion=inclusion_proof,
             consistency=append_proof,
         )
+        logger.debug("calculate_interval() done: %s", retval)
     return retval
 
 
