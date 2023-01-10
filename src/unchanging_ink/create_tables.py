@@ -1,12 +1,15 @@
-import sqlalchemy
+import asyncio
 
 from .models import metadata
-from .server import db
+from .server import engine
+
+
+async def main_inner():
+    await engine.run_sync(metadata.create_all)
 
 
 def main():
-    engine = sqlalchemy.create_engine(str(db.url))
-    metadata.create_all(engine)
+    asyncio.run(main_inner())
 
 
 if __name__ == "__main__":

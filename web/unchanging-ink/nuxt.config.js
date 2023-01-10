@@ -21,7 +21,7 @@ export default {
   css: ['@fontsource/roboto'],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: [{ src: '~/plugins/websocket.js', mode: 'client' }],
+  plugins: [],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -39,7 +39,7 @@ export default {
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/sentry',
     '@nuxtjs/axios',
-    'nuxt-i18n',
+    '@nuxtjs/i18n',
     '@nuxt/content',
   ],
 
@@ -107,6 +107,13 @@ export default {
       // of transactions for performance monitoring.
       // We recommend adjusting this value in production
       tracesSampleRate: 1.0,
+    },
+  },
+
+  // See https://github.com/nuxt/nuxt.js/issues/2481#issuecomment-356074552
+  watchers: {
+    webpack: {
+      poll: true,
     },
   },
 }

@@ -1,2 +1,4 @@
-FROM node:lts-alpine as frontend-base
+ARG NODE_VERSION=16
+
+FROM node:${NODE_VERSION}-alpine as frontend-base
 WORKDIR /app

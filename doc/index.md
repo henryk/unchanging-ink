@@ -3,6 +3,7 @@
  * [Protocol](protocol)
  * [Components](components)
  * [Deployment](deployment)
+ * [(Internals)](internals)
 
 ## Design rationale
 

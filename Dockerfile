@@ -1,4 +1,7 @@
-FROM python:3.8-slim AS base
+ARG PYTHON_VERSION=3.9
+ARG NODE_VERSION=16
+
+FROM python:${PYTHON_VERSION}-slim AS base
 
 FROM base AS builder-base
 
@@ -10,8 +13,8 @@ ENV PYTHONFAULTHANDLER=1 \
   PIP_DEFAULT_TIMEOUT=100 \
   POETRY_NO_INTERACTION=1 \
   PATH="$PATH:/app/.venv/bin" \
-  PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python3.8/site-packages/" \
-  POETRY_VERSION=1.1.5
+  PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python${PYTHON_VERSION}/site-packages/" \
+  POETRY_VERSION=1.1.13
 
 # System deps:
 RUN apt-get update && apt-get install -y build-essential unzip wget python-dev
@@ -38,7 +41,19 @@ COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --no-dev -E worker
 
-FROM node:lts-alpine as frontend-base
+FROM builder-base as tester
+RUN apt-get install -y libpq-dev redis-server
+RUN poetry install --no-dev --no-root -E worker -E test
+
+COPY migrations /app/migrations
+COPY src /app/src
+RUN poetry install --no-dev -E worker -E test
+ENV PYTHONTRACEMALLOC=40
+ENV PYTHONASYNCIODEBUG=1
+ENTRYPOINT ["poetry", "run", "pytest", "--cov"]
+CMD []
+
+FROM node:${NODE_VERSION}-alpine as frontend-base
 
 FROM frontend-base as frontend-prep-stage
 WORKDIR /app
@@ -56,12 +71,16 @@ COPY doc ./content/doc
 
 RUN npm run build
 
-FROM frontend-base as frontend
+FROM frontend-base as frontend-install-stage
 WORKDIR /app
 COPY web/unchanging-ink/package-lock.json ./
 COPY --from=frontend-prep-stage /app/package.json ./
 RUN npm ci --production
 
+FROM frontend-base as frontend
+WORKDIR /app
+
+COPY --from=frontend-install-stage /app/node_modules/ /app/node_modules/
 COPY --from=frontend-build-stage /app/package.json /app/nuxt.config.js /app/
 COPY --from=frontend-build-stage /app/.nuxt/ /app/.nuxt/
 COPY --from=frontend-build-stage /app/content/ /app/content/
@@ -70,12 +89,12 @@ CMD ["npm", "run", "start"]
 FROM base as worker
 RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-ENV PYTHONPATH=/app/.venv/lib/python3.8/site-packages/ PATH="$PATH:/app/.venv/bin"
+ENV PYTHONPATH=/app/.venv/lib/python${PYTHON_VERSION}/site-packages/ PATH="$PATH:/app/.venv/bin"
 CMD "/app/.venv/bin/unchanging-ink_worker"
 COPY --from=worker-builder /app/ /app/
 
 FROM base AS backend
 WORKDIR /app
-ENV PYTHONPATH=/app/.venv/lib/python3.8/site-packages/ PATH="$PATH:/app/.venv/bin"
+ENV PYTHONPATH=/app/.venv/lib/python${PYTHON_VERSION}/site-packages/ PATH="$PATH:/app/.venv/bin"
 CMD "/app/.venv/bin/unchanging-ink"
 COPY --from=backend-builder /app/ /app/

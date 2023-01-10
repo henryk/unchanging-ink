@@ -3,8 +3,6 @@ import os
 from asyncio import wait_for
 from typing import Any, Optional
 
-import aioredis
-
 
 class Fanout:
     def __init__(self):
@@ -23,15 +21,16 @@ class Fanout:
 
 
 async def redis_fanout(app):
-    await asyncio.sleep(1)  # I don't know why I need this
     while True:
-        redis = None
         try:
-            redis = await aioredis.create_redis("redis://redis/0")
-            (channel,) = await redis.subscribe("mth-live")
-            while await channel.wait_message():
-                message = await channel.get()
-                await app.ctx.fanout.trigger(message.decode())
+            pubsub = app.ctx.redis.pubsub()
+            await pubsub.subscribe("mth-live")
+            while True:
+                message = await pubsub.get_message(
+                    ignore_subscribe_messages=True, timeout=11
+                )
+                if message:
+                    await app.ctx.fanout.trigger(message["data"].decode())
         except GeneratorExit:
             raise
         except:
@@ -41,6 +40,3 @@ async def redis_fanout(app):
             prf = str(os.getpid()) + ": "
             print(prf + ("\n" + prf).join(bt.splitlines()))
             await asyncio.sleep(1)
-        finally:
-            if redis:
-                redis.close()

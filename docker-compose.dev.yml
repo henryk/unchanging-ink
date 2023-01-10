@@ -23,12 +23,14 @@ services:
       SANIC_WORKERS: 1
       SANIC_BIND_HOST: 0.0.0.0
       SANIC_BIND_PORT: 8000
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
-      POETRY_CACHE_DIR: /cache
+      POETRY_VIRTUALENVS_IN_PROJECT: "false"
+      POETRY_VIRTUALENVS_PATH: /venv
+      PYTHONUNBUFFERED: 1
+      PYTHONASYNCIODEBUG: 1
     volumes:
       - .:/app
-      - backend_venv:/app/.venv
-      - poetry_cache:/cache
+      - backend_venv:/venv
+      - poetry_backend_cache:/root/.cache
     networks:
       - db
       - web
@@ -54,12 +56,14 @@ services:
       SANIC_WORKERS: 1
       SANIC_BIND_HOST: 0.0.0.0
       SANIC_BIND_PORT: 8000
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
-      POETRY_CACHE_DIR: /cache
+      POETRY_VIRTUALENVS_IN_PROJECT: "false"
+      POETRY_VIRTUALENVS_PATH: /venv
+      PYTHONUNBUFFERED: 1
+      PYTHONASYNCIODEBUG: 1
     volumes:
       - .:/app
-      - worker_venv:/app/.venv
-      - poetry_cache:/cache
+      - worker_venv:/venv
+      - poetry_worker_cache:/root/.cache
     networks:
       - db
       - redis
@@ -77,11 +81,17 @@ services:
     volumes:
       - ./web/unchanging-ink:/app
       - ./doc:/app/content/doc
+    environment:
+      DISABLE_OPENCOLLECTIVE: true
     networks:
       - web
       - redis
       - default
     command: "sh -c 'cd /app && npm install && npm run dev'"
+    tmpfs:
+      - /root/.npm
+      - /app/.nuxt
+      - /app/node_modules:exec
 
 volumes:
   backend_venv:
@@ -92,4 +102,5 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-  poetry_cache:
+  poetry_backend_cache:
+  poetry_worker_cache:

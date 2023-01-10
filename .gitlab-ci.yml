@@ -1,6 +1,8 @@
-.docker-login:
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+include:
+  - project: tools/ci
+    file: buildkit.yml
+  - project: tools/ci
+    file: python-poetry.yml
 
 .ssh-agent:
   before_script:
@@ -11,56 +13,43 @@
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod -R go= ~/.ssh
 
-default:
-  before_script:
-    - !reference [.docker-login, before_script]
-    - !reference [.ssh-agent, before_script]
-  image: docker:latest
-  tags:
-    - shell
-  services:
-    - docker:dind
-
-variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_BUILDKIT: 1
-
 stages:
-  - build
-  - push
+  - test
+  - publish
   - deploy
 
-build main backend:
-  stage: build
-  script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend" --target backend .
-  only:
-    - main
+test cpython:
+  extends: .pytest-cov
+  before_script:
+    - !reference [.python-setup, before_script]
+    - apt-get update && apt-get install -y libpq-dev redis-server
+    - poetry install --no-root -E worker -E test
 
-build main worker:
-  stage: build
-  script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/worker" --target worker .
-  only:
-    - main
 
-build main frontend:
-  stage: build
-  script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend" --target frontend .
-  only:
-    - main
+publish docker:
+  needs:
+    - job: test cpython
+  variables:
+    IMAGE_SUFFIX: "/backend"
+    BUILDKIT_OPT_ARGS: --opt target=backend
 
-push main all:
-  stage: push
-  script:
-    - docker push "$CI_REGISTRY_IMAGE/backend"
-    - docker push "$CI_REGISTRY_IMAGE/worker"
-    - docker push "$CI_REGISTRY_IMAGE/frontend"
-  only:
-    - main
+publish docker worker:
+  extends: publish docker
+  variables:
+    IMAGE_SUFFIX: "/worker"
+    BUILDKIT_OPT_ARGS: --opt target=worker
+
+publish docker frontend:
+  extends: publish docker
+  variables:
+    IMAGE_SUFFIX: "/frontend"
+    BUILDKIT_OPT_ARGS: --opt target=frontend
 
 deploy dev:
+  needs:
+    - job: publish docker
+    - job: publish docker worker
+    - job: publish docker frontend
   environment: dev
   stage: deploy
   image: cytopia/ansible:latest-tools
@@ -72,15 +61,3 @@ deploy dev:
     - cd deployment && ansible-playbook -i "${DEPLOY_HOST}," deploy.yml
   only:
     - dev
-
-build other all:
-  stage: build
-  script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG" --target backend .
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG" --target worker .
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG" --target frontend .
-    - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG"
-    - docker push "$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG"
-    - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG"
-  except:
-    - main

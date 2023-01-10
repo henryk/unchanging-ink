@@ -20,6 +20,8 @@
         - docker-compose.yml
         - Dockerfile
         - default.conf
+        - nginx.conf
+        - redis.conf
     - name: Set environment
       ansible.builtin.template:
         dest: "{{ deploy_base_dir }}/.env"
