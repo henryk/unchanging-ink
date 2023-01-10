@@ -27,6 +27,8 @@ test cpython:
 
 
 publish docker:
+  needs:
+    - job: test cpython
   variables:
     IMAGE_SUFFIX: "/backend"
     BUILDKIT_OPT_ARGS: --opt target=backend
@@ -44,6 +46,10 @@ publish docker frontend:
     BUILDKIT_OPT_ARGS: --opt target=frontend
 
 deploy dev:
+  needs:
+    - job: publish docker
+    - job: publish docker worker
+    - job: publish docker frontend
   environment: dev
   stage: deploy
   image: cytopia/ansible:latest-tools
