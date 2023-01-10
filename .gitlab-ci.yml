@@ -22,7 +22,7 @@ test cpython:
   extends: .pytest-cov
   before_script:
     - !reference [.python-setup, before_script]
-    - apt-get install -y libpq-dev redis-server
+    - apt-get update && apt-get install -y libpq-dev redis-server
     - poetry install --no-root -E worker -E test
 
 
