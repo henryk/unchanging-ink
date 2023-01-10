@@ -33,6 +33,7 @@ sanic-testing = {version = "^22.3.0", optional = true}
 pytest-async-sqlalchemy = {version = "^0.2.0", optional = true}
 aiosqlite = {version = "^0.17.0", optional = true}
 accept-types = "^0.4.1"
+pytest-xdist = {version = "^2.5.0", extras = ["psutil"], optional = true}
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
@@ -40,7 +41,7 @@ isort = "^5.8.0"
 
 [tool.poetry.extras]
 worker = [ "psycopg2", "alembic", "redis", "sentry-sdk" ]
-test = [ "pytest", "pytest-asyncio", "coverage", "pytest-cov", "pytest-redis", "python-dateutil", "sanic-testing", "pytest-async-sqlalchemy", "aiosqlite" ]
+test = [ "pytest", "pytest-asyncio", "coverage", "pytest-cov", "pytest-redis", "python-dateutil", "sanic-testing", "pytest-async-sqlalchemy", "aiosqlite", "pytest-xdist" ]
 dev = [ "black", "isort" ]
 
 [tool.poetry.scripts]
