@@ -61,7 +61,7 @@ async def calculate_interval(
     conn: sqlalchemy.ext.asyncio.AsyncConnection,
     redisconn: Redis,
 ) -> MainHeadWithConsistency:
-    logger.debug("Starting calculate_interval()")
+    logger.info("Starting calculate_interval()")
     start_time = time.time()
     async with conn.begin() as transaction:
         now_ = (
@@ -109,12 +109,12 @@ async def calculate_interval(
             )
         )
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
-        logger.debug("Interval inserted", interval=interval, time=time.time()-start_time)
+        logger.info("Interval inserted", interval=interval, time=time.time()-start_time)
 
         tree_start_time = time.time()
         tree = MainMerkleTree(redisconn, conn)
         tree_root = await tree.recalculate_root(interval.index + 1)
-        logger.debug("New tree root", new_root=tree_root, time=time.time()-start_time, delta=time.time()-tree_start_time)
+        logger.info("New tree root", new_root=tree_root, time=time.time()-start_time, delta=time.time()-tree_start_time)
 
         mth_b64url = base64.urlsafe_b64encode(tree_root.value).decode().rstrip("=")
         mth = f"{authority_base_url}/{interval.index}#v1:{mth_b64url}"
@@ -131,7 +131,7 @@ async def calculate_interval(
                 )
             )
 
-        logger.debug("Inserting %i proofs", len(proofs), time=time.time()-start_time)
+        logger.info("Inserting %i proofs", len(proofs), time=time.time()-start_time)
         if proofs:
             await conn.execute(
                 timestamp.update()
@@ -153,7 +153,7 @@ async def calculate_interval(
                 nodes=[node.value for node in proof_nodes],
             )
 
-        logger.debug("Computing current inclusion proof", time=time.time()-start_time)
+        logger.info("Computing current inclusion proof", time=time.time()-start_time)
         incp_start_time = time.time()
         a, path = await tree.compute_inclusion_proof(interval.index)
         inclusion_proof = MainTreeInclusionProof(
@@ -170,7 +170,7 @@ async def calculate_interval(
             inclusion=inclusion_proof,
             consistency=append_proof,
         )
-        logger.debug("calculate_interval() done", retval=retval, time=time.time()-start_time, delta=time.time()-incp_start_time)
+        logger.info("calculate_interval() done", retval=retval, time=time.time()-start_time, delta=time.time()-incp_start_time)
     return retval
 
 
@@ -205,6 +205,7 @@ async def async_main():
 
 
 def main():
+    structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.INFO))
     asyncio.run(async_main())
 
 
