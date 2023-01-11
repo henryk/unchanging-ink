@@ -1,4 +1,5 @@
 import aioredis
+import structlog
 from sanic import Sanic
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -67,6 +68,7 @@ def setup():
 
 
 def init():
+    structlog.stdlib.recreate_defaults()
     setup()
 
     workers = app.config.get("WORKERS", "auto")

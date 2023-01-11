@@ -8,6 +8,7 @@ import aioredis
 import orjson
 import sentry_sdk
 import sqlalchemy
+import structlog
 from aioredis import Redis
 from alembic import command, config
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -204,6 +205,7 @@ async def async_main():
 
 
 def main():
+    structlog.stdlib.recreate_defaults()
     logging.basicConfig(level=logging.DEBUG)
     asyncio.run(async_main())
 
