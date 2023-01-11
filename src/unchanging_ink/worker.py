@@ -205,7 +205,7 @@ async def async_main():
 
 
 def main():
-    structlog.stdlib.recreate_defaults()
+    structlog.stdlib.recreate_defaults(log_level=logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
     asyncio.run(async_main())
 
