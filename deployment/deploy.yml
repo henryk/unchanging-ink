@@ -4,7 +4,7 @@
     ansible_port: "{{ lookup('env', 'DEPLOY_PORT') }}"
     ansible_python_interpreter: /usr/bin/python3
     ansible_user: "{{ lookup('env', 'DEPLOY_USER') }}"
-    CI_COMMIT_REF_SLUG: "{{ lookup('env', 'CI_COMMIT_REF_SLUG') }}"
+    DEPLOY_VERSION: "{{ lookup('env', 'DEPLOY_VERSION') }}"
     CI_REGISTRY_IMAGE: "{{ lookup('env', 'CI_REGISTRY_IMAGE') }}"
     CI_REGISTRY_USER: "{{ lookup('env', 'CI_REGISTRY_USER') }}"
     CI_REGISTRY_PASSWORD: "{{ lookup('env', 'CI_REGISTRY_PASSWORD') }}"
