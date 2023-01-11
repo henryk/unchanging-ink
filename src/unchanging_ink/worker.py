@@ -2,6 +2,7 @@ import asyncio
 import base64
 import datetime
 import logging
+import time
 from typing import Optional, Tuple, TypeVar
 
 import aioredis
@@ -24,11 +25,7 @@ from .models import interval as interval_model
 from .models import timestamp
 from .server import authority_base_url, engine, redis_url
 
-logger = logging.getLogger(__name__)
-
-
-def LOG_DEBUG(fmt, *args):
-    print(fmt % args)
+logger = structlog.getLogger(__name__)
 
 
 sentry_sdk.init(
@@ -64,7 +61,8 @@ async def calculate_interval(
     conn: sqlalchemy.ext.asyncio.AsyncConnection,
     redisconn: Redis,
 ) -> MainHeadWithConsistency:
-    LOG_DEBUG("Starting calculate_interval()")
+    logger.debug("Starting calculate_interval()")
+    start_time = time.time()
     async with conn.begin() as transaction:
         now_ = (
             datetime.datetime.now(datetime.timezone.utc)
@@ -79,7 +77,7 @@ async def calculate_interval(
         result = await conn.execute(s)
 
         rows = list(result)
-        LOG_DEBUG("Have %i new rows", len(rows))
+        logger.debug("Have %i new rows", len(rows), time=time.time()-start_time)
 
         interval_tree = await DictCachingMerkleTree.from_sequence(
             row["hash"] for row in rows
@@ -111,11 +109,12 @@ async def calculate_interval(
             )
         )
         await conn.execute(text("SET CONSTRAINTS ALL DEFERRED"))
-        LOG_DEBUG("Interval inserted: %s", interval)
+        logger.debug("Interval inserted", interval=interval, time=time.time()-start_time)
 
+        tree_start_time = time.time()
         tree = MainMerkleTree(redisconn, conn)
         tree_root = await tree.recalculate_root(interval.index + 1)
-        LOG_DEBUG("New tree root: %s", tree_root)
+        logger.debug("New tree root", new_root=tree_root, time=time.time()-start_time, delta=time.time()-tree_start_time)
 
         mth_b64url = base64.urlsafe_b64encode(tree_root.value).decode().rstrip("=")
         mth = f"{authority_base_url}/{interval.index}#v1:{mth_b64url}"
@@ -132,7 +131,7 @@ async def calculate_interval(
                 )
             )
 
-        LOG_DEBUG("Inserting %i proofs", len(proofs))
+        logger.debug("Inserting %i proofs", len(proofs), time=time.time()-start_time)
         if proofs:
             await conn.execute(
                 timestamp.update()
@@ -154,7 +153,8 @@ async def calculate_interval(
                 nodes=[node.value for node in proof_nodes],
             )
 
-        LOG_DEBUG("Computing current inclusion proof")
+        logger.debug("Computing current inclusion proof", time=time.time()-start_time)
+        incp_start_time = time.time()
         a, path = await tree.compute_inclusion_proof(interval.index)
         inclusion_proof = MainTreeInclusionProof(
             head=interval.index,
@@ -170,7 +170,7 @@ async def calculate_interval(
             inclusion=inclusion_proof,
             consistency=append_proof,
         )
-        LOG_DEBUG("calculate_interval() done: %s", retval)
+        logger.debug("calculate_interval() done", retval=retval, time=time.time()-start_time, delta=time.time()-incp_start_time)
     return retval
 
 
@@ -189,7 +189,7 @@ async def async_main():
     queue = []
     try:
         while True:
-            await asyncio.sleep(3)
+            await asyncio.sleep(3)  # Time between intervals
             async with aioredis.from_url(redis_url) as redisconn:
                 async with engine.connect() as conn:
                     mth = await calculate_interval(conn, redisconn)
@@ -205,8 +205,6 @@ async def async_main():
 
 
 def main():
-    structlog.stdlib.recreate_defaults(log_level=logging.DEBUG)
-    logging.basicConfig(level=logging.DEBUG)
     asyncio.run(async_main())
 
 
