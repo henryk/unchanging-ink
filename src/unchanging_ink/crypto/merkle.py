@@ -6,6 +6,10 @@ from dataclasses import dataclass, field
 from hashlib import sha3_256
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
+import structlog
+
+logger = structlog.getLogger(__name__)
+
 
 @dataclass
 class MerkleNode:
@@ -83,11 +87,13 @@ class AbstractAsyncMerkleTree(ABC):
         assert start < end
 
         if start + 1 == end:
+            logger.debug("calculate_node from leaf", start=start, end=end)
             item = MerkleNode.from_leaf(start, await self.fetch_leaf_data(start))
         else:
             mask_length = (start ^ (end - 1)).bit_length()
             middle = start + (1 << (mask_length - 1))
 
+            logger.debug("calculate_node recurse", start=start, middle=middle, end=end)
             item = await self.calculate_node(start, middle) + await self.calculate_node(
                 middle, end
             )
@@ -274,6 +280,7 @@ class AbstractAsyncCachingMerkleTree(AbstractAsyncMerkleTree):
         return retval
 
     async def recalculate_root(self, width: int) -> MerkleNode:
+        logger.debug("recalculate_root", width=width)
         root = await self.calculate_node(0, width)
         self.root = root
         self.width = width
@@ -282,8 +289,10 @@ class AbstractAsyncCachingMerkleTree(AbstractAsyncMerkleTree):
     async def calculate_node(self, start: int, end: int) -> MerkleNode:
         key = (start, end)
         if (retval := await self._getc(key)) is not None:
+            logger.debug("calculate_node cache hit", key=key)
             return retval
 
+        logger.debug("calculate_node cache miss", key=key)
         retval = await super().calculate_node(start, end)
         await self._setc(key, retval)
         return retval
