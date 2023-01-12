@@ -37,7 +37,7 @@ def setup_database():
         app.ctx.engine = create_async_engine(db_url, pool_size=0, max_overflow=-1)
 
     @app.listener("after_server_stop")
-    async def stop_db():
+    async def stop_db(*args, **kwargs):
         await app.ctx.engine.dispose()
 
 
@@ -54,7 +54,7 @@ def setup_redis(app):
         app.ctx.redis = await aioredis.from_url(redis_url)
 
     @app.listener("after_server_stop")
-    async def close_redis():
+    async def close_redis(*args, **kwargs):
         await app.ctx.redis.close()
 
 
