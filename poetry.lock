@@ -957,7 +957,7 @@ worker = ["psycopg2", "alembic", "redis", "sentry-sdk"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e6b7a6980acaee4f276d86627264dd25f6048a7bd8c0e48bdebb40dc353cedf4"
+content-hash = "9719a9ad55809bf54d774be3d8d05154afe08d55fb005a1a3da9c70440effe69"
 
 [metadata.files]
 accept-types = [
