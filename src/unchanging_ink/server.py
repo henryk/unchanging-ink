@@ -1,5 +1,4 @@
 import aioredis
-import structlog
 from sanic import Sanic
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -59,29 +58,8 @@ def setup_redis(app):
         await app.ctx.redis.close()
 
 
-def setup():
-    setup_database()
-    setup_redis(app)
-    setup_routes(app)
-    setup_crypto(app)
-    setup_fanout(app)
-
-
-def init():
-    structlog.stdlib.recreate_defaults()
-    setup()
-
-    workers = app.config.get("WORKERS", "auto")
-    if str(workers).lower() == "auto":
-        import multiprocessing
-
-        workers = max(multiprocessing.cpu_count() - 1, 1)
-    else:
-        workers = int(workers)
-
-    app.run(
-        host=app.config.get("BIND_HOST", "127.0.0.1"),
-        port=app.config.get("BIND_PORT", 8000),
-        debug=app.config.get("DEBUG", False),
-        workers=workers,
-    )
+setup_database()
+setup_redis(app)
+setup_routes(app)
+setup_crypto(app)
+setup_fanout(app)

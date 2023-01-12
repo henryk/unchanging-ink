@@ -7,7 +7,7 @@ authors = ["Henryk Plötz <henryk@ploetzli.ch>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-sanic = { version = "^22.3.2", extras=["ext"] }
+sanic = { version = "^22.12.*", extras=["ext"] }
 pynacl = "^1.4.0"
 sqlalchemy = { version="^1.4", extras=["asyncio"] }
 SQLAlchemy-Utils = "^0.38.2"
@@ -48,7 +48,6 @@ test = [ "pytest", "pytest-asyncio", "coverage", "pytest-cov", "pytest-redis", "
 dev = [ "black", "isort" ]
 
 [tool.poetry.scripts]
-unchanging-ink = "unchanging_ink.server:init"
 unchanging-ink_worker = "unchanging_ink.worker:main"
 unchanging-ink_create_tables = "unchanging_ink.create_tables:main"
 

@@ -14,15 +14,11 @@ services:
       dockerfile: Dockerfile
     read_only: false
     environment:
-      SANIC_DEBUG: "true"
+      SANIC_AUTHORITY: "localhost:23230"
       SANIC_DB_HOST: db
       SANIC_DB_USER: sanic
       SANIC_DB_PASSWORD: toomanysecrets
       SANIC_DB_NAME: sanic
-      SANIC_ACCESS_LOG: "true"
-      SANIC_WORKERS: 1
-      SANIC_BIND_HOST: 0.0.0.0
-      SANIC_BIND_PORT: 8000
       POETRY_VIRTUALENVS_IN_PROJECT: "false"
       POETRY_VIRTUALENVS_PATH: /venv
       PYTHONUNBUFFERED: 1
@@ -37,7 +33,7 @@ services:
       - redis
       - default
     command:
-      "sh -c 'poetry install && poetry run python -m unchanging_ink'"
+      "sh -c 'poetry install && poetry run sanic unchanging_ink.server:app --host=0.0.0.0 --port=8000 --workers=1 --dev --debug'"
 
   worker:
     image: ${IMAGE_BASE}/worker-dev:dev
@@ -47,15 +43,11 @@ services:
       dockerfile: Dockerfile
     read_only: false
     environment:
-      SANIC_DEBUG: "true"
+      SANIC_AUTHORITY: "localhost:23230"
       SANIC_DB_HOST: db
       SANIC_DB_USER: sanic
       SANIC_DB_PASSWORD: toomanysecrets
       SANIC_DB_NAME: sanic
-      SANIC_ACCESS_LOG: "true"
-      SANIC_WORKERS: 1
-      SANIC_BIND_HOST: 0.0.0.0
-      SANIC_BIND_PORT: 8000
       POETRY_VIRTUALENVS_IN_PROJECT: "false"
       POETRY_VIRTUALENVS_PATH: /venv
       PYTHONUNBUFFERED: 1
@@ -83,6 +75,7 @@ services:
       - ./doc:/app/content/doc
     environment:
       DISABLE_OPENCOLLECTIVE: true
+      AUTHORITY: "localhost:23230"
     networks:
       - web
       - redis
