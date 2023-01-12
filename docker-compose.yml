@@ -30,6 +30,8 @@ services:
       SANIC_DB_NAME: sanic
       SANIC_AUTHORITY: dev.unchanging.ink
       PYTHONUNBUFFERED: 1
+    tmpfs:
+      - /tmp
     depends_on:
       - db
       - redis
