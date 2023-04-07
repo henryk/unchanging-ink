@@ -171,24 +171,55 @@ This opens a live web socket to the server which will receive messages in near r
 
 ````json
 {
-    "version": "1",
-	"mth": "...url...",
-    "ith": "...base64-encoded...",
-    "kid": "xxx",
-    "signature": "...base64-encoded...",
-    "timestamp": "2021-04-13T15:22:23.535937Z"
-}
-````
-
-### Signed main tree hash
-
-````json
-{
-    "data": "...url...",
-    "kid": "xxx",
-    "timestamp": "2021-04-13T15:22:23.535937Z",
-    "typ": "mth",
-    "version": "1"
+    "authority":"dev.unchanging.ink",
+    "interval":{
+        "index":5654703,
+        "timestamp":"2023-04-07T15:10:25.811671Z",
+        "ith":"p//G+L8e12ZRwUdWoGHWYvWA/03kO0n6gtgKS4D4Q0o=",
+        "version":"1",
+        "typ":"it"
+    },
+    "mth":"4L/BVEhnc8u0NIK42ki6ZsVTMlrUYGENJZmqy8jzn1k=",
+    "version":"1",
+    "inclusion":{
+        "head":5654703,
+        "leaf":null,
+        "a":4095,
+        "nodes":[
+            "0lFmQkFhM0Y760Fxl60f4xR42cfiXxxWERGlwvtGA/g=",
+            "Lr6IJ/RPIp8S+seinWE3piMskCHFtuVNwVROzvF9rA0=",
+            "m5s1WKSMK+TNQfTmaxOcc7E8WRGkqVYnMgbis0HlOMI=",
+            "zRbNRRKf1WzXzgwOztzMcE8OHRO7r32U0Cy2WYx0xFE=",
+            "dMUcLgC5xHRRu90kPTzY78v2S+Fkn/7NfjKNSeLtm9c=",
+            "8mztYLbazl3z4glbSGGJFJlXWyzYwk6yB5ilAfhuIhc=",
+            "1WWrhyYeLZ2YLspTZk4paZP8GHqrOaG8uSz0zvDsuC8=",
+            "BKfhFOfKD36guLaTHQGu4H98Ov692ljj8KgdLcWSFYs=",
+            "T39jq6UVvIwXZJVUAOm31td9zrjUAoT1LiJf7xw6v28=",
+            "1FtCPDQZlY5EoRif5X5ilsR5WIvoI7wHAiXvrjeG5oU=",
+            "Dq7DrpxrdYhrNUWipD52/hW7t9EiaYDkBxWqcivGucI=",
+            "pV1WyhUE7KuTNTUYUUygVPgjqpc0O1Zl0hw78irDsPw="
+        ],
+        "version":"1"
+    },
+    "consistency":{
+        "old_interval":5654702,
+        "new_interval":5654703,
+        "nodes":[
+            "Lr6IJ/RPIp8S+seinWE3piMskCHFtuVNwVROzvF9rA0=",
+            "aUZB5G46NNZ+TxQZUBpb76XtTWIpGbRv1cmZBWnQm+k=",
+            "m5s1WKSMK+TNQfTmaxOcc7E8WRGkqVYnMgbis0HlOMI=",
+            "zRbNRRKf1WzXzgwOztzMcE8OHRO7r32U0Cy2WYx0xFE=",
+            "dMUcLgC5xHRRu90kPTzY78v2S+Fkn/7NfjKNSeLtm9c=",
+            "8mztYLbazl3z4glbSGGJFJlXWyzYwk6yB5ilAfhuIhc=",
+            "1WWrhyYeLZ2YLspTZk4paZP8GHqrOaG8uSz0zvDsuC8=",
+            "BKfhFOfKD36guLaTHQGu4H98Ov692ljj8KgdLcWSFYs=",
+            "T39jq6UVvIwXZJVUAOm31td9zrjUAoT1LiJf7xw6v28=",
+            "1FtCPDQZlY5EoRif5X5ilsR5WIvoI7wHAiXvrjeG5oU=",
+            "Dq7DrpxrdYhrNUWipD52/hW7t9EiaYDkBxWqcivGucI=",
+            "pV1WyhUE7KuTNTUYUUygVPgjqpc0O1Zl0hw78irDsPw="
+        ],
+        "version":"1"
+    }
 }
 ````
 
@@ -200,6 +231,8 @@ GET /api/v1/mth/current HTTP/1.1
 ````
 
 #### Response
+
+FIXME
 
 ### Request main tree inclusion proof
 

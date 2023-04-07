@@ -28,7 +28,7 @@ We're using one redis connection per process/thread and then use in-process mess
 
 The worker is a single Python process and the main source of interval tree computation. Every few seconds it creates a new interval tree from all `pt` in the database that are not yet added to an interval, computes the interval tree hash, updates the main Merkle tree, and stores the inclusion proofs in the database. It announces a new `mth` via redis PubSub on channel `mth-live`.
 
-The worker must be a single component, and needs to have enough processing power to compute all the hashes and signatures involved.
+The worker must be a single component, and needs to have enough processing power to compute all the hashes involved.
 
 ## Frontend
 
