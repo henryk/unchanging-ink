@@ -3,20 +3,31 @@
 </template>
 <script>
 import { decodeFirst } from 'cbor'
+import { TimestampService } from '~/utils/uits'
 
 export default {
   async asyncData({ params }) {
-    const response = await fetch(`http://backend:8000/v1/mth/${params.slug}`, {
+    const UiTs = new TimestampService(process.env.AUTHORITY)
+    const response = await fetch(`${UiTs.baseUrl}v1/mth/${params.slug}`, {
       headers: {
         Accept: 'application/cbor',
       },
     })
+    let mth = null
     if (response.ok) {
       const data = await response.body
-      const mth = await decodeFirst(data)
-      return { mth }
+      mth = await decodeFirst(data)
     }
-    return {}
+    return {
+      mth,
+      UiTs,
+    }
+  },
+  mounted() {
+    this.UiTs = new TimestampService(window.location.origin)
+  },
+  beforeDestroy() {
+    delete this.UiTs
   },
 }
 </script>
