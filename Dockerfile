@@ -96,5 +96,5 @@ COPY --from=worker-builder /app/ /app/
 FROM base AS backend
 WORKDIR /app
 ENV PYTHONPATH=/app/.venv/lib/python${PYTHON_VERSION}/site-packages/ PATH="$PATH:/app/.venv/bin"
-CMD "/app/.venv/bin/unchanging-ink"
+CMD ["sanic", "unchanging_ink.server:app", "--host=0.0.0.0", "--port=8000", "--fast"]
 COPY --from=backend-builder /app/ /app/

@@ -29,11 +29,11 @@ The service provides signed timestamps for arbitrary submitted data, and allows 
 
 ## Theory of operation
 
-1. Signed timestamps (`st`) are the smallest unit: Signature over current time and arbitrary data.
-2. Multiple `st` will be combined into an `interval`, each covering a certain, short, time window, typically 1s - 5s.
-3. All `st` in an `interval` are combined into a binary Merkle tree (interval tree), yielding its root as the interval tree hash (`ith`).
-4. The path from `st` to `ith` serves as proof of inclusion for this `st`. The server will store the proof only for a limited amount of time (~1 day).
-5. All `ith` are continuously appended to a binary Merkle tree (main tree). Its current root (main tree hash, `mth`) is signed by the server (`smth`) and provides a single snapshot of the entire history of the server. All `ith` are retained indefinitely.
+1. Timestamps (`ts`) are the smallest unit: Hash over current time and arbitrary data.
+2. Multiple `ts` will be combined into an `interval`, each covering a certain, short, time window, typically 1s - 5s.
+3. All `ts` in an `interval` are combined into a binary Merkle tree (interval tree), yielding its root as the interval tree head (`ith`).
+4. The path from `ts` to `ith` serves as proof of inclusion for this `ts`. The server will store the proof only for a limited amount of time (~1 day).
+5. All `ith` are continuously appended to a binary Merkle tree (main tree). Its current root (main tree head, `mth`) provides a single snapshot of the entire history of the server. All `ith` are retained indefinitely.
 
 
 

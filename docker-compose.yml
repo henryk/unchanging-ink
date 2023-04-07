@@ -24,17 +24,14 @@ services:
     read_only: true
     restart: always
     environment:
-      SANIC_DEBUG: "false"
       SANIC_DB_HOST: db
       SANIC_DB_USER: sanic
       SANIC_DB_PASSWORD: toomanysecrets
       SANIC_DB_NAME: sanic
-      SANIC_ACCESS_LOG: "false"
-      SANIC_WORKERS: auto
-      SANIC_BIND_HOST: 0.0.0.0
-      SANIC_BIND_PORT: 8000
       SANIC_AUTHORITY: dev.unchanging.ink
       PYTHONUNBUFFERED: 1
+    tmpfs:
+      - /tmp
     depends_on:
       - db
       - redis

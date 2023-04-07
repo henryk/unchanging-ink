@@ -37,7 +37,7 @@ def setup_database():
         app.ctx.engine = create_async_engine(db_url, pool_size=0, max_overflow=-1)
 
     @app.listener("after_server_stop")
-    async def stop_db():
+    async def stop_db(*args, **kwargs):
         await app.ctx.engine.dispose()
 
 
@@ -54,32 +54,12 @@ def setup_redis(app):
         app.ctx.redis = await aioredis.from_url(redis_url)
 
     @app.listener("after_server_stop")
-    async def close_redis():
+    async def close_redis(*args, **kwargs):
         await app.ctx.redis.close()
 
 
-def setup():
-    setup_database()
-    setup_redis(app)
-    setup_routes(app)
-    setup_crypto(app)
-    setup_fanout(app)
-
-
-def init():
-    setup()
-
-    workers = app.config.get("WORKERS", "auto")
-    if str(workers).lower() == "auto":
-        import multiprocessing
-
-        workers = max(multiprocessing.cpu_count() - 1, 1)
-    else:
-        workers = int(workers)
-
-    app.run(
-        host=app.config.get("BIND_HOST", "127.0.0.1"),
-        port=app.config.get("BIND_PORT", 8000),
-        debug=app.config.get("DEBUG", False),
-        workers=workers,
-    )
+setup_database()
+setup_redis(app)
+setup_routes(app)
+setup_crypto(app)
+setup_fanout(app)
