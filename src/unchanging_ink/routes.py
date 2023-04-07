@@ -18,7 +18,8 @@ from .cache import MainMerkleTree
 from .models import interval as interval_model
 from .models import timestamp
 from .schemas import (Interval, MainHead, MainTreeConsistencyProof,
-                      TimestampRequest, TimestampStructure, TimestampWithId)
+                      TimestampRequest, TimestampStructure, TimestampWithId, MainTreeInclusionProof,
+                      MainHeadWithConsistency)
 
 logger = logging.getLogger(__name__)
 
@@ -217,11 +218,11 @@ def setup_routes(app: Sanic):
 
         from unchanging_ink.server import authority_base_url
 
-        response = MainHead(
+        response = MainHeadWithConsistency(
             authority=authority_base_url,
             interval=Interval.from_row(row),
             mth=root_node.value,
-            proof=append_proof,
+            consistency=append_proof,
         )
         return data_to_response(request, response, immutable=True)
 
@@ -240,11 +241,11 @@ def setup_routes(app: Sanic):
     @app.route(
         "/mth/<old_interval:int>/in/<new_interval:int>", version=1, methods=["GET"]
     )
-    async def request_mth_containing(request, new_interval, old_interval):
+    async def request_mth_inclusion(request, new_interval, old_interval):
         async with app.ctx.engine.begin() as conn, app.ctx.redis.client() as redisconn:
             tree = MainMerkleTree(redisconn, conn, width=new_interval)
-            proof = await tree.compute_consistency_proof(old_interval)
-        response = MainTreeConsistencyProof(
-            old_interval, new_interval, [node.value for node in proof]
+            a, proof = await tree.compute_inclusion_proof(old_interval)
+        response = MainTreeInclusionProof(
+            old_interval, new_interval, a, [node.value for node in proof]
         )
         return data_to_response(request, response, immutable=True)
