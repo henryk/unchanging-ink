@@ -12,9 +12,7 @@
           <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
           </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title v-text="item.title" />
-          </v-list-item-content>
+          <v-list-item-title v-text="item.title" />
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -25,7 +23,7 @@
     </v-app-bar>
     <v-main>
       <v-container>
-        <nuxt />
+        <slot />
       </v-container>
     </v-main>
     <v-footer :absolute="!fixed" app>
@@ -42,20 +40,16 @@
   </v-app>
 </template>
 
-<script>
+<script setup>
 import { mdiHome, mdiBookOpenVariant, mdiTranslate } from '@mdi/js'
 
-export default {
-  data() {
-    return {
-      mdiTranslate,
-      clipped: false,
-      drawer: false,
-      fixed: false,
-      items: [
+let clipped = ref(false)
+let drawer = ref(false)
+let fixed = ref(false)
+let items = [
         {
           icon: mdiHome,
-          title: this.$t('homepage'),
+          title: $t('homepage'),
           to: '/',
         },
         {
@@ -63,18 +57,17 @@ export default {
           title: 'Documentation',
           to: '/doc/',
         },
-      ],
-      right: true,
-      rightDrawer: false,
-      title: 'unchanging.ink -- ' + this.$t('timestampService'),
-    }
-  },
-  computed: {
-    availableLocales() {
-      return this.$i18n.locales.filter((i) => i.code !== this.$i18n.locale)
-    },
-  },
-}
+      ]
+let right = ref(true)
+
+useHead({
+  title: 'unchanging.ink -- ' + $t('timestampService')
+})
+
+const availableLocales = computed(() => {
+  return $i18n.locales.filter((i) => i.code !== $i18n.locale)
+})
+
 </script>
 <i18n lang="yaml">
 de:

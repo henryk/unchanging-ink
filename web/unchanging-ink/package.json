@@ -3,46 +3,30 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nuxt",
     "build": "nuxt build",
-    "start": "nuxt start",
+    "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
-    "lint": "npm run lint:js"
-  },
-  "dependencies": {
-    "@mdi/js": "^7.2.96",
-    "@nuxt/content": "^1.15.1",
-    "@nuxtjs/axios": "^5.13.6",
-    "@nuxtjs/i18n": "^7.3.1",
-    "@nuxtjs/sentry": "^5.1.7",
-    "@sentry/tracing": "^6.19.7",
-    "buffer": "^6.0.3",
-    "cbor": "^8.1.0",
-    "core-js": "^3.22.4",
-    "net": "^1.0.2",
-    "nuxt": "^2.16.0",
-    "redis": "^3.1.2",
-    "sha3": "^2.1.4",
-    "tls": "0.0.1",
-    "vuetify": "^2.6.5"
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.17.0",
-    "@fontsource/roboto": "^4.5.5",
+    "@fontsource/roboto": "^4.5.8",
     "@mdi/font": "^7.2.96",
-    "@nuxt/types": "^2.16.3",
-    "@nuxt/typescript-build": "^2.1.0",
-    "@nuxtjs/eslint-config-typescript": "^6.0.1",
-    "@nuxtjs/eslint-module": "^3.1.0",
     "@nuxtjs/vuetify": "^1.12.3",
-    "@typescript-eslint/eslint-plugin": "^5.22.0",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-nuxt": "^3.2.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-vue": "^8.7.1",
-    "prettier": "^2.6.2"
+    "nuxt": "^3.3.3",
+    "vue-i18n": "^9.2.2"
+  },
+  "dependencies": {
+    "@intlify/unplugin-vue-i18n": "^0.10.0",
+    "@mdi/js": "^7.2.96",
+    "@nuxtjs/i18n": "^7.3.1",
+    "@nuxtjs/sentry": "^7.1.11",
+    "@sentry/tracing": "^7.47.0",
+    "cbor": "^8.1.0",
+    "redis": "^4.6.5",
+    "sass": "^1.60.0",
+    "sha3": "^2.1.4",
+    "vite-plugin-vuetify": "^1.0.2",
+    "vuetify": "^3.1.13"
   }
 }
