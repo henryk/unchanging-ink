@@ -14,7 +14,4 @@ export default defineAppConfig({
 
     },
     css: ['@fontsource/roboto', 'vuetify/styles/main.sass'],
-    build: {
-        transpile: ['vuetify'],
-    },
 })

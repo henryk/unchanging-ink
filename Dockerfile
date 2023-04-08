@@ -71,20 +71,11 @@ COPY doc ./content/doc
 
 RUN npm run build
 
-FROM frontend-base as frontend-install-stage
-WORKDIR /app
-COPY web/unchanging-ink/package-lock.json ./
-COPY --from=frontend-prep-stage /app/package.json ./
-RUN npm ci --production
-
 FROM frontend-base as frontend
 WORKDIR /app
 
-COPY --from=frontend-install-stage /app/node_modules/ /app/node_modules/
-COPY --from=frontend-build-stage /app/package.json /app/nuxt.config.js /app/
-COPY --from=frontend-build-stage /app/.nuxt/ /app/.nuxt/
-COPY --from=frontend-build-stage /app/content/ /app/content/
-CMD ["npm", "run", "start"]
+COPY --from=frontend-build-stage /app/.output/ /app/.output/
+CMD ["node", ".output/server/index.mjs"]
 
 FROM base as worker
 RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*
