@@ -129,13 +129,12 @@
   </v-container>
 </template>
 <script>
-import { promisify } from 'util'
 import { mdiStamper } from '@mdi/js'
 import redis from 'redis'
 import { computeHash } from '../utils/hashing'
 import TimelineCard from '../components/Timeline'
 import { TimestampService } from '../utils/uits'
-import { sleep } from '../utils/misc'
+import { promisify, sleep } from '../utils/misc'
 
 export default {
   components: {

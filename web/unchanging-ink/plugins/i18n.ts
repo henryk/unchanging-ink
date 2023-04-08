@@ -5,10 +5,6 @@ export default defineNuxtPlugin(({ vueApp }) => {
     legacy: false,
     globalInjection: true,
     locale: 'en',
-    messages: {
-      en: {
-      }
-    }
   })
 
   vueApp.use(i18n)

@@ -1,7 +1,3 @@
-import { Plugin } from 'vite'
-import vuetify from 'vite-plugin-vuetify'
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
-
 export default defineAppConfig({
     title: 'unchanging.ink',
     titleTemplate: '%s - unchanging.ink',
@@ -20,15 +16,5 @@ export default defineAppConfig({
     css: ['@fontsource/roboto', 'vuetify/styles/main.sass'],
     build: {
         transpile: ['vuetify'],
-    },
-    hooks: {
-        'vite:extendConfig': (config: { plugins: Plugin[][] }) => {
-            config.plugins.push(
-                vuetify(),
-            )
-            config.plugins.push(
-                VueI18nPlugin({})
-            )
-        },
     },
 })
