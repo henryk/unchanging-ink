@@ -130,7 +130,7 @@
 </template>
 <script>
 import { mdiStamper } from '@mdi/js'
-import redis from 'redis'
+// import redis from 'redis'
 import { computeHash } from '~/utils/hashing'
 import TimelineCard from '../components/Timeline'
 import { TimestampService } from '~/utils/uits'
@@ -171,14 +171,14 @@ export default {
     }
   },
   async fetch() {
-    if (process.server) {
+    /* if (process.server) {
       const client = redis.createClient('redis://redis/0')
       const getAsync = promisify(client.get).bind(client)
       const val = await getAsync('recent-mth')
       const recent = JSON.parse(val)
       ;(recent ?? []).forEach((item) => this.UiTs.tick(item, true))
       this.tickItems = JSON.parse(JSON.stringify(this.UiTs.tickItems))
-    }
+    } */
   },
   head() {
     return {
