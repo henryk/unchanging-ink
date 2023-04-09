@@ -16,7 +16,7 @@
       ><v-icon v-else>{{ mdiPlay }}</v-icon>
     </v-card-title>
     <v-card-text style="max-height: 35em; overflow-y: hidden">
-      <v-timeline v-show="displayItems.length" clipped dense>
+      <v-timeline v-show="displayItems.length" clipped dense side="end">
         <transition-group name="slide-y-transition">
           <timeline-item-card
             v-for="item in displayItems"

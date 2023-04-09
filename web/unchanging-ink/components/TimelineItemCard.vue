@@ -1,5 +1,5 @@
 <template>
-  <v-timeline-item fill-dot color="primary" right>
+  <v-timeline-item fill-dot color="primary">
     <v-card>
       <v-card-subtitle
         >{{ item.time }}
