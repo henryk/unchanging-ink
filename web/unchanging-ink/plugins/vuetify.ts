@@ -4,6 +4,7 @@ import {aliases, mdi} from 'vuetify/iconsets/mdi-svg'
 
 export default defineNuxtPlugin(({vueApp}) => {
     const vuetify = createVuetify({
+        ssr: true,
         icons: {
             defaultSet: 'mdi',
             aliases,

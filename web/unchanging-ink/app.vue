@@ -27,14 +27,14 @@
       </v-container>
     </v-main>
     <v-footer :absolute="!fixed" app>
-      <span>&copy; 2021</span>
+      <span>&copy; 2023</span>
       <v-spacer></v-spacer>
       <v-icon class="px-2">{{ mdiTranslate }}</v-icon>
-      <nuxt-link
+      <NuxtLink
         v-for="locale in availableLocales"
         :key="locale.code"
         :to="switchLocalePath(locale.code)"
-        >{{ locale.name }}</nuxt-link
+        >{{ locale.name }}</NuxtLink
       >
     </v-footer>
   </v-app>
@@ -42,14 +42,21 @@
 
 <script setup>
 import { mdiHome, mdiBookOpenVariant, mdiTranslate } from '@mdi/js'
+const switchLocalePath = useSwitchLocalePath()
+
+const { t, locale, locales } = useI18n()
+
+const availableLocales = computed(() => {
+  return (locales.value).filter(i => i.code !== locale.value)
+})
 
 let clipped = ref(false)
 let drawer = ref(false)
 let fixed = ref(false)
-let items = [
+const items = [
         {
           icon: mdiHome,
-          title: $t('homepage'),
+          title: t('homepage'),
           to: '/',
         },
         {
@@ -61,11 +68,7 @@ let items = [
 let right = ref(true)
 
 useHead({
-  title: 'unchanging.ink -- ' + $t('timestampService')
-})
-
-const availableLocales = computed(() => {
-  return $i18n.locales.filter((i) => i.code !== $i18n.locale)
+  title: 'unchanging.ink -- ' + t('timestampService')
 })
 
 </script>

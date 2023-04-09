@@ -131,10 +131,10 @@
 <script>
 import { mdiStamper } from '@mdi/js'
 import redis from 'redis'
-import { computeHash } from '../utils/hashing'
+import { computeHash } from '~/utils/hashing'
 import TimelineCard from '../components/Timeline'
-import { TimestampService } from '../utils/uits'
-import { promisify, sleep } from '../utils/misc'
+import { TimestampService } from '~/utils/uits'
+import { promisify, sleep } from '~/utils/misc'
 
 export default {
   components: {

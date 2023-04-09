@@ -1,15 +1,33 @@
 import vuetify from 'vite-plugin-vuetify'
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
+import {ViteConfig} from '@nuxt/schema'
 
 export default defineNuxtConfig({
-    vite: {
-        plugins: [
-            vuetify(),
-            VueI18nPlugin({
-            }),
-        ]
-    },
     build: {
         transpile: ['vuetify'],
+    },
+    modules: [
+        '@nuxtjs/i18n',
+    ],
+    hooks: {
+        'vite:extendConfig': ({plugins}: ViteConfig) => {
+            if (plugins) {
+                plugins.push(
+                    vuetify({
+
+                    }),
+                )
+            }
+        },
+    },
+    i18n: {
+        locales: [
+            'en',
+            'de'
+        ],
+        defaultLocale: 'de',
+        vueI18n: {
+            legacy: false,
+            locale: 'de',
+        },
     },
 })
