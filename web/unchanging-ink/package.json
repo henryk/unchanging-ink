@@ -23,7 +23,7 @@
     "@nuxtjs/sentry": "^7.1.11",
     "@sentry/tracing": "^7.47.0",
     "@vueuse/nuxt": "^9.13.0",
-    "cbor": "^8.1.0",
+    "cbor-web": "^8.1.0",
     "redis": "^4.6.5",
     "sass": "^1.60.0",
     "sha3": "^2.1.4",

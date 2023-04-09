@@ -171,7 +171,7 @@ export default {
     }
   },
   async fetch() {
-    /* if (process.server) {
+    /* FIXME if (process.server) {
       const client = redis.createClient('redis://redis/0')
       const getAsync = promisify(client.get).bind(client)
       const val = await getAsync('recent-mth')

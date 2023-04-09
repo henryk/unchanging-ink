@@ -12,9 +12,7 @@ export default defineNuxtConfig({
         'vite:extendConfig': ({plugins}: ViteConfig) => {
             if (plugins) {
                 plugins.push(
-                    vuetify({
-
-                    }),
+                    vuetify({}),
                 )
             }
         },
@@ -22,7 +20,7 @@ export default defineNuxtConfig({
     i18n: {
         locales: [
             'en',
-            'de'
+            'de',
         ],
         defaultLocale: 'de',
         vueI18n: {

@@ -2,7 +2,7 @@
   <pre>{{ mth }}</pre>
 </template>
 <script>
-import { decodeFirst } from 'cbor'
+import { cbor } from 'cbor-web'
 
 export default {
   async asyncData({ params }) {
@@ -13,7 +13,7 @@ export default {
     })
     if (response.ok) {
       const data = await response.body
-      const mth = await decodeFirst(data)
+      const mth = await cbor.decodeFirst(data)
       return { mth }
     }
     return {}

@@ -1,5 +1,5 @@
 import SHA3 from 'sha3'
-import { encodeCanonical } from 'cbor'
+import { cbor } from 'cbor-web'
 import { sleep } from './misc'
 
 const DEFAULT_OPTIONS_GET_TIMESTAMP = {
@@ -45,7 +45,7 @@ export function createTimestampHash(data, timestamp) {
     typ: 'ts',
     version: '1',
   }
-  return new SHA3(256).update(encodeCanonical(tsStruct)).digest()
+  return new SHA3(256).update(cbor.encodeCanonical(tsStruct)).digest()
 }
 
 function _verifyInclusionProof({ hash, head, a, path }) {

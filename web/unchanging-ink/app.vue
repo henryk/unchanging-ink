@@ -3,8 +3,8 @@
     <v-navigation-drawer v-model="drawer" :clipped="clipped" fixed app>
       <v-list>
         <v-list-item
-          v-for="(item, i) in items"
-          :key="i"
+          v-for="item in items"
+          :key="item.icon"
           :to="item.to"
           router
           exact
