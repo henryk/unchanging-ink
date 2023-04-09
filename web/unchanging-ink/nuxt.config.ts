@@ -9,12 +9,8 @@ export default defineNuxtConfig({
         '@nuxtjs/i18n',
     ],
     hooks: {
-        'vite:extendConfig': ({plugins}: ViteConfig) => {
-            if (plugins) {
-                plugins.push(
-                    vuetify({}),
-                )
-            }
+        'vite:extendConfig': (config: ViteConfig) => {
+            config.plugins = [...(config.plugins ?? []), vuetify({})]
         },
     },
     i18n: {

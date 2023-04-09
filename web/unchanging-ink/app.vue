@@ -23,7 +23,9 @@
     </v-app-bar>
     <v-main>
       <v-container>
-        <slot />
+        <NuxtLayout>
+          <NuxtPage/>
+        </NuxtLayout>
       </v-container>
     </v-main>
     <v-footer :absolute="!fixed" app>

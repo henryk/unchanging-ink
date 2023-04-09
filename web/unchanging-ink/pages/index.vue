@@ -10,8 +10,8 @@
             <v-tab key="create">{{ $t('createTimestamp') }}</v-tab>
             <v-tab key="verify" disabled>{{ $t('verifyTimestamp') }}</v-tab>
           </v-tabs>
-          <v-tabs-items v-model="selectedTab" color="primary">
-            <v-tab-item key="create">
+          <v-window v-model="selectedTab">
+            <v-window-item key="create">
               <v-card-text @dragover="doverHandler" @drop="dropHandler">
                 <v-textarea
                   v-model="createInput.text"
@@ -28,16 +28,16 @@
                 ></v-file-input>
                 <v-expansion-panels v-model="extendedOptionsOpen">
                   <v-expansion-panel>
-                    <v-expansion-panel-header>{{
+                    <v-expansion-panel-title>{{
                       $t('extendedOptions')
-                    }}</v-expansion-panel-header>
-                    <v-expansion-panel-content>
+                    }}</v-expansion-panel-title>
+                    <v-expansion-panel-text>
                       <v-select
                         v-model="createInput.hash"
                         :items="hashItems"
                         :label="$t('hashfunction')"
                       ></v-select>
-                    </v-expansion-panel-content>
+                    </v-expansion-panel-text>
                   </v-expansion-panel>
                 </v-expansion-panels>
               </v-card-text>
@@ -68,8 +68,8 @@
                       ></v-progress-linear>
                     </template> </v-btn></v-card-actions
               ></v-expand-transition>
-            </v-tab-item>
-            <v-tab-item key="verify">
+            </v-window-item>
+            <v-window-item key="verify">
               <v-card-text @dragover="doverHandler" @drop="dropHandler">
                 <v-textarea
                   v-model="createInput.text"
@@ -102,8 +102,8 @@
                   ></v-card-actions
                 ></v-expand-transition
               >
-            </v-tab-item>
-          </v-tabs-items>
+            </v-window-item>
+          </v-window>
         </v-card>
       </v-col>
       <v-col cols="12" md="6">
@@ -130,7 +130,7 @@
 </template>
 <script>
 import { mdiStamper } from '@mdi/js'
-// import redis from 'redis'
+// FIXME import redis from 'redis'
 import { computeHash } from '~/utils/hashing'
 import TimelineCard from '../components/Timeline'
 import { TimestampService } from '~/utils/uits'
@@ -171,14 +171,14 @@ export default {
     }
   },
   async fetch() {
-    /* FIXME if (process.server) {
+    if (process.server) { /* FIXME
       const client = redis.createClient('redis://redis/0')
       const getAsync = promisify(client.get).bind(client)
       const val = await getAsync('recent-mth')
       const recent = JSON.parse(val)
       ;(recent ?? []).forEach((item) => this.UiTs.tick(item, true))
-      this.tickItems = JSON.parse(JSON.stringify(this.UiTs.tickItems))
-    } */
+      this.tickItems = JSON.parse(JSON.stringify(this.UiTs.tickItems)) */
+    }
   },
   head() {
     return {
@@ -208,8 +208,8 @@ export default {
     },
     progressToNext() {
       if (
-        !this.UiTs.estimatedNextTick ||
-        !this.UiTs.averageTickDurationMillis
+        !this.UiTs?.estimatedNextTick ||
+        !this.UiTs?.averageTickDurationMillis
       ) {
         return null
       }
