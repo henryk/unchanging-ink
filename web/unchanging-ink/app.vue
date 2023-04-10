@@ -9,9 +9,9 @@
           router
           exact
         >
-          <v-list-item-action>
+          <template #prepend>
             <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-action>
+          </template>
           <v-list-item-title v-text="item.title" />
         </v-list-item>
       </v-list>
@@ -34,9 +34,9 @@
       <v-icon class="px-2">{{ mdiTranslate }}</v-icon>
       <NuxtLink
         v-for="locale in availableLocales"
-        :key="locale.code"
-        :to="switchLocalePath(locale.code)"
-        >{{ locale.name }}</NuxtLink
+        :key="locale"
+        :to="switchLocalePath(locale)"
+        >{{ locale }}</NuxtLink
       >
     </v-footer>
   </v-app>
@@ -49,7 +49,7 @@ const switchLocalePath = useSwitchLocalePath()
 const { t, locale, locales } = useI18n()
 
 const availableLocales = computed(() => {
-  return (locales.value).filter(i => i.code !== locale.value)
+  return (locales.value).filter(i => i !== locale)
 })
 
 let clipped = ref(false)
