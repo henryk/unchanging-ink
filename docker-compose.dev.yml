@@ -83,7 +83,7 @@ services:
     command: "sh -c 'cd /app && npm install && npm run dev'"
     tmpfs:
       - /root/.npm
-      - /app/.nuxt
+      - /tmp
       - /app/node_modules:exec
 
 volumes:
