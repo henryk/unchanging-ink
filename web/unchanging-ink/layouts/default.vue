@@ -5,7 +5,7 @@
         <v-list-item
             v-for="item in navItems"
             :key="item.to"
-            link
+            :to="item.to"
         >
           <template v-slot:prepend>
             <v-icon>{{ item.icon }}</v-icon>
@@ -33,7 +33,7 @@
 
 </template>
 <script lang="ts" setup>
-import {mdiGithub, mdiHome} from '@mdi/js'
+import {mdiBookOpenVariant, mdiGithub, mdiHome} from '@mdi/js'
 
 const drawer = ref(true)
 const navItems = [
@@ -42,5 +42,12 @@ const navItems = [
         title: 'homepage',
         to: '/',
     },
+    /* FIXME Doesn't work
+    {
+        icon: mdiBookOpenVariant,
+        title: 'documentation',
+        to: '/doc',
+    },
+    */
 ]
 </script>
