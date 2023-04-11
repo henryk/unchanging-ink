@@ -8,6 +8,21 @@ export default defineNuxtConfig({
             authority: "http://localhost:23230",
         },
     },
+    css: ['@fontsource/roboto', 'vuetify/styles/main.sass'],
+    app: {
+        head: {
+            htmlAttrs: {
+                lang: 'de',
+            },
+            meta: [
+                {charset: 'utf-8'},
+                {name: 'viewport', content: 'width=device-width, initial-scale=1'},
+            ],
+            link: [{rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'}],
+            title: 'unchanging.ink',
+            titleTemplate: '%s - unchanging.ink',
+        },
+    },
     build: {
         transpile: ['vuetify'],
     },

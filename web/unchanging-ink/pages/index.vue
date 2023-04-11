@@ -7,4 +7,9 @@
   </v-container>
 </template>
 <script setup lang="ts">
+import {useHead} from 'unhead'
+
+useHead({
+    title: "Startseite"
+})
 </script>
