@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     },
     modules: [
         '@nuxtjs/i18n',
+        '@nuxt/content',
     ],
     hooks: {
         'vite:extendConfig': (config: ViteConfig) => {
