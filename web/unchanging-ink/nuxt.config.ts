@@ -28,6 +28,7 @@ export default defineNuxtConfig({
     },
     modules: [
         '@nuxtjs/i18n',
+        '@vueuse/nuxt',
     ],
     hooks: {
         'vite:extendConfig': (config: ViteConfig) => {

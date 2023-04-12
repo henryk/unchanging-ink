@@ -1,5 +1,5 @@
 interface CreateInput {
   text: string;
-  files: [File];
+  files: File[];
   hash: "sha512" | "raw";
 }

@@ -11,11 +11,16 @@
   "devDependencies": {
     "@fontsource/roboto": "^4.5.8",
     "@nuxtjs/i18n": "^8.0.0-beta.10",
+    "@vueuse/core": "^9.13.0",
+    "@vueuse/nuxt": "^9.13.0",
+    "cbor-web": "^8.1.0",
     "nuxt": "^3.3.3",
+    "sha3": "^2.1.4",
     "vue-i18n": "^9.3.0-beta.17"
   },
   "dependencies": {
     "@mdi/js": "^7.2.96",
+    "buffer": "^6.0.3",
     "sass": "^1.61.0",
     "vite-plugin-vuetify": "^1.0.2",
     "vuetify": "^3.1.4"
