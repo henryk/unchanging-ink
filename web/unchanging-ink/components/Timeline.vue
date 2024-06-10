@@ -1,18 +1,15 @@
 <template>
-  <v-card
-      ref="timelineDisplay"
-      :loading="true"
-  >
+  <v-card ref="timelineDisplay" :loading="true">
     <template #loader>
       <v-progress-linear
-          color="primary"
-          :model-value="(paused ? 0 : progressToNext) ?? 0"
-          :stream="paused"
+        color="primary"
+        :model-value="(paused ? 0 : progressToNext) ?? 0"
+        :stream="paused"
       ></v-progress-linear>
     </template>
     <v-card-title class="headline d-flex">
-      <span>{{ $t('liveView') }}</span>
-      <v-spacer/>
+      <span>{{ $t("liveView") }}</span>
+      <v-spacer />
       <v-icon v-if="paused">{{ mdiPause }}</v-icon>
       <v-icon v-else>{{ mdiPlay }}</v-icon>
     </v-card-title>
@@ -20,9 +17,9 @@
       <v-timeline v-show="displayItems.length" clipped dense side="end">
         <transition-group name="slide-y-transition">
           <timeline-item-card
-              v-for="item in displayItems"
-              :key="item.time"
-              :item="item"
+            v-for="item in displayItems"
+            :key="item.time"
+            :item="item"
           ></timeline-item-card>
         </transition-group>
       </v-timeline>
@@ -31,36 +28,37 @@
 </template>
 
 <script lang="ts" setup>
-import {mdiPause, mdiPlay} from '@mdi/js'
-import {TickItemDisplay} from '~/utils/uits'
-import {Ref} from 'vue'
+import { mdiPause, mdiPlay } from "@mdi/js"
+import { TickItemDisplay } from "~/utils/uits"
+import { Ref } from "vue"
 
 const props = defineProps<{
-    progressToNext?: number,
-    items: Array<TickItemDisplay>,
+  progressToNext?: number
+  items: Array<TickItemDisplay>
 }>()
 
 const timelineDisplay = ref(null)
 
 const pausedItems: Ref<Array<TickItemDisplay>> = ref([])
-const {isOutside: mouseIsOutTimeline} = useMouseInElement(timelineDisplay)
+const { isOutside: mouseIsOutTimeline } = useMouseInElement(timelineDisplay)
 const documentIsVisible = useDocumentVisibility()
 
 const displayItems = computed(() => {
-    return paused.value ? unref(pausedItems) : unref(props.items)
+  return paused.value ? unref(pausedItems) : unref(props.items)
 })
 const paused = computed(() => {
-    return !mouseIsOutTimeline.value || !documentIsVisible.value
+  return !mouseIsOutTimeline.value || !documentIsVisible.value
 })
 
-watch(paused,
-    (newVal) => {
-        if (newVal) {
-            pausedItems.value = [...unref(props.items)]
-        }
-    },
-    {immediate: true}
-  )
+watch(
+  paused,
+  (newVal) => {
+    if (newVal) {
+      pausedItems.value = [...unref(props.items)]
+    }
+  },
+  { immediate: true },
+)
 </script>
 <i18n lang="yaml">
 de:

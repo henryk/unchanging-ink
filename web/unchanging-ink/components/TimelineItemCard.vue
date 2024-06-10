@@ -8,8 +8,7 @@
       <v-card-text class="hash">{{ item.hash }}</v-card-text>
     </v-card>
     <template #icon>
-      <v-avatar
-          color="primary"
+      <v-avatar color="primary"
         ><span class="white--text icon">{{ item.icon }}</span></v-avatar
       ></template
     >
@@ -17,22 +16,26 @@
 </template>
 
 <script setup lang="ts">
-import { mdiCheck } from '@mdi/js'
-import { TickItemDisplay } from '~/utils/uits'
+import { mdiCheck } from "@mdi/js"
+import { TickItemDisplay } from "~/utils/uits"
 
 const props = defineProps<{
-    item: TickItemDisplay
+  item: TickItemDisplay
 }>()
 </script>
 
 <style scoped>
 .hash {
-  font-family: Roboto Mono, monospace;
+  font-family:
+    Roboto Mono,
+    monospace;
   word-break: break-all;
 }
 
 .icon {
-  font-family: Roboto Mono, monospace;
+  font-family:
+    Roboto Mono,
+    monospace;
   line-height: 0.9;
   white-space: pre-line;
 }

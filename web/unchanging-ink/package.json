@@ -1,28 +1,39 @@
 {
   "name": "nuxt-app",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint . --fix --ignore-path .gitignore",
+    "format": "prettier *.ts pages plugins utils layouts components composables  --write"
+  },
+  "prettier": {
+    "semi": false
   },
   "devDependencies": {
-    "@fontsource/roboto": "^4.5.8",
-    "@nuxtjs/i18n": "^8.0.0-beta.10",
-    "@vueuse/core": "^9.13.0",
-    "@vueuse/nuxt": "^9.13.0",
-    "cbor-web": "^8.1.0",
-    "nuxt": "^3.3.3",
+    "@vueuse/core": "^10.10.0",
+    "@vueuse/nuxt": "^10.10.0",
+    "cbor-web": "^9.0.2",
+    "prettier": "^3.3.1",
     "sha3": "^2.1.4",
-    "vue-i18n": "^9.3.0-beta.17"
+    "vite": "^5.2.13",
+    "vite-plugin-vuetify": "^2.0.3",
+    "vue-i18n": "^9.13.1",
+    "vuetify": "^3.6.8"
   },
   "dependencies": {
-    "@mdi/js": "^7.2.96",
+    "@fontsource/roboto": "^5.0.13",
+    "@mdi/js": "^7.4.47",
+    "@nuxtjs/i18n": "^8.3.1",
     "buffer": "^6.0.3",
-    "sass": "^1.61.0",
-    "vite-plugin-vuetify": "^1.0.2",
-    "vuetify": "^3.1.4"
-  }
+    "nuxt": "^3.11.2",
+    "sass": "^1.77.4",
+    "vue": "^3.4.27",
+    "vue-router": "^4.3.2"
+  },
+  "packageManager": "yarn@4.2.2"
 }
