@@ -2,7 +2,7 @@ import asyncio
 import sys
 from functools import wraps
 
-import aioredis
+from redis import asyncio as aioredis
 import pytest
 
 from unchanging_ink.cache import AbstractRedisAsyncCachingMerkleTree

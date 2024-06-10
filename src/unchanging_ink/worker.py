@@ -5,12 +5,12 @@ import logging
 import time
 from typing import Optional, Tuple, TypeVar
 
-import aioredis
+from redis import asyncio as aioredis
 import orjson
 import sentry_sdk
 import sqlalchemy
 import structlog
-from aioredis import Redis
+from redis.asyncio import Redis
 from alembic import command, config
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql.expression import bindparam, text

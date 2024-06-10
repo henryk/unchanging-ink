@@ -1,4 +1,4 @@
-import aioredis
+from redis import asyncio as aioredis
 from sanic import Sanic
 from sqlalchemy.ext.asyncio import create_async_engine
 

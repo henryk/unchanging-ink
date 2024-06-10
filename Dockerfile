@@ -1,5 +1,5 @@
-ARG PYTHON_VERSION=3.9
-ARG NODE_VERSION=16
+ARG PYTHON_VERSION=3.12
+ARG NODE_VERSION=18
 
 FROM python:${PYTHON_VERSION}-slim AS base
 
@@ -14,10 +14,10 @@ ENV PYTHONFAULTHANDLER=1 \
   POETRY_NO_INTERACTION=1 \
   PATH="$PATH:/app/.venv/bin" \
   PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python${PYTHON_VERSION}/site-packages/" \
-  POETRY_VERSION=1.1.13
+  POETRY_VERSION=1.8.3
 
 # System deps:
-RUN apt-get update && apt-get install -y build-essential unzip wget python-dev
+RUN apt-get update && apt-get install -y build-essential unzip wget python3-dev
 RUN pip install "poetry==$POETRY_VERSION" && \
     poetry config virtualenvs.in-project true && \
     poetry config virtualenvs.path .venv
