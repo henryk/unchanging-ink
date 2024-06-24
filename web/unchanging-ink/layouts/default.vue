@@ -18,7 +18,7 @@
       <v-toolbar-title>unchanging.ink</v-toolbar-title>
     </v-app-bar>
 
-    <v-main>
+    <v-main id="main">
       <slot />
     </v-main>
 
@@ -52,10 +52,12 @@ const navItems = [
     */
 ]
 </script>
-<i18n lang="json5">
-{
-  de: {
-    homepage: "Startseite",
-  },
+<style>
+#main {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),
+    url('/background.webp');
+  background-size: 33%;
+  background-repeat: repeat;
 }
-</i18n>
+</style>

@@ -1,10 +1,8 @@
 import type { Ref } from "vue"
-import { TimestampService as _TimestampService } from "~/utils/uits"
-
-export type TimestampService = Pick<_TimestampService, keyof _TimestampService>
+import { TimestampService } from "~/utils/uits"
 
 export function useTimestampService(authority: string): Ref<TimestampService> {
-  const ts = ref<TimestampService>(new _TimestampService(authority))
+  const ts = ref<TimestampService>(new TimestampService(authority))
 
   onMounted(() => {
     ts.value.openLiveConnection()
@@ -13,5 +11,5 @@ export function useTimestampService(authority: string): Ref<TimestampService> {
     ts.value.closeLiveConnection()
   })
 
-  return ts
+  return ts as any as Ref<TimestampService>
 }
