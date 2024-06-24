@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import { mdiCheck } from "@mdi/js"
-import { TickItemDisplay } from "~/utils/uits"
+import type { TickItemDisplay } from "~/utils/uits"
 
 const props = defineProps<{
   item: TickItemDisplay

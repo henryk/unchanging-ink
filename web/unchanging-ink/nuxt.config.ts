@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import vuetify, { transformAssetUrls } from "vite-plugin-vuetify"
-import { ViteConfig } from "@nuxt/schema"
+import type { ViteConfig } from "@nuxt/schema"
 
 export default defineNuxtConfig({
   runtimeConfig: {
@@ -13,6 +13,12 @@ export default defineNuxtConfig({
     vue: {
       template: {
         transformAssetUrls,
+      },
+    },
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 300,
       },
     },
   },

@@ -1,9 +1,5 @@
 <template>
   <v-container>
-    <v-card>
-      <v-card-title><h1>Hello, vuetify</h1></v-card-title>
-      <v-card-text><p>Hello everyone</p></v-card-text>
-    </v-card>
     <v-row class="mt-2">
       <v-col cols="6"
         ><Timeline :items="ts.tickItems" :progress-to-next="progressToNext"
@@ -12,8 +8,6 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { useHead } from "unhead"
-
 useHead({
   title: "Startseite",
 })

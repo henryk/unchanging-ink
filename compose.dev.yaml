@@ -1,17 +1,17 @@
-version: '3.4'
-
 services:
   db:
     networks:
       - db
       - default
 
-  backend:
+  backend: &backend-base
     image: ${IMAGE_BASE}/backend-dev:dev
     build:
       context: .
       target: backend-builder
       dockerfile: Dockerfile
+      pull: true
+    pull_policy: build
     read_only: false
     environment:
       SANIC_AUTHORITY: "localhost:23230"
@@ -36,22 +36,13 @@ services:
       "sh -c 'poetry install && poetry run sanic unchanging_ink.server:app --host=0.0.0.0 --port=8000 --workers=1 --dev --debug'"
 
   worker:
+    <<: *backend-base
     image: ${IMAGE_BASE}/worker-dev:dev
     build:
       context: .
       target: worker-builder
       dockerfile: Dockerfile
-    read_only: false
-    environment:
-      SANIC_AUTHORITY: "localhost:23230"
-      SANIC_DB_HOST: db
-      SANIC_DB_USER: sanic
-      SANIC_DB_PASSWORD: toomanysecrets
-      SANIC_DB_NAME: sanic
-      POETRY_VIRTUALENVS_IN_PROJECT: "false"
-      POETRY_VIRTUALENVS_PATH: /venv
-      PYTHONUNBUFFERED: 1
-      PYTHONASYNCIODEBUG: 1
+      pull: true
     volumes:
       - .:/app
       - worker_venv:/venv
@@ -69,6 +60,8 @@ services:
       context: .
       target: frontend-base
       dockerfile: Dockerfile.dev
+      pull: true
+    pull_policy: build
     read_only: false
     volumes:
       - ./web/unchanging-ink:/app

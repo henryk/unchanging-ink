@@ -1,4 +1,4 @@
-import { Ref } from "vue"
+import type { Ref } from "vue"
 import { TimestampService as _TimestampService } from "~/utils/uits"
 
 export type TimestampService = Pick<_TimestampService, keyof _TimestampService>

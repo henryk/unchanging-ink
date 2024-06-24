@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <v-app>
     <v-navigation-drawer v-model="drawer">
       <v-list>
         <v-list-item v-for="item in navItems" :key="item.to" :to="item.to">
@@ -29,7 +29,7 @@
         ><v-icon>{{ mdiGithub }}</v-icon></NuxtLink
       >
     </v-footer>
-  </div>
+  </v-app>
 </template>
 <script lang="ts" setup>
 import { mdiGithub, mdiHome } from "@mdi/js"

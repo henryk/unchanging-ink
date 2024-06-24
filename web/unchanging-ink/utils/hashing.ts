@@ -1,3 +1,5 @@
+import type { CreateInput } from "~/types"
+
 async function hashSha512(x: ArrayBuffer): Promise<string> {
   return (
     "sha512:" +

@@ -29,8 +29,8 @@
 
 <script lang="ts" setup>
 import { mdiPause, mdiPlay } from "@mdi/js"
-import { TickItemDisplay } from "~/utils/uits"
-import { Ref } from "vue"
+import type { TickItemDisplay } from "~/utils/uits"
+import type { Ref } from "vue"
 
 const props = defineProps<{
   progressToNext?: number
