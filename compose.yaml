@@ -69,6 +69,8 @@ services:
       PORT: "3000"
       AUTHORITY: "dev.unchanging.ink"
     read_only: true
+    tmpfs:
+      - /tmp
     depends_on:
       - redis
     networks:
