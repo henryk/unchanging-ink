@@ -113,8 +113,20 @@
             </v-tabs-window-item>
           </v-tabs-window>
         </v-card>
-        <v-card>
-          Ohai
+        <v-card class="mt-4">
+          <v-card-title>Letzte Aktionen &hellip;</v-card-title>
+          <v-container v-for="item in createdTimestamps">
+            <v-row>
+              <v-col cols="2">
+                <v-icon color="primary" :size="64">{{ item.icon }}</v-icon>
+                <v-icon color="green" :size="32" style="position: absolute; left: 48px; top: 108px">{{ mdiSeal }}</v-icon>
+              </v-col>
+              <v-col cols="10">
+                <span style="white-space: pre-wrap"><b>{{ item.filename }}</b> aufgezeichnet in <tt>{{ item.mth }}</tt></span><br>
+                Timestamp: <a :href="'https://' + item.mth" class="text-mono">{{item.timestamp}}</a>
+              </v-col>
+            </v-row>
+          </v-container>
         </v-card>
       </v-col>
       <v-col cols="6">
@@ -125,7 +137,15 @@
 </template>
 <script lang="ts" setup>
 import type { CreateInput, VerifyInput } from "~/types"
-import { mdiFileWord, mdiStamper } from "@mdi/js"
+import {
+  mdiCertificate,
+  mdiEmailSeal,
+  mdiFileCertificate,
+  mdiFileWord,
+  mdiSeal,
+  mdiSealVariant,
+  mdiStamper,
+} from '@mdi/js'
 
 useHead({
   title: "Startseite",
