@@ -14,10 +14,10 @@ ENV PYTHONFAULTHANDLER=1 \
   POETRY_NO_INTERACTION=1 \
   PATH="$PATH:/app/.venv/bin" \
   PYTHONPATH="$PYTHONPATH:/app/.venv/lib/python${PYTHON_VERSION}/site-packages/" \
-  POETRY_VERSION=1.1.13
+  POETRY_VERSION=2.2.1
 
 # System deps:
-RUN apt-get update && apt-get install -y build-essential unzip wget python-dev
+RUN apt-get update && apt-get install -y build-essential unzip wget python3-dev
 RUN pip install "poetry==$POETRY_VERSION" && \
     poetry config virtualenvs.in-project true && \
     poetry config virtualenvs.path .venv
@@ -26,28 +26,28 @@ WORKDIR /app
 
 # Install dependencies
 COPY pyproject.toml poetry.lock alembic.ini /app/
-RUN poetry install --no-dev --no-root
+RUN poetry install --without dev --no-root
 
 FROM builder-base as backend-builder
 
 COPY src /app/src
-RUN poetry install --no-dev
+RUN poetry install --without dev
 
 FROM builder-base as worker-builder
 RUN apt-get install -y libpq-dev
-RUN poetry install --no-dev --no-root -E worker
+RUN poetry install --without dev --no-root -E worker
 
 COPY migrations /app/migrations
 COPY src /app/src
-RUN poetry install --no-dev -E worker
+RUN poetry install --without dev -E worker
 
 FROM builder-base as tester
 RUN apt-get install -y libpq-dev redis-server
-RUN poetry install --no-dev --no-root -E worker -E test
+RUN poetry install --without dev --no-root -E worker -E test
 
 COPY migrations /app/migrations
 COPY src /app/src
-RUN poetry install --no-dev -E worker -E test
+RUN poetry install --without dev -E worker -E test
 ENV PYTHONTRACEMALLOC=40
 ENV PYTHONASYNCIODEBUG=1
 ENTRYPOINT ["poetry", "run", "pytest", "--cov"]
