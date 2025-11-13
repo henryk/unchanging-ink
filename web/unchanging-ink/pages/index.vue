@@ -8,7 +8,7 @@
           }}</v-card-title>
           <v-tabs v-model="selectedTab" color="primary" grow>
             <v-tab key="create">{{ $t('createTimestamp') }}</v-tab>
-            <v-tab key="verify" disabled>{{ $t('verifyTimestamp') }}</v-tab>
+            <v-tab key="verify" >{{ $t('verifyTimestamp') }}</v-tab>
           </v-tabs>
           <v-tabs-items v-model="selectedTab" color="primary">
             <v-tab-item key="create">
@@ -85,6 +85,20 @@
                   :disabled="!!createInput.text.length"
                 ></v-file-input>
               </v-card-text>
+              <v-expansion-panels v-model="extendedOptionsOpen">
+                <v-expansion-panel>
+                  <v-expansion-panel-header>{{
+                    $t('extendedOptions')
+                  }}</v-expansion-panel-header>
+                  <v-expansion-panel-content>
+                    <v-select
+                      v-model="verifyInput.hash"
+                      :items="hashItems"
+                      :label="$t('hashfunction')"
+                    ></v-select>
+                  </v-expansion-panel-content>
+                </v-expansion-panel>
+              </v-expansion-panels>
               <v-expand-transition
                 ><v-card-actions
                   v-show="createInput.text.length || createInput.files.length"
@@ -97,6 +111,7 @@
                     :disabled="
                       !createInput.text.length && !createInput.files.length
                     "
+                    @click="doVerify"
                     ><v-icon dark>{{ mdiStamper }}</v-icon>
                     {{ $t('verifyTimestamp') }}</v-btn
                   ></v-card-actions
@@ -168,6 +183,7 @@ export default {
         text: '',
         files: [],
         proof: '',
+        hash: 'sha512',
       },
     }
   },
@@ -274,6 +290,9 @@ export default {
         this.createLoading = false
         this.createPending = false
       }
+    },
+    async doVerify() {
+      console.log("Verify")
     },
     doverHandler(event) {
       event.preventDefault()
