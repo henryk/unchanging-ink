@@ -293,6 +293,10 @@ export default {
     },
     async doVerify() {
       console.log("Verify")
+      //TODO:Verify Timestamp
+      // Therefore parse the proof string to a JSON and try to find the proof object
+      // Then do verification with the hash and the proof object
+      // The file and text can be hashed using the methods already in place in the doCreateHandler.
     },
     doverHandler(event) {
       event.preventDefault()
