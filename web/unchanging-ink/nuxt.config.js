@@ -1,7 +1,3 @@
-import { resolve } from 'path'
-
-const docPath = resolve(process.cwd(), './content/doc')
-
 export default defineNuxtConfig({
   devtools: {
     enabled: false,
@@ -51,15 +47,6 @@ export default defineNuxtConfig({
       process.env.SENTRY_DSN ||
       'https://26453d4c0df842bdbe54069d5d23452c@sentry.digitalwolff.de/11',
     tracesSampleRate: 1.0,
-  },
-  content: {
-    liveEdit: process.env.NODE_ENV !== 'production',
-    sources: {
-      doc: {
-        driver: 'fs',
-        base: docPath,
-      },
-    },
   },
   build: {
     transpile: ['vuetify'],
