@@ -72,17 +72,17 @@
             <v-tab-item key="verify">
               <v-card-text @dragover="doverHandler" @drop="dropHandler">
                 <v-textarea
-                  v-model="createInput.text"
-                  :disabled="!!createInput.files.length"
+                  v-model="verifyInput.text"
+                  :disabled="!!verifyInput.files.length"
                   :placeholder="textPlaceholder"
                 ></v-textarea>
                 <v-file-input
-                  v-model="createInput.files"
+                  v-model="verifyInput.files"
                   :placeholder="filesPlaceholder"
                   chips
                   multiple
                   counter
-                  :disabled="!!createInput.text.length"
+                  :disabled="!!verifyInput.text.length"
                 ></v-file-input>
               </v-card-text>
               <v-expansion-panels v-model="extendedOptionsOpen">
@@ -101,15 +101,18 @@
               </v-expansion-panels>
               <v-expand-transition
                 ><v-card-actions
-                  v-show="createInput.text.length || createInput.files.length"
-                  ><v-text-field placeholder="proof"></v-text-field
+                  v-show="verifyInput.text.length || verifyInput.files.length"
+                  ><v-text-field
+                    placeholder="ts"
+                    v-model="verifyInput.ts"
+                  ></v-text-field
                   ><v-spacer></v-spacer
                   ><v-btn
                     large
                     dark
                     color="primary"
                     :disabled="
-                      !createInput.text.length && !createInput.files.length
+                      !verifyInput.text.length && !verifyInput.files.length || !verifyInput.ts.length
                     "
                     @click="doVerify"
                     ><v-icon dark>{{ mdiStamper }}</v-icon>
@@ -151,6 +154,7 @@ import { computeHash } from '../utils/hashing'
 import TimelineCard from '../components/Timeline'
 import { TimestampService } from '../utils/uits'
 import { sleep } from '../utils/misc'
+import {validateTsInput} from "~/utils/validate";
 
 export default {
   components: {
@@ -182,7 +186,7 @@ export default {
       verifyInput: {
         text: '',
         files: [],
-        proof: '',
+        ts: '',
         hash: 'sha512',
       },
     }
@@ -276,15 +280,17 @@ export default {
       try {
         this.createLoading = true
         this.createPending = true
-        const hash = await computeHash(this.createInput)
-        const ts = await this.UiTs.getTimestamp(hash, {
+
+        // Calculate hash, which serves as the input data for the timestamp
+        const data_hash = await computeHash(this.createInput)
+        const ts = await this.UiTs.getTimestamp(data_hash, {
           // eslint-disable-next-line require-await
           firstStepCallback: async () => {
             this.createPending = false
           },
         })
         await sleep(1000)
-        console.log(await this.UiTs.verifyTimestamp(hash, ts))
+        console.log(await this.UiTs.verifyTimestamp(data_hash, ts))
         this.createdTimestamps.unshift(ts)
       } finally {
         this.createLoading = false
@@ -292,11 +298,25 @@ export default {
       }
     },
     async doVerify() {
-      console.log("Verify")
-      //TODO:Verify Timestamp
-      // Therefore parse the proof string to a JSON and try to find the proof object
-      // Then do verification with the hash and the proof object
-      // The file and text can be hashed using the methods already in place in the doCreateHandler.
+      let verified = false
+      let error = null
+      try {
+        const data_hash = await computeHash(this.verifyInput)  //calculate hash from input files and text
+        const ts = await validateTsInput(JSON.parse(this.verifyInput.ts))
+        verified = await this.UiTs.verifyTimestamp(data_hash, ts)
+        console.log("Verified", verified)
+      } catch (err) {
+        error = err
+      } finally {
+        // FIXME: This is a hack to make the error message visible.
+        if (error) {
+          alert(`Error during verification: ${error.message}`)
+        } else if (verified) {
+          alert('Timestamp is valid for the provided data.')
+        } else {
+          alert('Timestamp is NOT valid for the provided data.')
+        }
+      }
     },
     doverHandler(event) {
       event.preventDefault()
