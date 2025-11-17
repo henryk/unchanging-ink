@@ -1,9 +1,6 @@
-import { existsSync } from 'fs'
 import { resolve } from 'path'
 
-const localDocPath = resolve(process.cwd(), '../doc')
-const bundledDocPath = resolve(process.cwd(), './content/doc')
-const docPath = existsSync(localDocPath) ? localDocPath : bundledDocPath
+const docPath = resolve(process.cwd(), './content/doc')
 
 export default defineNuxtConfig({
   devtools: {
