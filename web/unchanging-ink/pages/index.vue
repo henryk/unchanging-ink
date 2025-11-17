@@ -4,11 +4,12 @@
       <v-col cols="12" md="6">
         <v-card>
           <v-card-title class="headline">{{
-            $t('createOrVerify')
-          }}</v-card-title>
+              $t('createOrVerify')
+            }}
+          </v-card-title>
           <v-tabs v-model="selectedTab" color="primary" grow>
             <v-tab key="create">{{ $t('createTimestamp') }}</v-tab>
-            <v-tab key="verify" >{{ $t('verifyTimestamp') }}</v-tab>
+            <v-tab key="verify">{{ $t('verifyTimestamp') }}</v-tab>
           </v-tabs>
           <v-tabs-items v-model="selectedTab" color="primary">
             <v-tab-item key="create">
@@ -29,8 +30,9 @@
                 <v-expansion-panels v-model="extendedOptionsOpen">
                   <v-expansion-panel>
                     <v-expansion-panel-header>{{
-                      $t('extendedOptions')
-                    }}</v-expansion-panel-header>
+                        $t('extendedOptions')
+                      }}
+                    </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-select
                         v-model="createInput.hash"
@@ -42,10 +44,13 @@
                 </v-expansion-panels>
               </v-card-text>
               <v-expand-transition
-                ><v-card-actions
+              >
+                <v-card-actions
                   v-show="createInput.text.length || createInput.files.length"
-                  ><v-spacer></v-spacer
-                  ><v-btn
+                >
+                  <v-spacer></v-spacer
+                  >
+                  <v-btn
                     large
                     dark
                     color="primary"
@@ -54,7 +59,8 @@
                     "
                     :loading="createLoading"
                     @click="doCreate"
-                    ><v-icon dark>{{ mdiStamper }}</v-icon>
+                  >
+                    <v-icon dark>{{ mdiStamper }}</v-icon>
                     {{ $t('createTimestamp') }}
                     <template #loader>
                       <v-progress-linear
@@ -66,8 +72,11 @@
                         :indeterminate="createPending"
                         :value="createPending ? null : progressToNext"
                       ></v-progress-linear>
-                    </template> </v-btn></v-card-actions
-              ></v-expand-transition>
+                    </template>
+                  </v-btn>
+                </v-card-actions
+                >
+              </v-expand-transition>
             </v-tab-item>
             <v-tab-item key="verify">
               <v-card-text @dragover="doverHandler" @drop="dropHandler">
@@ -88,8 +97,9 @@
               <v-expansion-panels v-model="extendedOptionsOpen">
                 <v-expansion-panel>
                   <v-expansion-panel-header>{{
-                    $t('extendedOptions')
-                  }}</v-expansion-panel-header>
+                      $t('extendedOptions')
+                    }}
+                  </v-expansion-panel-header>
                   <v-expansion-panel-content>
                     <v-select
                       v-model="verifyInput.hash"
@@ -100,14 +110,18 @@
                 </v-expansion-panel>
               </v-expansion-panels>
               <v-expand-transition
-                ><v-card-actions
+              >
+                <v-card-actions
                   v-show="verifyInput.text.length || verifyInput.files.length"
-                  ><v-text-field
+                >
+                  <v-text-field
                     placeholder="ts"
                     v-model="verifyInput.ts"
                   ></v-text-field
-                  ><v-spacer></v-spacer
-                  ><v-btn
+                  >
+                  <v-spacer></v-spacer
+                  >
+                  <v-btn
                     large
                     dark
                     color="primary"
@@ -115,10 +129,14 @@
                       !verifyInput.text.length && !verifyInput.files.length || !verifyInput.ts.length
                     "
                     @click="doVerify"
-                    ><v-icon dark>{{ mdiStamper }}</v-icon>
-                    {{ $t('verifyTimestamp') }}</v-btn
-                  ></v-card-actions
-                ></v-expand-transition
+                  >
+                    <v-icon dark>{{ mdiStamper }}</v-icon>
+                    {{ $t('verifyTimestamp') }}
+                  </v-btn
+                  >
+                </v-card-actions
+                >
+              </v-expand-transition
               >
             </v-tab-item>
           </v-tabs-items>
@@ -136,8 +154,9 @@
       <v-col v-if="createdTimestamps.length" cols="12" md="6">
         <v-card>
           <v-card-title class="headline">{{
-            $t('createdTimestamps')
-          }}</v-card-title>
+              $t('createdTimestamps')
+            }}
+          </v-card-title>
           <v-card-text v-for="ts in createdTimestamps" :key="ts.id">
             <pre>{{ JSON.stringify(ts, null, 2) }}</pre>
           </v-card-text>
@@ -159,13 +178,13 @@
   </v-container>
 </template>
 <script>
-import { promisify } from 'util'
-import { mdiStamper } from '@mdi/js'
+import {promisify} from 'util'
+import {mdiStamper} from '@mdi/js'
 import redis from 'redis'
-import { computeHash } from '../utils/hashing'
+import {computeHash} from '../utils/hashing'
 import TimelineCard from '../components/Timeline'
-import { TimestampService } from '../utils/uits'
-import { sleep } from '../utils/misc'
+import {TimestampService} from '../utils/uits'
+import {sleep} from '../utils/misc'
 import {validateTsInput} from "~/utils/validate";
 
 export default {
@@ -226,8 +245,8 @@ export default {
   computed: {
     hashItems() {
       return [
-        { text: 'SHA-512', value: 'sha512' },
-        { text: this.$t('rawHash'), value: 'raw' },
+        {text: 'SHA-512', value: 'sha512'},
+        {text: this.$t('rawHash'), value: 'raw'},
       ]
     },
     textPlaceholder() {
@@ -328,7 +347,7 @@ export default {
         if (error) {
           this.verifySnackbar = {
             show: true,
-            message: this.$t('verifyError', { error: error.message }),
+            message: this.$t('verifyError', {error: error.message}),
             color: 'error',
           }
         } else if (verified) {
