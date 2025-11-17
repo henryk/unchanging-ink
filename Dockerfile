@@ -1,5 +1,5 @@
 ARG PYTHON_VERSION=3.9
-ARG NODE_VERSION=16
+ARG NODE_VERSION=20
 
 FROM python:${PYTHON_VERSION}-slim AS base
 
@@ -19,8 +19,8 @@ ENV PYTHONFAULTHANDLER=1 \
 # System deps:
 RUN apt-get update && apt-get install -y build-essential unzip wget python3-dev
 RUN pip install "poetry==$POETRY_VERSION" && \
-    poetry config virtualenvs.in-project true && \
-    poetry config virtualenvs.path .venv
+  poetry config virtualenvs.in-project true && \
+  poetry config virtualenvs.path .venv
 
 WORKDIR /app
 
@@ -75,16 +75,16 @@ FROM frontend-base as frontend-install-stage
 WORKDIR /app
 COPY web/unchanging-ink/package-lock.json ./
 COPY --from=frontend-prep-stage /app/package.json ./
-RUN npm ci --production
+RUN npm ci --omit=dev
 
 FROM frontend-base as frontend
 WORKDIR /app
 
 COPY --from=frontend-install-stage /app/node_modules/ /app/node_modules/
-COPY --from=frontend-build-stage /app/package.json /app/nuxt.config.js /app/
-COPY --from=frontend-build-stage /app/.nuxt/ /app/.nuxt/
+COPY --from=frontend-build-stage /app/package.json /app/
+COPY --from=frontend-build-stage /app/.output/ /app/.output/
 COPY --from=frontend-build-stage /app/content/ /app/content/
-CMD ["npm", "run", "start"]
+CMD ["node", ".output/server/index.mjs"]
 
 FROM base as worker
 RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*

@@ -1,15 +1,15 @@
 <template>
-  <v-timeline-item fill-dot color="primary" right>
+  <v-timeline-item fill-dot color="info" right>
     <v-card>
       <v-card-subtitle
         >{{ item.time }}
-        <v-icon color="success">{{ mdiCheck }}</v-icon></v-card-subtitle
+        <v-icon :icon="mdiCheck" color="success"></v-icon></v-card-subtitle
       >
       <v-card-text class="hash">{{ item.hash }}</v-card-text>
     </v-card>
     <template #icon>
-      <v-avatar
-        ><span class="white--text icon">{{ item.icon }}</span></v-avatar
+      <v-avatar color="primary"
+        ><span class="text-white icon">{{ item.icon }}</span></v-avatar
       ></template
     >
   </v-timeline-item>

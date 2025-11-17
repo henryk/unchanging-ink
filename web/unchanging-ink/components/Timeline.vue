@@ -4,19 +4,19 @@
     @mouseenter="pauseMover = true"
     @mouseleave="pauseMover = false"
   >
-    <template #progress>
+    <template #loader>
       <v-progress-linear
-        :value="!paused ? progressToNext : null"
+        :model-value="!paused ? progressToNext : null"
       ></v-progress-linear>
     </template>
     <v-card-title class="headline">
       {{ $t('liveView') }}
       <v-spacer></v-spacer>
-      <v-icon v-if="paused">{{ mdiPause }}</v-icon
-      ><v-icon v-else>{{ mdiPlay }}</v-icon>
+      <v-icon v-if="paused" :icon="mdiPause"></v-icon>
+      <v-icon v-else :icon="mdiPlay"></v-icon>
     </v-card-title>
     <v-card-text style="max-height: 35em; overflow-y: hidden">
-      <v-timeline v-show="displayItems.length" clipped dense>
+      <v-timeline v-show="displayItems.length" density="compact">
         <transition-group name="slide-y-transition">
           <timeline-item-card
             v-for="item in displayItems"
