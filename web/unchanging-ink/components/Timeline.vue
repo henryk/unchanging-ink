@@ -7,7 +7,9 @@
     <template #loader>
       <v-progress-linear
         color="primary"
-        :model-value="!paused ? progressToNext : null"
+        height="6"
+        v-show="displayProgress !== null"
+        :model-value="displayProgress || 0"
       ></v-progress-linear>
     </template>
     <v-card-title class="headline">
@@ -55,6 +57,9 @@ export default {
       pausedItems: [],
       pauseMover: false,
       pauseBackground: false,
+      displayProgress: null,
+      animFrame: null,
+      tickTimer: null,
     }
   },
   computed: {
@@ -71,6 +76,12 @@ export default {
         this.pausedItems = [...this.items]
       }
     },
+    items: {
+      handler() {
+        this.animateTick()
+      },
+      deep: true,
+    },
   },
   mounted() {
     document.addEventListener(
@@ -79,9 +90,47 @@ export default {
       false
     )
   },
+  beforeUnmount() {
+    if (this.animFrame) {
+      cancelAnimationFrame(this.animFrame)
+      this.animFrame = null
+    }
+    if (this.tickTimer) {
+      clearTimeout(this.tickTimer)
+      this.tickTimer = null
+    }
+  },
   methods: {
     handleVisibilityChange() {
       this.pauseBackground = document.hidden
+    },
+    animateTick() {
+      if (this.animFrame) {
+        cancelAnimationFrame(this.animFrame)
+        this.animFrame = null
+      }
+      if (this.tickTimer) {
+        clearTimeout(this.tickTimer)
+        this.tickTimer = null
+      }
+      this.displayProgress = 0
+      const duration = 500
+      const startTime = performance.now()
+      const step = (now) => {
+        const elapsed = now - startTime
+        const t = Math.min(elapsed / duration, 1)
+        this.displayProgress = 100 * t
+        if (t < 1) {
+          this.animFrame = requestAnimationFrame(step)
+        } else {
+          this.animFrame = null
+          this.tickTimer = setTimeout(() => {
+            this.displayProgress = null
+            this.tickTimer = null
+          }, 300)
+        }
+      }
+      this.animFrame = requestAnimationFrame(step)
     },
   },
 }
