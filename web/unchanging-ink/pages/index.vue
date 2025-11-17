@@ -144,6 +144,18 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-snackbar
+      v-model="verifySnackbar.show"
+      :color="verifySnackbar.color"
+      :timeout="5000"
+    >
+      {{ verifySnackbar.message }}
+      <template #action="{ attrs }">
+        <v-btn text v-bind="attrs" @click="verifySnackbar.show = false">
+          {{ $t('close') }}
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 <script>
@@ -188,6 +200,11 @@ export default {
         files: [],
         ts: '',
         hash: 'sha512',
+      },
+      verifySnackbar: {
+        show: false,
+        message: '',
+        color: 'success',
       },
     }
   },
@@ -308,13 +325,24 @@ export default {
       } catch (err) {
         error = err
       } finally {
-        // FIXME: This is a hack to make the error message visible.
         if (error) {
-          alert(`Error during verification: ${error.message}`)
+          this.verifySnackbar = {
+            show: true,
+            message: this.$t('verifyError', { error: error.message }),
+            color: 'error',
+          }
         } else if (verified) {
-          alert('Timestamp is valid for the provided data.')
+          this.verifySnackbar = {
+            show: true,
+            message: this.$t('verifySuccess'),
+            color: 'success',
+          }
         } else {
-          alert('Timestamp is NOT valid for the provided data.')
+          this.verifySnackbar = {
+            show: true,
+            message: this.$t('verifyFailed'),
+            color: 'warning',
+          }
         }
       }
     },
@@ -356,6 +384,10 @@ de:
   extendedOptions: Erweiterte Einstellungen
   rawHash: Rohdaten/ungehasht (max 256 Bytes)
   createdTimestamps: Zuletzt erzeugte Zeitstempel
+  verifyError: 'Fehler bei der Überprüfung: {error}'
+  verifySuccess: Zeitstempel ist für die bereitgestellten Daten gültig.
+  verifyFailed: Zeitstempel ist NICHT gültig für die bereitgestellten Daten.
+  close: Schließen
 en:
   createTimestamp: Create timestamp
   verifyTimestamp: Verify timestamp
@@ -368,4 +400,8 @@ en:
   extendedOptions: Extended Options
   rawHash: raw/no hash (max 256 bytes)
   createdTimestamps: Created timestamps
+  verifyError: 'Error during verification: {error}'
+  verifySuccess: Timestamp is valid for the provided data.
+  verifyFailed: Timestamp is NOT valid for the provided data.
+  close: Close
 </i18n>
