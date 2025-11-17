@@ -6,6 +6,7 @@
   >
     <template #loader>
       <v-progress-linear
+        color="primary"
         :model-value="!paused ? progressToNext : null"
       ></v-progress-linear>
     </template>
