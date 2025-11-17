@@ -35,6 +35,14 @@ function canonizeAuthority(s) {
       retval = retval.replace(/:443/, '')
     }
   }
+
+  // FIXME: this is a hack to support local development
+  if (retval.toLowerCase().startsWith('http://localhost:23230')) {
+    retval = retval.replace(/^http:\/\//i, '')
+    if (retval.endsWith(':80')) {
+      retval = retval.replace(/:80/, '')
+    }
+  }
   return retval.toLowerCase()
 }
 
@@ -121,6 +129,12 @@ export class TimestampService {
       (!this.authority.includes('://') ? 'https://' : '') +
       this.authority +
       '/api/'
+
+    // FIXME: this is a hack to support local development
+    if (this.authority.includes('localhost:23230') && this.baseUrl.startsWith('https://localhost:23230')) {
+      this.baseUrl = this.baseUrl.replace('https:', 'http:')
+      console.log(`Using http protocol for ${this.authority}. Resulting URL: ${this.baseUrl}`)
+    }
     this.cacheIth = {}
     this.cacheMtree = {}
     this.knownHead = {
