@@ -224,7 +224,7 @@ export class TimestampService {
     const item = {
       time: mh?.interval?.timestamp ?? 'not set',
       hash: mh?.mth ?? 'NOT SET',
-      icon: (String(mh?.interval?.index) ?? '?').match(/.{1,3}/g).join('\n'),
+      icon: (String(mh?.interval?.index ?? '?')).match(/.{1,3}/g).join('\n'),
     }
 
     item.timeobj = new Date(mh.timestamp)
