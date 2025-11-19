@@ -333,6 +333,8 @@ async function doCreate() {
 
 async function doVerify() {
   let verified = false
+  let verified_ith = false
+  let verified_mth = false
   let error = null
   try {
     const data_hash = await computeHash(verifyInput)
