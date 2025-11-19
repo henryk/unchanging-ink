@@ -52,6 +52,9 @@ export default defineNuxtConfig({
     transpile: ['vuetify'],
   },
   vite: {
+    optimizeDeps: {
+      include: ['cbor-web',  'sha3', '@mdi/js', 'defu' ],
+    },
     resolve: {
       alias: {
         cbor: 'cbor-web',
