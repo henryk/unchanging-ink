@@ -35,7 +35,10 @@ function canonizeAuthority(s) {
     }
   }
 
-  // FIXME: this is a hack to support local development
+  // FIXME: this is a hack to support local development and to avoid an authority mismatch:
+  // updateState() compares its parameter authority against this.authority.
+  // While parameter authority ships as "localhost:23230", this.authority is "http://localhost:23230".
+  // Therefore we are removing the "http://" prefix here, to avoid the mismatch.
   if (retval.toLowerCase().startsWith('http://localhost:23230')) {
     retval = retval.replace(/^http:\/\//i, '')
     if (retval.endsWith(':80')) {
@@ -129,7 +132,12 @@ export class TimestampService {
       this.authority +
       '/api/'
 
-    // FIXME: this is a hack to support local development
+    // FIXME: this is another hack to support local development:
+    // If we are running the server on localhost:23230, we are not using https, so we need to use http.
+    // In case we are not replacing the protocol we are ending up with issues in the websocket connection.
+    // It will replace "https" with "ws" resulting in a "wss" URL, which implies a TLS connection.
+    // This leads to failing websocket connection attempts and we cannot receive live updates.
+    // Therefore we are replacing the protocol here, if we are running the server on localhost:23230 (dev mode).
     if (this.authority.includes('localhost:23230') && this.baseUrl.startsWith('https://localhost:23230')) {
       this.baseUrl = this.baseUrl.replace('https:', 'http:')
       console.log(`Using http protocol for ${this.authority}. Resulting URL: ${this.baseUrl}`)
