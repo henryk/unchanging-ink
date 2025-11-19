@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { mdiBookOpenVariant, mdiHome, mdiTranslate } from '@mdi/js'
+import { mdiHome, mdiTranslate } from '@mdi/js'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSwitchLocalePath } from '#imports'

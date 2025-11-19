@@ -5,7 +5,6 @@ import { sleep } from './misc'
 const DEFAULT_OPTIONS_GET_TIMESTAMP = {
   wait: false,
   maxRetries: 5,
-  // eslint-disable-next-line require-await
   firstStepCallback: async () => null,
 }
 

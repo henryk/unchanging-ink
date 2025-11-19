@@ -6,9 +6,9 @@
   >
     <template #loader>
       <v-progress-linear
+        v-show="displayProgress !== null"
         color="primary"
         height="6"
-        v-show="displayProgress !== null"
         :model-value="displayProgress || 0"
       ></v-progress-linear>
     </template>
