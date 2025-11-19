@@ -59,6 +59,7 @@
                   >
                     <v-icon :icon="mdiStamper"></v-icon>
                     {{ t('createTimestamp') }}
+<!--                    Fixme: Should do it dynamically based on progressToNext-->
                     <template #loader>
                       <v-progress-linear
                         color="primary"
@@ -92,6 +93,10 @@
                   counter
                   :disabled="!!verifyInput.text.length"
                 />
+                <v-textarea
+                    v-model="verifyInput.ts"
+                    placeholder="Timestamp / Proof JSON"
+                  />
               </v-card-text>
               <v-expansion-panels v-model="extendedOptionsOpen">
                 <v-expansion-panel>
@@ -113,10 +118,6 @@
                 <v-card-actions
                   v-show="verifyInput.text.length || verifyInput.files.length"
                 >
-                  <v-text-field
-                    v-model="verifyInput.ts"
-                    placeholder="ts"
-                  />
                   <v-spacer></v-spacer>
                   <v-btn
                     size="large"
