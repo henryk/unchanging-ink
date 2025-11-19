@@ -75,6 +75,7 @@ services:
     environment:
       DISABLE_OPENCOLLECTIVE: true
       AUTHORITY: "localhost:23230"
+      NODE_ENV: "development"
     networks:
       - web
       - redis

@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   devtools: {
-    enabled: false,
+    enabled: process.env.NODE_ENV === 'development',
   },
   app: {
     head: {
@@ -58,8 +58,9 @@ export default defineNuxtConfig({
       },
     },
     server: {
+      hmr: process.env.NODE_ENV === 'development',
       watch: {
-        usePolling: true,
+        usePolling:process.env.NODE_ENV === 'development',
       },
     },
   },
