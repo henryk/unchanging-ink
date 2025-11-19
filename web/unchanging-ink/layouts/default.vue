@@ -21,7 +21,7 @@
       </v-container>
     </v-main>
     <v-footer :absolute="!fixed" app>
-      <span>&copy; 2021</span>
+      <span>&copy; 2025</span>
       <v-spacer></v-spacer>
       <v-icon class="px-2" :icon="mdiTranslate"></v-icon>
       <NuxtLink
@@ -52,12 +52,7 @@ const items = computed(() => [
     icon: mdiHome,
     title: t('homepage'),
     to: '/',
-  },
-  {
-    icon: mdiBookOpenVariant,
-    title: 'Documentation',
-    to: '/doc/',
-  },
+  }
 ])
 
 const availableLocales = computed(() =>
@@ -73,3 +68,4 @@ en:
   timestampService: Timestamp Service
   homepage: Home Page
 </i18n>
+.

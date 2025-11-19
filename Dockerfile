@@ -67,7 +67,6 @@ COPY web/unchanging-ink/package-lock.json ./
 COPY --from=frontend-prep-stage /app/package.json ./
 RUN npm ci
 COPY web/unchanging-ink .
-COPY doc ./content/doc
 
 RUN npm run build
 
@@ -83,7 +82,6 @@ WORKDIR /app
 COPY --from=frontend-install-stage /app/node_modules/ /app/node_modules/
 COPY --from=frontend-build-stage /app/package.json /app/
 COPY --from=frontend-build-stage /app/.output/ /app/.output/
-COPY --from=frontend-build-stage /app/content/ /app/content/
 CMD ["node", ".output/server/index.mjs"]
 
 FROM base as worker

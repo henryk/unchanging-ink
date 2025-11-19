@@ -72,7 +72,6 @@ services:
     read_only: false
     volumes:
       - ./web/unchanging-ink:/app
-      - ./doc:/app/content/doc
     environment:
       DISABLE_OPENCOLLECTIVE: true
       AUTHORITY: "localhost:23230"

@@ -22,7 +22,7 @@ export default defineNuxtConfig({
     '@fontsource/roboto/400.css',
     '@fontsource/roboto/500.css',
   ],
-  modules: ['@nuxtjs/i18n', '@nuxt/content', '@sentry/nuxt'],
+  modules: ['@nuxtjs/i18n', '@sentry/nuxt'],
   runtimeConfig: {
     public: {
       authority: process.env.AUTHORITY || '',
