@@ -198,12 +198,6 @@ export class TimestampService {
     )
     this.ws.onmessage = (event) => this._wsmessage(event)
     this.ws.onclose = (event) => this._wsclose(event)
-    this.ws.onopen = () => {
-      console.log('Live socket is open')
-    }
-    this.ws.onerror = (error) => {
-      console.error('Live socket error:', error)
-    }
   }
 
   _wsmessage(event) {
