@@ -177,7 +177,7 @@ function validateMth(mthStr) {
   }
 
   const authorityPattern =
-    /^(?:(?:https?:\/\/))?(?:localhost|[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*|\d{1,3}(?:\.\d{1,3}){3})(?::\d{1,5})?$/;
+    /^(?:(?:https?:\/\/))?(?:localhost|[A-Z0-9-]+(?:\.[A-Z0-9-]+)*|\d{1,3}(?:\.\d{1,3}){3})(?::\d{1,5})?$/i;
   if (!authorityPattern.test(authority)) {
     throw new Error('Invalid proof: invalid authority in mth');
   }
