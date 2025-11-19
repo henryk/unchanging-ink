@@ -5,7 +5,6 @@ import { sleep } from './misc'
 const DEFAULT_OPTIONS_GET_TIMESTAMP = {
   wait: false,
   maxRetries: 5,
-  // eslint-disable-next-line require-await
   firstStepCallback: async () => null,
 }
 
@@ -35,6 +34,7 @@ function canonizeAuthority(s) {
       retval = retval.replace(/:443/, '')
     }
   }
+
   return retval.toLowerCase()
 }
 
@@ -121,6 +121,7 @@ export class TimestampService {
       (!this.authority.includes('://') ? 'https://' : '') +
       this.authority +
       '/api/'
+
     this.cacheIth = {}
     this.cacheMtree = {}
     this.knownHead = {
@@ -137,8 +138,10 @@ export class TimestampService {
   }
 
   addListener(f) {
-    this._listeners[this._listener_next_idx] = f
+    const idx = this._listener_next_idx
+    this._listeners[idx] = f
     this._listener_next_idx++
+    return idx
   }
 
   removeListener(idx) {
@@ -203,7 +206,7 @@ export class TimestampService {
     const item = {
       time: mh?.interval?.timestamp ?? 'not set',
       hash: mh?.mth ?? 'NOT SET',
-      icon: (String(mh?.interval?.index) ?? '?').match(/.{1,3}/g).join('\n'),
+      icon: (String(mh?.interval?.index ?? '?')).match(/.{1,3}/g).join('\n'),
     }
 
     item.timeobj = new Date(mh.timestamp)

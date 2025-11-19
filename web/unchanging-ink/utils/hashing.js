@@ -12,7 +12,6 @@ export async function computeHash(inputObj) {
     async sha512(x) {
       return await hashSha512(x)
     },
-    // eslint-disable-next-line require-await
     async raw(x) {
       const s = String(x)
       if (s.length <= 256) {

@@ -4,19 +4,22 @@
     @mouseenter="pauseMover = true"
     @mouseleave="pauseMover = false"
   >
-    <template #progress>
+    <template #loader>
       <v-progress-linear
-        :value="!paused ? progressToNext : null"
+        v-show="displayProgress !== null"
+        color="primary"
+        height="6"
+        :model-value="displayProgress || 0"
       ></v-progress-linear>
     </template>
     <v-card-title class="headline">
       {{ $t('liveView') }}
       <v-spacer></v-spacer>
-      <v-icon v-if="paused">{{ mdiPause }}</v-icon
-      ><v-icon v-else>{{ mdiPlay }}</v-icon>
+      <v-icon v-if="paused" :icon="mdiPause"></v-icon>
+      <v-icon v-else :icon="mdiPlay"></v-icon>
     </v-card-title>
     <v-card-text style="max-height: 35em; overflow-y: hidden">
-      <v-timeline v-show="displayItems.length" clipped dense>
+      <v-timeline v-show="displayItems.length" density="compact">
         <transition-group name="slide-y-transition">
           <timeline-item-card
             v-for="item in displayItems"
@@ -54,6 +57,9 @@ export default {
       pausedItems: [],
       pauseMover: false,
       pauseBackground: false,
+      displayProgress: null,
+      animFrame: null,
+      tickTimer: null,
     }
   },
   computed: {
@@ -70,6 +76,12 @@ export default {
         this.pausedItems = [...this.items]
       }
     },
+    items: {
+      handler() {
+        this.animateTick()
+      },
+      deep: true,
+    },
   },
   mounted() {
     document.addEventListener(
@@ -78,9 +90,47 @@ export default {
       false
     )
   },
+  beforeUnmount() {
+    if (this.animFrame) {
+      cancelAnimationFrame(this.animFrame)
+      this.animFrame = null
+    }
+    if (this.tickTimer) {
+      clearTimeout(this.tickTimer)
+      this.tickTimer = null
+    }
+  },
   methods: {
     handleVisibilityChange() {
       this.pauseBackground = document.hidden
+    },
+    animateTick() {
+      if (this.animFrame) {
+        cancelAnimationFrame(this.animFrame)
+        this.animFrame = null
+      }
+      if (this.tickTimer) {
+        clearTimeout(this.tickTimer)
+        this.tickTimer = null
+      }
+      this.displayProgress = 0
+      const duration = 500
+      const startTime = performance.now()
+      const step = (now) => {
+        const elapsed = now - startTime
+        const t = Math.min(elapsed / duration, 1)
+        this.displayProgress = 100 * t
+        if (t < 1) {
+          this.animFrame = requestAnimationFrame(step)
+        } else {
+          this.animFrame = null
+          this.tickTimer = setTimeout(() => {
+            this.displayProgress = null
+            this.tickTimer = null
+          }, 300)
+        }
+      }
+      this.animFrame = requestAnimationFrame(step)
     },
   },
 }

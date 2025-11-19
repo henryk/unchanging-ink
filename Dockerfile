@@ -1,5 +1,5 @@
 ARG PYTHON_VERSION=3.9
-ARG NODE_VERSION=16
+ARG NODE_VERSION=24
 
 FROM python:${PYTHON_VERSION}-slim AS base
 
@@ -19,8 +19,8 @@ ENV PYTHONFAULTHANDLER=1 \
 # System deps:
 RUN apt-get update && apt-get install -y build-essential unzip wget python3-dev
 RUN pip install "poetry==$POETRY_VERSION" && \
-    poetry config virtualenvs.in-project true && \
-    poetry config virtualenvs.path .venv
+  poetry config virtualenvs.in-project true && \
+  poetry config virtualenvs.path .venv
 
 WORKDIR /app
 
@@ -28,12 +28,12 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock alembic.ini /app/
 RUN poetry install --without dev --no-root
 
-FROM builder-base as backend-builder
+FROM builder-base AS backend-builder
 
 COPY src /app/src
 RUN poetry install --without dev
 
-FROM builder-base as worker-builder
+FROM builder-base AS worker-builder
 RUN apt-get install -y libpq-dev
 RUN poetry install --without dev --no-root -E worker
 
@@ -41,7 +41,7 @@ COPY migrations /app/migrations
 COPY src /app/src
 RUN poetry install --without dev -E worker
 
-FROM builder-base as tester
+FROM builder-base AS tester
 RUN apt-get install -y libpq-dev redis-server
 RUN poetry install --without dev --no-root -E worker -E test
 
@@ -53,40 +53,38 @@ ENV PYTHONASYNCIODEBUG=1
 ENTRYPOINT ["poetry", "run", "pytest", "--cov"]
 CMD []
 
-FROM node:${NODE_VERSION}-alpine as frontend-base
+FROM node:${NODE_VERSION}-alpine AS frontend-base
 
-FROM frontend-base as frontend-prep-stage
+FROM frontend-base AS frontend-prep-stage
 WORKDIR /app
 COPY web/unchanging-ink/package.json ./
 RUN sed -i -e 's/  "version": ".*",/  "version": "0.0.0",/' package.json
 
-FROM frontend-base as frontend-build-stage
+FROM frontend-base AS frontend-build-stage
 WORKDIR /app
 
 COPY web/unchanging-ink/package-lock.json ./
 COPY --from=frontend-prep-stage /app/package.json ./
 RUN npm ci
 COPY web/unchanging-ink .
-COPY doc ./content/doc
 
 RUN npm run build
 
-FROM frontend-base as frontend-install-stage
+FROM frontend-base AS frontend-install-stage
 WORKDIR /app
 COPY web/unchanging-ink/package-lock.json ./
 COPY --from=frontend-prep-stage /app/package.json ./
-RUN npm ci --production
+RUN npm ci --omit=dev
 
-FROM frontend-base as frontend
+FROM frontend-base AS frontend
 WORKDIR /app
 
 COPY --from=frontend-install-stage /app/node_modules/ /app/node_modules/
-COPY --from=frontend-build-stage /app/package.json /app/nuxt.config.js /app/
-COPY --from=frontend-build-stage /app/.nuxt/ /app/.nuxt/
-COPY --from=frontend-build-stage /app/content/ /app/content/
-CMD ["npm", "run", "start"]
+COPY --from=frontend-build-stage /app/package.json /app/
+COPY --from=frontend-build-stage /app/.output/ /app/.output/
+CMD ["node", ".output/server/index.mjs"]
 
-FROM base as worker
+FROM base AS worker
 RUN apt-get update && apt-get install -y libpq5 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV PYTHONPATH=/app/.venv/lib/python${PYTHON_VERSION}/site-packages/ PATH="$PATH:/app/.venv/bin"

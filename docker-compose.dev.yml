@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   db:
     networks:
@@ -14,7 +12,7 @@ services:
       dockerfile: Dockerfile
     read_only: false
     environment:
-      SANIC_AUTHORITY: "localhost:23230"
+      SANIC_AUTHORITY: "http://localhost:23230"
       SANIC_DB_HOST: db
       SANIC_DB_USER: sanic
       SANIC_DB_PASSWORD: toomanysecrets
@@ -43,7 +41,7 @@ services:
       dockerfile: Dockerfile
     read_only: false
     environment:
-      SANIC_AUTHORITY: "localhost:23230"
+      SANIC_AUTHORITY: "http://localhost:23230"
       SANIC_DB_HOST: db
       SANIC_DB_USER: sanic
       SANIC_DB_PASSWORD: toomanysecrets
@@ -72,10 +70,10 @@ services:
     read_only: false
     volumes:
       - ./web/unchanging-ink:/app
-      - ./doc:/app/content/doc
     environment:
       DISABLE_OPENCOLLECTIVE: true
-      AUTHORITY: "localhost:23230"
+      AUTHORITY: "http://localhost:23230"
+      NODE_ENV: "development"
     networks:
       - web
       - redis
